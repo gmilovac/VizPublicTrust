@@ -3,16 +3,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Make sure these files exist in your 'data/' folder
   const datasets = [
     { name: "Beer Tasting Notes", file: "data/beer.csv" },
-    { name: "Ice Cream Tasting", file: "data/icecream.csv" },
-    { name: "Video Game Ratings", file: "data/games.csv" },
+    { name: "Ice Cream Tasting", file: "data/ice_cream_expanded.csv" },
+    { name: "Video Game Ratings", file: "data/video_games_expanded.csv" },
   ];
 
   // --- 1. Global State & Chart Dimensions ---
   let currentData = [];
   let currentMetrics = [];
-  let categoryColumn = ""; // Column to group by (e.g., Shop, Genre)
-  let itemColumn = ""; // Column for individual item (e.g., Flavor, Game)
-  let comparisonMode = "individual"; // 'individual' or 'category'
+  let categoryColumn = ""; // Column to group by (e.g., Genre)
+  let itemColumn = ""; // Column for individual item (e.g., Game)
   let categoryAverages = new Map(); // To store calculated averages
 
   const width = 600;
@@ -42,7 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const itemSelect2 = d3.select("#item-select-2");
   const select1Label = d3.select("#select-1-label");
   const select2Label = d3.select("#select-2-label");
-  const modeRadios = d3.selectAll("input[name='compare-mode']");
+
+  const item1ModeRadios = d3.selectAll("input[name='compare-mode-1']");
+  const item2ModeRadios = d3.selectAll("input[name='compare-mode-2']");
 
   // --- 2. Core Drawing Functions (Unchanged) ---
   function angleToCoordinate(angle, value) {
@@ -64,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const dataPoints = metrics.map((metric, i) => {
       const angle = angleSlice * i;
-      const value = data[metric] ? rScale(data[metric]) : 0; // Handle missing data
+      const value = data[metric] ? rScale(data[metric]) : 0;
       return [angle, value];
     });
 
@@ -137,16 +138,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     d3.csv(selectedFile)
       .then((data) => {
-        // Standardize columns: Col 0 is Category, Col 1 is Item
+        // *** NEW DATA LOGIC ***
+        // Default: Col 0 is Category, Col 1 is Item
         categoryColumn = data.columns[0];
         itemColumn = data.columns[1];
-        currentMetrics = data.columns.slice(2);
 
+        // Swap for specific datasets
+        if (
+          selectedFile.includes("ice_cream") ||
+          selectedFile.includes("video_games")
+        ) {
+          // Ice Cream: Category=Flavor (Col 1), Item=Shop (Col 0)
+          // Video Games: Category=Genre (Col 1), Item=Game (Col 0)
+          categoryColumn = data.columns[1];
+          itemColumn = data.columns[0];
+        }
+        // For beer, the default is correct (Category=Category, Item=Brewery)
+        // *** END NEW DATA LOGIC ***
+
+        currentMetrics = data.columns.slice(2);
         let maxValue = 0;
 
         data.forEach((d) => {
-          // Create a unique label for individual items
-          d.individualLabel = `${d[categoryColumn]} - ${d[itemColumn]}`;
+          // Use a consistent label format: [Item] - [Category]
+          d.individualLabel = `${d[itemColumn]} - ${d[categoryColumn]}`;
           // Convert metrics to numbers and find max
           currentMetrics.forEach((metric) => {
             d[metric] = +d[metric];
@@ -159,14 +174,19 @@ document.addEventListener("DOMContentLoaded", () => {
         rScale.domain([0, scaleMax]);
 
         calculateCategoryAverages();
-        updateSelectorPopulation(); // New master population function
 
+        // Enable controls
         itemSelect1.property("disabled", false);
         itemSelect2.property("disabled", false);
-        modeRadios.property("disabled", false);
+        item1ModeRadios.property("disabled", false);
+        item2ModeRadios.property("disabled", false);
+
+        // Populate selectors for the first time
+        populateItemSelectors("1");
+        populateItemSelectors("2");
 
         drawBase(currentMetrics);
-        drawRadarChart(null, null, currentMetrics);
+        updateChart(); // Draw empty chart
       })
       .catch((error) => {
         console.error("Error loading or parsing data:", error);
@@ -190,51 +210,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 4. UI Population and Event Handling ---
 
-  function updateSelectorPopulation() {
-    comparisonMode = d3
-      .select("input[name='compare-mode']:checked")
+  /**
+   * Populates a single item selector based on its mode
+   * @param {string} selectorNumber - "1" or "2"
+   */
+  function populateItemSelectors(selectorNumber) {
+    const mode = d3
+      .select(`input[name='compare-mode-${selectorNumber}']:checked`)
       .property("value");
+    const select = selectorNumber === "1" ? itemSelect1 : itemSelect2;
+    const label = selectorNumber === "1" ? select1Label : select2Label;
 
-    if (comparisonMode === "individual") {
-      populateIndividualSelectors();
-    } else {
-      populateCategorySelectors();
-    }
-    // Trigger a chart update to clear old polygons
-    updateChart();
-  }
+    // Clear old options
+    select.selectAll("option").remove();
+    select.append("option").attr("value", "none").text("None");
 
-  function populateIndividualSelectors() {
-    select1Label.text("3. Item 1 (Blue):");
-    select2Label.text("4. Item 2 (Red):");
-
-    const options = [itemSelect1, itemSelect2];
-    options.forEach((select) => {
-      select.selectAll("option").remove();
-      select.append("option").attr("value", "none").text("None");
-
+    if (mode === "individual") {
+      label.text("Select Item:");
       select
         .selectAll("option.item-option")
-        .data(currentData)
+        .data(
+          currentData.sort((a, b) =>
+            d3.ascending(a.individualLabel, b.individualLabel)
+          )
+        )
         .enter()
         .append("option")
         .attr("class", "item-option")
         .attr("value", (d) => d.individualLabel)
         .text((d) => d.individualLabel);
-    });
-  }
-
-  function populateCategorySelectors() {
-    select1Label.text("3. Category 1 (Blue):");
-    select2Label.text("4. Category 2 (Red):");
-
-    const categoryNames = Array.from(categoryAverages.keys()).sort();
-
-    const options = [itemSelect1, itemSelect2];
-    options.forEach((select) => {
-      select.selectAll("option").remove();
-      select.append("option").attr("value", "none").text("None");
-
+    } else {
+      // mode === 'category'
+      label.text("Select Category:");
+      const categoryNames = Array.from(categoryAverages.keys()).sort();
       select
         .selectAll("option.category-option")
         .data(categoryNames)
@@ -243,28 +251,41 @@ document.addEventListener("DOMContentLoaded", () => {
         .attr("class", "category-option")
         .attr("value", (d) => d)
         .text((d) => d);
-    });
+    }
+    // After repopulating, clear the chart
+    updateChart();
   }
 
+  /**
+   * Finds the selected data (individual or category) and calls the draw function
+   */
   function updateChart() {
+    const mode1 = d3
+      .select('input[name="compare-mode-1"]:checked')
+      .property("value");
     const val1 = itemSelect1.property("value");
+    const mode2 = d3
+      .select('input[name="compare-mode-2"]:checked')
+      .property("value");
     const val2 = itemSelect2.property("value");
 
     let data1 = null;
     let data2 = null;
 
-    if (comparisonMode === "individual") {
+    // Find data for Selection 1
+    if (val1 !== "none") {
       data1 =
-        val1 === "none"
-          ? null
-          : currentData.find((d) => d.individualLabel === val1);
+        mode1 === "individual"
+          ? currentData.find((d) => d.individualLabel === val1)
+          : categoryAverages.get(val1);
+    }
+
+    // Find data for Selection 2
+    if (val2 !== "none") {
       data2 =
-        val2 === "none"
-          ? null
-          : currentData.find((d) => d.individualLabel === val2);
-    } else {
-      data1 = val1 === "none" ? null : categoryAverages.get(val1);
-      data2 = val2 === "none" ? null : categoryAverages.get(val2);
+        mode2 === "individual"
+          ? currentData.find((d) => d.individualLabel === val2)
+          : categoryAverages.get(val2);
     }
 
     drawRadarChart(data1, data2, currentMetrics);
@@ -280,8 +301,12 @@ document.addEventListener("DOMContentLoaded", () => {
     itemSelect1.property("disabled", true);
     itemSelect2.property("disabled", true);
 
-    modeRadios.property("disabled", true);
-    d3.select("#mode-individual").property("checked", true);
+    item1ModeRadios.property("disabled", true).property("checked", function () {
+      return d3.select(this).property("value") === "individual";
+    });
+    item2ModeRadios.property("disabled", true).property("checked", function () {
+      return d3.select(this).property("value") === "individual";
+    });
 
     drawBase([]);
     drawRadarChart(null, null, []);
@@ -302,7 +327,10 @@ document.addEventListener("DOMContentLoaded", () => {
     datasetSelect.on("change", loadDataset);
     itemSelect1.on("change", updateChart);
     itemSelect2.on("change", updateChart);
-    modeRadios.on("change", updateSelectorPopulation);
+
+    // New listeners for the mode radios
+    item1ModeRadios.on("change", () => populateItemSelectors("1"));
+    item2ModeRadios.on("change", () => populateItemSelectors("2"));
 
     resetChart(); // Set initial disabled state
   }
