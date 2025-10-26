@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   // --- 0. Dataset Configuration ---
-  // Add your new datasets here!
-  // 'name' is what the user sees. 'file' is the path.
+  // Make sure these files exist in your 'data/' folder
   const datasets = [
     { name: "Beer Tasting Notes", file: "data/beer.csv" },
     { name: "Ice Cream Tasting", file: "data/icecream.csv" },
@@ -11,8 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- 1. Global State & Chart Dimensions ---
   let currentData = [];
   let currentMetrics = [];
-  let labelColumn = "";
-  let categoryColumn = "";
+  let categoryColumn = ""; // Column to group by (e.g., Shop, Genre)
+  let itemColumn = ""; // Column for individual item (e.g., Flavor, Game)
+  let comparisonMode = "individual"; // 'individual' or 'category'
+  let categoryAverages = new Map(); // To store calculated averages
 
   const width = 600;
   const height = 500;
@@ -21,10 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const chartHeight = height - margin.top - margin.bottom;
   const radius = Math.min(chartWidth, chartHeight) / 2;
 
-  // This scale's domain will be updated when data is loaded
   const rScale = d3.scaleLinear().range([0, radius]);
 
-  // Select the SVG and create the main 'g' element
   const svg = d3
     .select("#radar-chart")
     .attr("width", width)
@@ -37,40 +36,27 @@ document.addEventListener("DOMContentLoaded", () => {
       })`
     );
 
-  // Select the dropdowns
+  // Select UI elements
   const datasetSelect = d3.select("#dataset-select");
   const itemSelect1 = d3.select("#item-select-1");
   const itemSelect2 = d3.select("#item-select-2");
+  const select1Label = d3.select("#select-1-label");
+  const select2Label = d3.select("#select-2-label");
+  const modeRadios = d3.selectAll("input[name='compare-mode']");
 
-  // --- 2. Core Drawing Functions (Now Parametric) ---
-
-  /**
-   * Converts an angle and radius to [x, y] coordinates
-   */
+  // --- 2. Core Drawing Functions (Unchanged) ---
   function angleToCoordinate(angle, value) {
-    const x = value * Math.cos(angle - Math.PI / 2); // Adjust for 12 o'clock start
+    const x = value * Math.cos(angle - Math.PI / 2);
     const y = value * Math.sin(angle - Math.PI / 2);
     return [x, y];
   }
 
-  /**
-   * Draws the main radar chart visualization
-   */
   function drawRadarChart(data1, data2, metrics) {
-    // Clear previous chart elements
     svg.selectAll(".radar-polygon").remove();
-
-    if (data1) {
-      drawPolygon(data1, "beer1", metrics);
-    }
-    if (data2) {
-      drawPolygon(data2, "beer2", metrics);
-    }
+    if (data1) drawPolygon(data1, "beer1", metrics);
+    if (data2) drawPolygon(data2, "beer2", metrics);
   }
 
-  /**
-   * Draws a single data polygon
-   */
   function drawPolygon(data, className, metrics) {
     if (!metrics || metrics.length === 0) return;
     const numAxes = metrics.length;
@@ -78,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const dataPoints = metrics.map((metric, i) => {
       const angle = angleSlice * i;
-      const value = rScale(data[metric]);
+      const value = data[metric] ? rScale(data[metric]) : 0; // Handle missing data
       return [angle, value];
     });
 
@@ -95,21 +81,13 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("d", lineGenerator);
   }
 
-  /**
-   * Draws the static background (axes, labels, levels)
-   */
   function drawBase(metrics) {
-    // Clear existing axes and labels before redrawing
-    svg.selectAll(".radar-axis").remove();
-    svg.selectAll(".radar-label").remove();
-    svg.selectAll(".radar-level").remove(); // Redraw levels based on new scale
-
+    svg.selectAll(".radar-axis, .radar-label, .radar-level").remove();
     if (!metrics || metrics.length === 0) return;
 
     const numAxes = metrics.length;
     const angleSlice = (Math.PI * 2) / numAxes;
 
-    // Draw the radial axes (spokes)
     const axes = svg
       .selectAll(".radar-axis")
       .data(metrics)
@@ -124,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .attr("x2", (d, i) => angleToCoordinate(angleSlice * i, radius)[0])
       .attr("y2", (d, i) => angleToCoordinate(angleSlice * i, radius)[1]);
 
-    // Draw the axis labels
     axes
       .append("text")
       .attr("class", "radar-label")
@@ -133,10 +110,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .text((d) => d)
       .style("text-anchor", "middle");
 
-    // Draw the concentric circles (levels)
-    // Adjust levels based on the new scale's domain
     const maxVal = rScale.domain()[1];
-    const levels = Math.min(Math.ceil(maxVal), 7); // Show a reasonable number of levels
+    const levels = Math.min(Math.ceil(maxVal), 7);
     const levelData = d3.range(1, levels + 1).map((d) => (d * maxVal) / levels);
 
     svg
@@ -151,14 +126,10 @@ document.addEventListener("DOMContentLoaded", () => {
       .style("fill", "none");
   }
 
-  // --- 3. Data Loading and Event Handling ---
+  // --- 3. Data Loading and Processing ---
 
-  /**
-   * Called when a new dataset is selected
-   */
   function loadDataset() {
     const selectedFile = datasetSelect.property("value");
-
     if (selectedFile === "none") {
       resetChart();
       return;
@@ -166,106 +137,156 @@ document.addEventListener("DOMContentLoaded", () => {
 
     d3.csv(selectedFile)
       .then((data) => {
-        // --- Dynamically determine columns ---
-        // Assumes: Col 0 is primary label, Col 1 is category, Col 2+ are metrics
-        labelColumn = data.columns[0];
-        categoryColumn = data.columns[1];
-        currentMetrics = data.columns.slice(2); // Get all columns from the 3rd one onwards
+        // Standardize columns: Col 0 is Category, Col 1 is Item
+        categoryColumn = data.columns[0];
+        itemColumn = data.columns[1];
+        currentMetrics = data.columns.slice(2);
 
         let maxValue = 0;
 
-        // Parse data
         data.forEach((d) => {
-          // Create a unique, readable label
-          d.label = `${d[labelColumn]} - ${d[categoryColumn]}`;
-          // Convert all metric columns to numbers and find max
+          // Create a unique label for individual items
+          d.individualLabel = `${d[categoryColumn]} - ${d[itemColumn]}`;
+          // Convert metrics to numbers and find max
           currentMetrics.forEach((metric) => {
             d[metric] = +d[metric];
-            if (d[metric] > maxValue) {
-              maxValue = d[metric];
-            }
+            if (d[metric] > maxValue) maxValue = d[metric];
           });
         });
 
-        currentData = data; // Store data globally
-
-        // --- Update Chart Components ---
-        // Set a ceiling for the scale, e.g., the next integer up
+        currentData = data;
         const scaleMax = Math.ceil(maxValue);
-        rScale.domain([0, scaleMax]); // Update the scale's domain
+        rScale.domain([0, scaleMax]);
 
-        populateItemSelectors(); // Re-populate dropdowns
+        calculateCategoryAverages();
+        updateSelectorPopulation(); // New master population function
 
         itemSelect1.property("disabled", false);
         itemSelect2.property("disabled", false);
+        modeRadios.property("disabled", false);
 
-        drawBase(currentMetrics); // Redraw axes
-        drawRadarChart(null, null, currentMetrics); // Clear any old polygons
+        drawBase(currentMetrics);
+        drawRadarChart(null, null, currentMetrics);
       })
       .catch((error) => {
         console.error("Error loading or parsing data:", error);
+        alert(`Error: Could not load the dataset from '${selectedFile}'.`);
         resetChart();
       });
   }
 
-  /**
-   * Populates the item selectors based on currentData
-   */
-  function populateItemSelectors() {
+  function calculateCategoryAverages() {
+    categoryAverages.clear();
+    const categories = d3.group(currentData, (d) => d[categoryColumn]);
+
+    categories.forEach((items, categoryName) => {
+      const avgData = { [categoryColumn]: categoryName };
+      currentMetrics.forEach((metric) => {
+        avgData[metric] = d3.mean(items, (d) => d[metric]);
+      });
+      categoryAverages.set(categoryName, avgData);
+    });
+  }
+
+  // --- 4. UI Population and Event Handling ---
+
+  function updateSelectorPopulation() {
+    comparisonMode = d3
+      .select("input[name='compare-mode']:checked")
+      .property("value");
+
+    if (comparisonMode === "individual") {
+      populateIndividualSelectors();
+    } else {
+      populateCategorySelectors();
+    }
+    // Trigger a chart update to clear old polygons
+    updateChart();
+  }
+
+  function populateIndividualSelectors() {
+    select1Label.text("3. Item 1 (Blue):");
+    select2Label.text("4. Item 2 (Red):");
+
     const options = [itemSelect1, itemSelect2];
     options.forEach((select) => {
-      // Clear old options
       select.selectAll("option").remove();
-
-      // Add a "None" option
       select.append("option").attr("value", "none").text("None");
 
-      // Add an option for each item
       select
         .selectAll("option.item-option")
         .data(currentData)
         .enter()
         .append("option")
         .attr("class", "item-option")
-        .attr("value", (d) => d.label)
-        .text((d) => d.label);
+        .attr("value", (d) => d.individualLabel)
+        .text((d) => d.individualLabel);
     });
   }
 
-  /**
-   * Finds the selected data and calls the draw function
-   */
-  function updateChart() {
-    const label1 = itemSelect1.property("value");
-    const label2 = itemSelect2.property("value");
+  function populateCategorySelectors() {
+    select1Label.text("3. Category 1 (Blue):");
+    select2Label.text("4. Category 2 (Red):");
 
-    const data1 =
-      label1 === "none" ? null : currentData.find((d) => d.label === label1);
-    const data2 =
-      label2 === "none" ? null : currentData.find((d) => d.label === label2);
+    const categoryNames = Array.from(categoryAverages.keys()).sort();
+
+    const options = [itemSelect1, itemSelect2];
+    options.forEach((select) => {
+      select.selectAll("option").remove();
+      select.append("option").attr("value", "none").text("None");
+
+      select
+        .selectAll("option.category-option")
+        .data(categoryNames)
+        .enter()
+        .append("option")
+        .attr("class", "category-option")
+        .attr("value", (d) => d)
+        .text((d) => d);
+    });
+  }
+
+  function updateChart() {
+    const val1 = itemSelect1.property("value");
+    const val2 = itemSelect2.property("value");
+
+    let data1 = null;
+    let data2 = null;
+
+    if (comparisonMode === "individual") {
+      data1 =
+        val1 === "none"
+          ? null
+          : currentData.find((d) => d.individualLabel === val1);
+      data2 =
+        val2 === "none"
+          ? null
+          : currentData.find((d) => d.individualLabel === val2);
+    } else {
+      data1 = val1 === "none" ? null : categoryAverages.get(val1);
+      data2 = val2 === "none" ? null : categoryAverages.get(val2);
+    }
 
     drawRadarChart(data1, data2, currentMetrics);
   }
 
-  /**
-   * Resets the chart to its initial empty state
-   */
   function resetChart() {
     currentData = [];
     currentMetrics = [];
+    categoryAverages.clear();
 
     itemSelect1.selectAll("option").remove();
     itemSelect2.selectAll("option").remove();
     itemSelect1.property("disabled", true);
     itemSelect2.property("disabled", true);
 
-    drawBase([]); // Clear axes
-    drawRadarChart(null, null, []); // Clear polygons
+    modeRadios.property("disabled", true);
+    d3.select("#mode-individual").property("checked", true);
+
+    drawBase([]);
+    drawRadarChart(null, null, []);
   }
 
-  /**
-   * Initializes the entire application
-   */
   function initialize() {
     // Populate the dataset selector
     datasetSelect
@@ -281,11 +302,11 @@ document.addEventListener("DOMContentLoaded", () => {
     datasetSelect.on("change", loadDataset);
     itemSelect1.on("change", updateChart);
     itemSelect2.on("change", updateChart);
+    modeRadios.on("change", updateSelectorPopulation);
 
-    // Draw an empty base to start
-    drawBase([]);
+    resetChart(); // Set initial disabled state
   }
 
-  // --- 4. Run Initialization ---
+  // --- 5. Run Initialization ---
   initialize();
 });

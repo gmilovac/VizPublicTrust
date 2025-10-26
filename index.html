@@ -20,27 +20,50 @@
       </p>
 
       <div class="chart-controls">
-        <!-- New Dataset Selector -->
         <div class="selector">
           <label for="dataset-select">1. Select Dataset:</label>
           <select id="dataset-select">
             <option value="none" selected>Choose a dataset...</option>
-            <!-- Options will be added by script.js -->
           </select>
         </div>
 
-        <!-- Generic Item Selectors (disabled by default) -->
         <div class="selector">
-          <label for="item-select-1">2. Item 1 (Blue):</label>
+          <label>2. Comparison Mode:</label>
+          <div class="radio-group">
+            <input
+              type="radio"
+              id="mode-individual"
+              name="compare-mode"
+              value="individual"
+              checked
+            />
+            <label for="mode-individual">Compare Individuals</label>
+            <input
+              type="radio"
+              id="mode-category"
+              name="compare-mode"
+              value="category"
+            />
+            <label for="mode-category">Compare Categories</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-controls">
+        <div class="selector">
+          <label id="select-1-label" for="item-select-1"
+            >3. Selection 1 (Blue):</label
+          >
           <select id="item-select-1" disabled></select>
         </div>
         <div class="selector">
-          <label for="item-select-2">3. Item 2 (Red):</label>
+          <label id="select-2-label" for="item-select-2"
+            >4. Selection 2 (Red):</label
+          >
           <select id="item-select-2" disabled></select>
         </div>
       </div>
 
-      <!-- This is where the D3 chart will be drawn -->
       <div id="radar-chart-container">
         <svg id="radar-chart"></svg>
       </div>
@@ -50,10 +73,8 @@
       <p>A project by Shravya Munugala and Gordan Milovac.</p>
     </footer>
 
-    <!-- Load the D3.js library -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
 
-    <!-- Load your custom script -->
     <script src="script.js"></script>
   </body>
 </html>

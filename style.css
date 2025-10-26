@@ -44,7 +44,7 @@ footer {
   justify-content: center;
   flex-wrap: wrap; /* Allow wrapping on small screens */
   gap: 2rem;
-  margin: 2rem 0;
+  margin: 1.5rem 0;
 }
 
 .selector {
@@ -67,10 +67,26 @@ footer {
   min-width: 250px;
 }
 
-/* New style for disabled dropdowns */
 .selector select:disabled {
   background-color: #eee;
   cursor: not-allowed;
+}
+
+/* New Radio Button Styles */
+.radio-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  min-height: 40px; /* Match height of select box */
+}
+
+.radio-group label {
+  font-weight: normal;
+  margin-bottom: 0;
+}
+
+.radio-group input {
+  margin: 0 0.25rem 0 0;
 }
 
 #radar-chart-container {

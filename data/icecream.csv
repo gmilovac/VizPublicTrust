@@ -1,7 +1,16 @@
 Shop,Flavor,Creaminess,Sweetness,Texture,Flavor_Intensity
-Ben & Jerry's,Cherry Garcia,6,7,5,7
-Häagen-Dazs,Vanilla Bean,7,6,7,6
-Newport Creamery,Awful Awful,5,7,6,5
-Ben &Jerry's,Choc. Fudge Brownie,5,8,6,8
-Häagen-Dazs,Strawberry,6,5,6,5
-Newport Creamery,Coffee,4,6,5,7
+Ben & Jerry's,Cherry Garcia,7.0,4.13,7.01,5.39
+Ben & Jerry's,Choc. Fudge Brownie,7.56,5.03,3.1,5.05
+Ben & Jerry's,Half Baked,5.77,9.44,7.73,5.77
+Ben & Jerry's,Phish Food,6.39,9.41,6.53,8.4
+Häagen-Dazs,Vanilla Bean,6.69,7.04,8.99,6.79
+Häagen-Dazs,Strawberry,8.18,9.0,4.97,8.34
+Häagen-Dazs,Coffee,7.88,6.45,7.71,6.38
+Häagen-Dazs,Caramel Cone,6.76,4.3,6.41,8.21
+Newport Creamery,Awful Awful,6.09,8.93,6.29,6.47
+Newport Creamery,Coffee,7.31,9.19,6.32,5.44
+Newport Creamery,Mint Chip,7.86,4.65,3.19,6.46
+Jeni's,Brown Butter Almond Brittle,5.72,8.79,4.85,9.87
+Jeni's,Salted Peanut Butter,6.4,9.87,5.31,9.56
+Jeni's,Frosé Sorbet,6.8,9.01,5.43,5.63
+Jeni's,Gooey Butter Cake,7.6,8.8,4.14,8.78
