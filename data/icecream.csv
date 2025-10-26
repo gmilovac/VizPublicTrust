@@ -1,16 +1,31 @@
-Shop,Flavor,Creaminess,Sweetness,Texture,Flavor_Intensity
-Ben & Jerry's,Cherry Garcia,7.0,4.13,7.01,5.39
-Ben & Jerry's,Choc. Fudge Brownie,7.56,5.03,3.1,5.05
-Ben & Jerry's,Half Baked,5.77,9.44,7.73,5.77
-Ben & Jerry's,Phish Food,6.39,9.41,6.53,8.4
-Häagen-Dazs,Vanilla Bean,6.69,7.04,8.99,6.79
-Häagen-Dazs,Strawberry,8.18,9.0,4.97,8.34
-Häagen-Dazs,Coffee,7.88,6.45,7.71,6.38
-Häagen-Dazs,Caramel Cone,6.76,4.3,6.41,8.21
-Newport Creamery,Awful Awful,6.09,8.93,6.29,6.47
-Newport Creamery,Coffee,7.31,9.19,6.32,5.44
-Newport Creamery,Mint Chip,7.86,4.65,3.19,6.46
-Jeni's,Brown Butter Almond Brittle,5.72,8.79,4.85,9.87
-Jeni's,Salted Peanut Butter,6.4,9.87,5.31,9.56
-Jeni's,Frosé Sorbet,6.8,9.01,5.43,5.63
-Jeni's,Gooey Butter Cake,7.6,8.8,4.14,8.78
+Category,Shop,Creaminess,Sweetness,Texture,Flavor_Intensity
+Mint Chip,Jeni's,4.97,5.56,7.84,9.28
+Coffee,Jeni's,4.27,6.31,3.68,9.4
+Chocolate,Häagen-Dazs,4.01,7.75,5.32,5.37
+Mint Chip,Baskin-Robbins,9.66,9.6,5.14,9.18
+Vanilla,Baskin-Robbins,7.18,4.28,4.16,9.73
+Cookies & Cream,Baskin-Robbins,5.08,9.63,8.51,7.8
+Salted Caramel,Newport Creamery,5.68,9.56,3.36,7.43
+Coffee,Ben & Jerry's,6.75,5.86,7.03,9.97
+Coffee,Baskin-Robbins,4.12,7.95,4.36,6.21
+Pistachio,Newport Creamery,5.61,9.08,4.27,7.14
+Pistachio,Three Sisters,7.21,9.91,6.89,5.36
+Salted Caramel,Three Sisters,7.96,6.61,4.05,8.19
+Chocolate,Newport Creamery,4.73,8.54,6.48,5.21
+Strawberry,Jeni's,6.18,8.87,3.93,8.69
+Pistachio,Ben & Jerry's,8.68,6.85,7.5,7.39
+Chocolate,Jeni's,5.84,4.68,6.58,7.99
+Chocolate,Häagen-Dazs,7.13,6.31,8.35,8.37
+Strawberry,Newport Creamery,4.26,5.14,3.01,6.59
+Vanilla,Newport Creamery,9.24,5.5,4.67,6.33
+Cookies & Cream,Jeni's,8.65,9.02,8.08,7.02
+Pistachio,Three Sisters,8.85,9.57,6.3,6.89
+Pistachio,Baskin-Robbins,9.59,4.26,8.74,6.82
+Vanilla,Ben & Jerry's,8.96,9.54,4.86,7.34
+Vanilla,Häagen-Dazs,4.6,7.07,7.07,6.72
+Pistachio,Häagen-Dazs,7.74,9.1,4.98,9.44
+Salted Caramel,Newport Creamery,6.84,8.44,8.83,5.29
+Chocolate,Häagen-Dazs,8.83,4.68,4.16,5.74
+Chocolate,Ben & Jerry's,7.49,6.18,4.84,9.31
+Vanilla,Ben & Jerry's,6.69,7.69,8.79,9.45
+Strawberry,Häagen-Dazs,9.37,5.74,4.45,8.15

@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   // --- 0. Dataset Configuration ---
-  // Make sure these files exist in your 'data/' folder
+  // Updated to point to the new standardized files
   const datasets = [
     { name: "Beer Tasting Notes", file: "data/beer.csv" },
     { name: "Ice Cream Tasting", file: "data/icecream.csv" },
@@ -139,26 +139,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     d3.csv(selectedFile)
       .then((data) => {
-        // *** DATA LOGIC ***
-        // Default: Col 0 is Category, Col 1 is Item
+        // *** SIMPLIFIED DATA LOGIC ***
+        // All CSVs are standardized: Col 0 is Category, Col 1 is Item
         categoryColumn = data.columns[0];
         itemColumn = data.columns[1];
-
-        // Swap for specific datasets
-        if (
-          selectedFile.includes("ice_cream") ||
-          selectedFile.includes("video_games")
-        ) {
-          // Ice Cream: Category=Flavor (Col 1), Item=Shop (Col 0)
-          // Video Games: Category=Genre (Col 1), Item=Game (Col 0)
-          categoryColumn = data.columns[1];
-          itemColumn = data.columns[0];
-        }
+        // *** NO MORE SWAPPING LOGIC NEEDED ***
 
         currentMetrics = data.columns.slice(2);
         let maxValue = 0;
 
         data.forEach((d) => {
+          // Standardized label: [Item] - [Category]
           d.individualLabel = `${d[itemColumn]} - ${d[categoryColumn]}`;
           currentMetrics.forEach((metric) => {
             d[metric] = +d[metric];
@@ -192,10 +183,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function calculateCategoryAverages() {
     categoryAverages.clear();
+    // Group by the 'Category' column
     const categories = d3.group(currentData, (d) => d[categoryColumn]);
 
     categories.forEach((items, categoryName) => {
-      const avgData = { [categoryColumn]: categoryName };
+      const avgData = { [categoryColumn]: categoryName }; // Use Category column for label
       currentMetrics.forEach((metric) => {
         avgData[metric] = d3.mean(items, (d) => d[metric]);
       });
@@ -212,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const select = selectorNumber === "1" ? itemSelect1 : itemSelect2;
     const label = selectorNumber === "1" ? select1Label : select2Label;
 
-    const currentVal = select.property("value"); // Preserve selection if possible
+    const currentVal = select.property("value");
 
     select.selectAll("option").remove();
     select.append("option").attr("value", "none").text("None");
@@ -221,6 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
       label.text("Select Item:");
       select
         .selectAll("option.item-option")
+        // Use the individualLabel for sorting and display
         .data(
           currentData.sort((a, b) =>
             d3.ascending(a.individualLabel, b.individualLabel)
@@ -245,9 +238,8 @@ document.addEventListener("DOMContentLoaded", () => {
         .text((d) => d);
     }
 
-    select.property("value", currentVal); // Re-apply old selection
+    select.property("value", currentVal);
     if (select.property("selectedIndex") === -1) {
-      // If old val wasn't found
       select.property("value", "none");
     }
 
@@ -270,7 +262,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (val1 !== "none") {
       data1 =
         mode1 === "individual"
-          ? currentData.find((d) => d.individualLabel === val1)
+          ? // Find by the standardized individualLabel
+            currentData.find((d) => d.individualLabel === val1)
           : categoryAverages.get(val1);
     }
 
@@ -323,16 +316,13 @@ document.addEventListener("DOMContentLoaded", () => {
     item1ModeRadios.on("change", () => populateItemSelectors("1"));
     item2ModeRadios.on("change", () => populateItemSelectors("2"));
 
-    // --- NEW PRE-LOAD LOGIC ---
-    // Set the chart to a default empty state first
+    // --- PRE-LOAD LOGIC ---
     resetChart();
 
     // Find the beer dataset
     const beerDataset = datasets.find((d) => d.name.includes("Beer"));
     if (beerDataset) {
-      // Set the dropdown value
       datasetSelect.property("value", beerDataset.file);
-      // Manually trigger the load function
       loadDataset();
     }
     // --- END PRE-LOAD LOGIC ---

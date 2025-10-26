@@ -149,7 +149,6 @@ header h1 {
 .radar-label {
   font-size: 12px;
   font-weight: bold;
-  fill: #333;
 }
 .radar-polygon {
   fill-opacity: 0.25;
