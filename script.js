@@ -82,8 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .append("path")
       .datum(dataPoints)
       .attr("class", `radar-polygon ${className}`)
-      .attr("d", lineGenerator)
-      .attr("transform", `translate(${-centerX}, ${-centerY})`); // Adjust path position
+      .attr("d", lineGenerator);
+    // --- CHANGE 1: Removed transform attribute that was incorrectly offsetting the path ---
   }
 
   /**
@@ -100,29 +100,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     axes
       .append("line")
-      .attr("x1", -centerX)
-      .attr("y1", -centerY)
-      .attr(
-        "x2",
-        (d, i) => angleToCoordinate(angleSlice * i, radius)[0] - centerX
-      )
-      .attr(
-        "y2",
-        (d, i) => angleToCoordinate(angleSlice * i, radius)[1] - centerY
-      );
+      .attr("x1", 0) // --- CHANGE 2: Removed -centerX ---
+      .attr("y1", 0) // --- CHANGE 2: Removed -centerY ---
+      .attr("x2", (d, i) => angleToCoordinate(angleSlice * i, radius)[0]) // --- CHANGE 2: Removed -centerX ---
+      .attr("y2", (d, i) => angleToCoordinate(angleSlice * i, radius)[1]); // --- CHANGE 2: Removed -centerY ---
 
     // Draw the axis labels
     axes
       .append("text")
       .attr("class", "radar-label")
-      .attr(
-        "x",
-        (d, i) => angleToCoordinate(angleSlice * i, radius * 1.1)[0] - centerX
-      )
-      .attr(
-        "y",
-        (d, i) => angleToCoordinate(angleSlice * i, radius * 1.1)[1] - centerY
-      )
+      .attr("x", (d, i) => angleToCoordinate(angleSlice * i, radius * 1.1)[0]) // --- CHANGE 3: Removed -centerX ---
+      .attr("y", (d, i) => angleToCoordinate(angleSlice * i, radius * 1.1)[1]) // --- CHANGE 3: Removed -centerY ---
       .text((d) => d)
       .style("text-anchor", "middle");
 
@@ -136,8 +124,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .enter()
       .append("circle")
       .attr("class", "radar-level")
-      .attr("cx", -centerX)
-      .attr("cy", -centerY)
+      .attr("cx", 0) // --- CHANGE 4: Removed -centerX ---
+      .attr("cy", 0) // --- CHANGE 4: Removed -centerY ---
       .attr("r", (d) => rScale(d))
       .style("fill", "none");
   }
@@ -149,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const select1 = d3.select("#beer-select-1");
   const select2 = d3.select("#beer-select-2");
 
+  // Remember to use the correct path!
   d3.csv("data/beer.csv")
     .then((data) => {
       // Parse the data
