@@ -1,28 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Visualizing Public Trust</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <header>
-        <h1>Visualizing Public Trust</h1>
-        <p>An interactive exploration of institutional trust data.</p>
+      <h1>Visualizing Beer Characteristics</h1>
+      <p>An interactive exploration of beer tasting data.</p>
     </header>
 
     <main>
-        <h2>Project Status</h2>
-        <p>This website is currently under construction. 🚧</p>
-        <p>The new visualization will be available here soon.</p>
+      <h2>Radar Chart Comparison</h2>
+      <p>
+        Select one or two beers from the dropdowns to compare their
+        characteristics.
+      </p>
+
+      <div class="chart-controls">
+        <div class="selector">
+          <label for="beer-select-1">Beer 1 (Blue):</label>
+          <select id="beer-select-1"></select>
+        </div>
+        <div class="selector">
+          <label for="beer-select-2">Beer 2 (Red):</label>
+          <select id="beer-select-2"></select>
+        </div>
+      </div>
+
+      <div id="radar-chart-container">
+        <svg id="radar-chart"></svg>
+      </div>
     </main>
 
     <footer>
-        <p>A project by Shravya Munugala and Gordan Milovac.</p>
+      <p>A project by Shravya Munugala and Gordan Milovac.</p>
     </footer>
 
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
     <script src="script.js"></script>
-</body>
+  </body>
 </html>

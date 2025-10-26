@@ -1,37 +1,104 @@
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f4f4f4;
-    color: #333;
-    margin: 0;
-    padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  line-height: 1.6;
+  background-color: #f4f4f4;
+  color: #333;
+  margin: 0;
+  padding: 0;
 }
 
 header {
-    background-color: #333;
-    color: #fff;
-    padding: 2rem;
-    text-align: center;
+  background-color: #333;
+  color: #fff;
+  padding: 2rem;
+  text-align: center;
 }
 
 header h1 {
-    margin: 0;
+  margin: 0;
 }
 
 main {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 1rem;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    text-align: center;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
 footer {
-    text-align: center;
-    margin-top: 2rem;
-    padding: 1rem;
-    font-size: 0.9rem;
-    color: #777;
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* --- New Styles for Chart --- */
+
+.chart-controls {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.selector {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.selector label {
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.selector select {
+  font-size: 1rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  min-width: 250px;
+}
+
+#radar-chart-container {
+  width: 100%;
+  min-height: 500px;
+}
+
+/* Styles for D3-generated elements */
+.radar-axis {
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+
+.radar-level {
+  fill: none;
+  stroke: #ddd;
+  stroke-width: 1px;
+}
+
+.radar-label {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.radar-polygon {
+  fill-opacity: 0.25;
+  stroke-width: 2px;
+}
+
+.radar-polygon.beer1 {
+  fill: #1e90ff; /* DodgerBlue */
+  stroke: #1e90ff;
+}
+
+.radar-polygon.beer2 {
+  fill: #dc143c; /* Crimson */
+  stroke: #dc143c;
 }
