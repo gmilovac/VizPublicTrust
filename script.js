@@ -23,10 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const rScale = d3.scaleLinear().range([0, radius]);
 
+  // Select the SVG and create the main 'g' element
   const svg = d3
     .select("#radar-chart")
-    .attr("width", width)
-    .attr("height", height)
+    .attr("viewBox", `0 0 ${width} ${height}`) // Make SVG responsive
+    .attr("preserveAspectRatio", "xMidYMid meet")
     .append("g")
     .attr(
       "transform",
@@ -138,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     d3.csv(selectedFile)
       .then((data) => {
-        // *** NEW DATA LOGIC ***
+        // *** DATA LOGIC ***
         // Default: Col 0 is Category, Col 1 is Item
         categoryColumn = data.columns[0];
         itemColumn = data.columns[1];
@@ -153,16 +154,12 @@ document.addEventListener("DOMContentLoaded", () => {
           categoryColumn = data.columns[1];
           itemColumn = data.columns[0];
         }
-        // For beer, the default is correct (Category=Category, Item=Brewery)
-        // *** END NEW DATA LOGIC ***
 
         currentMetrics = data.columns.slice(2);
         let maxValue = 0;
 
         data.forEach((d) => {
-          // Use a consistent label format: [Item] - [Category]
           d.individualLabel = `${d[itemColumn]} - ${d[categoryColumn]}`;
-          // Convert metrics to numbers and find max
           currentMetrics.forEach((metric) => {
             d[metric] = +d[metric];
             if (d[metric] > maxValue) maxValue = d[metric];
@@ -175,18 +172,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         calculateCategoryAverages();
 
-        // Enable controls
         itemSelect1.property("disabled", false);
         itemSelect2.property("disabled", false);
         item1ModeRadios.property("disabled", false);
         item2ModeRadios.property("disabled", false);
 
-        // Populate selectors for the first time
         populateItemSelectors("1");
         populateItemSelectors("2");
 
         drawBase(currentMetrics);
-        updateChart(); // Draw empty chart
+        updateChart();
       })
       .catch((error) => {
         console.error("Error loading or parsing data:", error);
@@ -210,10 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 4. UI Population and Event Handling ---
 
-  /**
-   * Populates a single item selector based on its mode
-   * @param {string} selectorNumber - "1" or "2"
-   */
   function populateItemSelectors(selectorNumber) {
     const mode = d3
       .select(`input[name='compare-mode-${selectorNumber}']:checked`)
@@ -221,7 +212,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const select = selectorNumber === "1" ? itemSelect1 : itemSelect2;
     const label = selectorNumber === "1" ? select1Label : select2Label;
 
-    // Clear old options
+    const currentVal = select.property("value"); // Preserve selection if possible
+
     select.selectAll("option").remove();
     select.append("option").attr("value", "none").text("None");
 
@@ -252,13 +244,16 @@ document.addEventListener("DOMContentLoaded", () => {
         .attr("value", (d) => d)
         .text((d) => d);
     }
-    // After repopulating, clear the chart
+
+    select.property("value", currentVal); // Re-apply old selection
+    if (select.property("selectedIndex") === -1) {
+      // If old val wasn't found
+      select.property("value", "none");
+    }
+
     updateChart();
   }
 
-  /**
-   * Finds the selected data (individual or category) and calls the draw function
-   */
   function updateChart() {
     const mode1 = d3
       .select('input[name="compare-mode-1"]:checked')
@@ -272,7 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let data1 = null;
     let data2 = null;
 
-    // Find data for Selection 1
     if (val1 !== "none") {
       data1 =
         mode1 === "individual"
@@ -280,7 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
           : categoryAverages.get(val1);
     }
 
-    // Find data for Selection 2
     if (val2 !== "none") {
       data2 =
         mode2 === "individual"
@@ -327,12 +320,22 @@ document.addEventListener("DOMContentLoaded", () => {
     datasetSelect.on("change", loadDataset);
     itemSelect1.on("change", updateChart);
     itemSelect2.on("change", updateChart);
-
-    // New listeners for the mode radios
     item1ModeRadios.on("change", () => populateItemSelectors("1"));
     item2ModeRadios.on("change", () => populateItemSelectors("2"));
 
-    resetChart(); // Set initial disabled state
+    // --- NEW PRE-LOAD LOGIC ---
+    // Set the chart to a default empty state first
+    resetChart();
+
+    // Find the beer dataset
+    const beerDataset = datasets.find((d) => d.name.includes("Beer"));
+    if (beerDataset) {
+      // Set the dropdown value
+      datasetSelect.property("value", beerDataset.file);
+      // Manually trigger the load function
+      loadDataset();
+    }
+    // --- END PRE-LOAD LOGIC ---
   }
 
   // --- 5. Run Initialization ---
