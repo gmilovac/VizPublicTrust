@@ -3,8 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Make sure these files exist in your 'data/' folder
   const datasets = [
     { name: "Beer Tasting Notes", file: "data/beer.csv" },
-    { name: "Ice Cream Tasting", file: "data/ice_cream_expanded.csv" },
-    { name: "Video Game Ratings", file: "data/video_games_expanded.csv" },
+    { name: "Ice Cream Tasting", file: "data/icecream.csv" },
+    { name: "Video Game Ratings", file: "data/games.csv" },
   ];
 
   // --- 1. Global State & Chart Dimensions ---
