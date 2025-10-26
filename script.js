@@ -4,8 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // 'name' is what the user sees. 'file' is the path.
   const datasets = [
     { name: "Beer Tasting Notes", file: "data/beer.csv" },
-    { name: "Ice Cream Tasting", file: "data/ice_cream.csv" },
-    { name: "Video Game Ratings", file: "data/video_games.csv" },
+    { name: "Ice Cream Tasting", file: "data/icecream.csv" },
+    { name: "Video Game Ratings", file: "data/games.csv" },
   ];
 
   // --- 1. Global State & Chart Dimensions ---
