@@ -37,11 +37,12 @@ footer {
   color: #777;
 }
 
-/* --- New Styles for Chart --- */
+/* --- Styles for Chart --- */
 
 .chart-controls {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
   gap: 2rem;
   margin: 2rem 0;
 }
@@ -66,6 +67,12 @@ footer {
   min-width: 250px;
 }
 
+/* New style for disabled dropdowns */
+.selector select:disabled {
+  background-color: #eee;
+  cursor: not-allowed;
+}
+
 #radar-chart-container {
   width: 100%;
   min-height: 500px;
@@ -86,7 +93,6 @@ footer {
 .radar-label {
   font-size: 12px;
   font-weight: bold;
-  fill: #333;
 }
 
 .radar-polygon {

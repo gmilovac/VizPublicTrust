@@ -8,28 +8,39 @@
   </head>
   <body>
     <header>
-      <h1>Visualizing Beer Characteristics</h1>
-      <p>An interactive exploration of beer tasting data.</p>
+      <h1>Visualizing Public Trust</h1>
+      <p>A generalized visualization for comparing multidimensional data.</p>
     </header>
 
     <main>
       <h2>Radar Chart Comparison</h2>
       <p>
-        Select one or two beers from the dropdowns to compare their
+        Select a dataset, then choose one or two items to compare their
         characteristics.
       </p>
 
       <div class="chart-controls">
+        <!-- New Dataset Selector -->
         <div class="selector">
-          <label for="beer-select-1">Beer 1 (Blue):</label>
-          <select id="beer-select-1"></select>
+          <label for="dataset-select">1. Select Dataset:</label>
+          <select id="dataset-select">
+            <option value="none" selected>Choose a dataset...</option>
+            <!-- Options will be added by script.js -->
+          </select>
+        </div>
+
+        <!-- Generic Item Selectors (disabled by default) -->
+        <div class="selector">
+          <label for="item-select-1">2. Item 1 (Blue):</label>
+          <select id="item-select-1" disabled></select>
         </div>
         <div class="selector">
-          <label for="beer-select-2">Beer 2 (Red):</label>
-          <select id="beer-select-2"></select>
+          <label for="item-select-2">3. Item 2 (Red):</label>
+          <select id="item-select-2" disabled></select>
         </div>
       </div>
 
+      <!-- This is where the D3 chart will be drawn -->
       <div id="radar-chart-container">
         <svg id="radar-chart"></svg>
       </div>
@@ -39,8 +50,10 @@
       <p>A project by Shravya Munugala and Gordan Milovac.</p>
     </footer>
 
+    <!-- Load the D3.js library -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
 
+    <!-- Load your custom script -->
     <script src="script.js"></script>
   </body>
 </html>
