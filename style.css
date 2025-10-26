@@ -86,6 +86,7 @@ footer {
 .radar-label {
   font-size: 12px;
   font-weight: bold;
+  fill: #333;
 }
 
 .radar-polygon {
