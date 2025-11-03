@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const vectors = currentData.map((d) =>
       currentMetrics.map((metric) => d[metric])
     );
-    const umap = new umapjs.UMAP({
+    const umap = new UMAP({
       nNeighbors: Math.min(15, vectors.length - 1), // Handle small datasets
       minDist: 0.1,
       nComponents: 2,
