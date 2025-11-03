@@ -11,7 +11,7 @@ body {
   color: #333;
   margin: 0;
   padding: 0;
-  height: 100vh; /* Make body fill the viewport height */
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -21,7 +21,7 @@ header {
   color: #fff;
   padding: 2rem;
   text-align: center;
-  flex-shrink: 0; /* Prevent header from shrinking */
+  flex-shrink: 0;
 }
 
 header h1 {
@@ -31,30 +31,30 @@ header h1 {
 /* Two-Column Layout */
 .container {
   display: flex;
-  flex: 1; /* Make container fill remaining vertical space */
+  flex: 1;
   width: 100%;
-  max-width: 1800px; /* Increase max width */
+  max-width: 1800px;
   margin: 0 auto;
   background-color: #fff;
-  overflow: hidden; /* Prevent container from causing body scroll */
+  overflow: hidden;
 }
 
 .controls-panel {
-  flex: 0 0 400px; /* Give controls more fixed space */
+  flex: 0 0 400px;
   padding: 2rem;
   background-color: #fdfdfd;
   border-right: 1px solid #ddd;
-  overflow-y: auto; /* Allow controls to scroll if content is tall */
+  overflow-y: auto;
 }
 
 .chart-panel {
-  flex: 1; /* Takes remaining space */
+  flex: 1;
   padding: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* Prevent chart from overflowing */
-  min-width: 500px; /* Ensure chart has space */
+  overflow: hidden;
+  min-width: 500px;
 }
 
 /* --- Control Styles --- */
@@ -96,7 +96,7 @@ header h1 {
 
 .selector label,
 .selector-block label {
-  font-size: 1rem; /* Make labels larger */
+  font-size: 1rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
@@ -107,13 +107,43 @@ header h1 {
   padding: 0.5rem;
   border-radius: 4px;
   border: 1px solid #ccc;
-  width: 100%; /* Make selects fill the panel */
+  width: 100%;
 }
 
 .selector select:disabled,
 .selector-block select:disabled {
   background-color: #eee;
   cursor: not-allowed;
+}
+
+/* --- New File Uploader Styles --- */
+.file-uploader-label {
+  display: block; /* Makes it a full-width clickable target */
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #fff;
+  background-color: #007bff; /* Blue */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 0.5rem !important; /* Override default label margin */
+}
+.file-uploader-label:hover {
+  background-color: #0069d9;
+}
+input[type="file"] {
+  display: none; /* Hide the default ugly input */
+}
+.file-name-display {
+  font-size: 0.85rem;
+  color: #555;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .radio-group {
@@ -125,7 +155,7 @@ header h1 {
 
 .radio-group label {
   font-weight: normal;
-  font-size: 0.95rem; /* Slightly smaller than main labels */
+  font-size: 0.95rem;
   margin-bottom: 0;
 }
 
@@ -133,7 +163,6 @@ header h1 {
   margin: 0 0.25rem 0 0;
 }
 
-/* --- New View Switcher Style --- */
 .view-switcher {
   display: flex;
   width: 100%;
@@ -142,7 +171,7 @@ header h1 {
   overflow: hidden;
 }
 .view-switcher input {
-  display: none; /* Hide the actual radio button */
+  display: none;
 }
 .view-switcher label {
   flex: 1;
@@ -169,7 +198,6 @@ header h1 {
   cursor: not-allowed;
 }
 
-/* --- New Button Styles --- */
 .add-selector-btn {
   display: block;
   width: 100%;
@@ -177,7 +205,7 @@ header h1 {
   font-size: 1rem;
   font-weight: bold;
   color: #fff;
-  background-color: #28a745; /* Green */
+  background-color: #28a745;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -195,7 +223,7 @@ header h1 {
   float: right;
   background: none;
   border: none;
-  color: #dc143c; /* Crimson */
+  color: #dc143c;
   font-size: 1.5rem;
   font-weight: bold;
   cursor: pointer;
@@ -208,20 +236,18 @@ header h1 {
 }
 
 .selector-block h3 {
-  display: inline-block; /* To allow button to float next to it */
+  display: inline-block;
   margin-top: 0;
 }
 
-/* --- Utility Class --- */
 .hidden {
   display: none !important;
 }
 
-/* --- Chart Styles --- */
 #radar-chart-container,
 #umap-chart-container {
   width: 100%;
-  height: 100%; /* Make container fill the panel */
+  height: 100%;
   min-height: 500px;
   display: flex;
   align-items: center;
@@ -234,7 +260,6 @@ header h1 {
   max-height: 100%;
 }
 
-/* 1. Radar Chart Styles */
 .radar-axis {
   stroke: #ccc;
   stroke-width: 1px;
@@ -253,7 +278,6 @@ header h1 {
   stroke-width: 2px;
 }
 
-/* 2. UMAP Chart Styles */
 .umap-axis {
   stroke: #ccc;
   stroke-width: 1px;
@@ -270,7 +294,6 @@ header h1 {
   stroke-width: 1.5px;
 }
 
-/* --- New Tooltip Style --- */
 #umap-tooltip {
   position: absolute;
   background-color: rgba(0, 0, 0, 0.8);
@@ -278,59 +301,56 @@ header h1 {
   padding: 8px 12px;
   border-radius: 4px;
   font-size: 12px;
-  pointer-events: none; /* So it doesn't block mouse events on points */
+  pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s;
   white-space: nowrap;
 }
 
-/* --- Dynamic Polygon & Highlight Colors --- */
-/* These classes are now used for BOTH radial polygons AND UMAP highlights */
-
+/* Dynamic Colors */
 .radar-polygon.polygon-index-0,
 .umap-point.highlight-index-0 {
-  fill: #1e90ff; /* DodgerBlue */
+  fill: #1e90ff;
   stroke: #1e90ff;
   fill-opacity: 0.25;
   stroke-width: 2px;
 }
 .radar-polygon.polygon-index-1,
 .umap-point.highlight-index-1 {
-  fill: #dc143c; /* Crimson */
+  fill: #dc143c;
   stroke: #dc143c;
   fill-opacity: 0.25;
   stroke-width: 2px;
 }
 .radar-polygon.polygon-index-2,
 .umap-point.highlight-index-2 {
-  fill: #32cd32; /* LimeGreen */
+  fill: #32cd32;
   stroke: #32cd32;
   fill-opacity: 0.25;
   stroke-width: 2px;
 }
 .radar-polygon.polygon-index-3,
 .umap-point.highlight-index-3 {
-  fill: #ff8c00; /* DarkOrange */
+  fill: #ff8c00;
   stroke: #ff8c00;
   fill-opacity: 0.25;
   stroke-width: 2px;
 }
 .radar-polygon.polygon-index-4,
 .umap-point.highlight-index-4 {
-  fill: #9400d3; /* DarkViolet */
+  fill: #9400d3;
   stroke: #9400d3;
   fill-opacity: 0.25;
   stroke-width: 2px;
 }
 .radar-polygon.polygon-index-5,
 .umap-point.highlight-index-5 {
-  fill: #00ced1; /* DarkTurquoise */
+  fill: #00ced1;
   stroke: #00ced1;
   fill-opacity: 0.25;
   stroke-width: 2px;
 }
 
-/* UMAP highlights need to be more visible */
 .umap-point.highlight-index-0,
 .umap-point.highlight-index-1,
 .umap-point.highlight-index-2,
@@ -342,7 +362,6 @@ header h1 {
   stroke-opacity: 1;
 }
 
-/* --- Footer --- */
 footer {
   text-align: center;
   padding: 1rem;
@@ -350,5 +369,5 @@ footer {
   color: #777;
   background-color: #f4f4f4;
   border-top: 1px solid #ddd;
-  flex-shrink: 0; /* Prevent footer from shrinking */
+  flex-shrink: 0;
 }

@@ -17,10 +17,11 @@
         <h2>Controls</h2>
 
         <div class="selector">
-          <label for="dataset-select">1. Select Dataset:</label>
-          <select id="dataset-select">
-            <option value="none" selected>Choose a dataset...</option>
-          </select>
+          <label for="csv-uploader" class="file-uploader-label"
+            >1. Upload CSV File:</label
+          >
+          <input type="file" id="csv-uploader" accept=".csv" />
+          <span class="file-name-display">No file chosen...</span>
         </div>
 
         <div class="selector">
