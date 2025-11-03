@@ -22,17 +22,20 @@ document.addEventListener("DOMContentLoaded", () => {
   let categoryColumn = "";
   let itemColumn = "";
   let categoryAverages = new Map();
+  let umapProjection = [];
+  let currentView = "radial"; // 'radial' or 'umap'
 
+  // Dimensions for both charts
   const width = 600;
   const height = 500;
   const margin = { top: 60, right: 60, bottom: 60, left: 60 };
   const chartWidth = width - margin.left - margin.right;
   const chartHeight = height - margin.top - margin.bottom;
+
+  // --- 1A. Radial Chart Setup ---
   const radius = Math.min(chartWidth, chartHeight) / 2;
-
   const rScale = d3.scaleLinear().range([0, radius]);
-
-  const svg = d3
+  const radarSvg = d3
     .select("#radar-chart")
     .attr("viewBox", `0 0 ${width} ${height}`)
     .attr("preserveAspectRatio", "xMidYMid meet")
@@ -44,24 +47,37 @@ document.addEventListener("DOMContentLoaded", () => {
       })`
     );
 
-  // Select UI elements
+  // --- 1B. UMAP Chart Setup ---
+  const umapSvg = d3
+    .select("#umap-chart")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .attr("preserveAspectRatio", "xMidYMid meet")
+    .append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+  const umapXScale = d3.scaleLinear().range([0, chartWidth]);
+  const umapYScale = d3.scaleLinear().range([chartHeight, 0]);
+  const umapTooltip = d3.select("#umap-tooltip");
+
+  // --- 1C. UI Element Selections ---
   const datasetSelect = d3.select("#dataset-select");
   const selectorContainer = d3.select("#selector-container");
   const addSelectorBtn = d3.select("#add-selector-btn");
+  const viewRadios = d3.selectAll('input[name="view-mode"]');
+  const umapRadio = d3.select("#view-umap");
+  const radarChartContainer = d3.select("#radar-chart-container");
+  const umapChartContainer = d3.select("#umap-chart-container");
 
-  // --- 2. Core Drawing Functions ---
+  // --- 2. Core Radial Chart Functions ---
   function angleToCoordinate(angle, value) {
     const x = value * Math.cos(angle - Math.PI / 2);
     const y = value * Math.sin(angle - Math.PI / 2);
     return [x, y];
   }
 
-  // --- MODIFIED: Accepts an array of data objects ---
   function drawRadarChart(dataArray, metrics) {
-    svg.selectAll(".radar-polygon").remove();
+    radarSvg.selectAll(".radar-polygon").remove();
     dataArray.forEach((item) => {
       if (item.data) {
-        // Use the index for the CSS class
         drawPolygon(item.data, `polygon-index-${item.index}`, metrics);
       }
     });
@@ -84,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .radius((d) => d[1])
       .curve(d3.curveLinearClosed);
 
-    svg
+    radarSvg
       .append("path")
       .datum(dataPoints)
       .attr("class", `radar-polygon ${className}`)
@@ -92,13 +108,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function drawBase(metrics) {
-    svg.selectAll(".radar-axis, .radar-label, .radar-level").remove();
+    radarSvg.selectAll(".radar-axis, .radar-label, .radar-level").remove();
     if (!metrics || metrics.length === 0) return;
 
     const numAxes = metrics.length;
     const angleSlice = (Math.PI * 2) / numAxes;
 
-    const axes = svg
+    const axes = radarSvg
       .selectAll(".radar-axis")
       .data(metrics)
       .enter()
@@ -124,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const levels = Math.min(Math.ceil(maxVal), 7);
     const levelData = d3.range(1, levels + 1).map((d) => (d * maxVal) / levels);
 
-    svg
+    radarSvg
       .selectAll(".radar-level")
       .data(levelData)
       .enter()
@@ -136,7 +152,86 @@ document.addEventListener("DOMContentLoaded", () => {
       .style("fill", "none");
   }
 
-  // --- 3. Data Loading and Processing ---
+  // --- 3. New UMAP Chart Functions ---
+
+  function runUMAP() {
+    if (currentData.length === 0) return;
+
+    // 1. Extract the metric vectors for UMAP
+    const vectors = currentData.map((d) =>
+      currentMetrics.map((metric) => d[metric])
+    );
+
+    // 2. Initialize and run UMAP
+    // These parameters are tunable.
+    const umap = new umapjs.UMAP({
+      nNeighbors: 15,
+      minDist: 0.1,
+      nComponents: 2,
+      spread: 1.0,
+    });
+
+    try {
+      const projection = umap.fit(vectors);
+
+      // 3. Merge projection data back with original data
+      umapProjection = currentData.map((d, i) => {
+        return {
+          x: projection[i][0],
+          y: projection[i][1],
+          originalData: d, // Keep a reference to the full data item
+        };
+      });
+
+      // 4. Draw the plot
+      drawUMAPPlot(umapProjection);
+      umapRadio.property("disabled", false); // Enable the UMAP view
+    } catch (e) {
+      console.error("UMAP failed:", e);
+      alert(
+        "UMAP calculation failed. This dataset may be too small or have issues."
+      );
+      umapRadio.property("disabled", true);
+    }
+  }
+
+  function drawUMAPPlot(projectionData) {
+    umapSvg.selectAll("*").remove(); // Clear previous plot
+    if (projectionData.length === 0) return;
+
+    // 1. Set domains for scales
+    umapXScale.domain(d3.extent(projectionData, (d) => d.x)).nice();
+    umapYScale.domain(d3.extent(projectionData, (d) => d.y)).nice();
+
+    // 2. Draw Axes
+    umapSvg
+      .append("g")
+      .attr("class", "umap-axis")
+      .attr("transform", `translate(0, ${chartHeight})`)
+      .call(d3.axisBottom(umapXScale).ticks(5));
+
+    umapSvg
+      .append("g")
+      .attr("class", "umap-axis")
+      .call(d3.axisLeft(umapYScale).ticks(5));
+
+    // 3. Draw Points
+    umapSvg
+      .selectAll(".umap-point")
+      .data(projectionData)
+      .enter()
+      .append("circle")
+      .attr("class", "umap-point")
+      .attr("cx", (d) => umapXScale(d.x))
+      .attr("cy", (d) => umapYScale(d.y))
+      .attr("r", 5)
+      // Store data for highlighting
+      .attr("data-label", (d) => d.originalData.individualLabel)
+      .on("mouseover", showTooltip)
+      .on("mouseout", hideTooltip);
+  }
+
+  // --- 4. Data Loading and Processing ---
 
   function loadDataset() {
     const selectedFile = datasetSelect.property("value");
@@ -166,10 +261,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         calculateCategoryAverages();
 
-        // Enable the "Add" button
+        // --- New UMAP Step ---
+        runUMAP(); // Calculate UMAP projection
+
         addSelectorBtn.property("disabled", false);
 
-        // --- MODIFIED: Populate all existing selectors ---
         selectorContainer.selectAll(".selector-block").each(function () {
           const block = d3.select(this);
           block.selectAll("select, input").property("disabled", false);
@@ -177,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         drawBase(currentMetrics);
-        updateChart();
+        updateChart(); // This will now call the router
       })
       .catch((error) => {
         console.error("Error loading or parsing data:", error);
@@ -199,9 +295,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- 4. UI Population and Event Handling ---
+  // --- 5. UI Population and Event Handling ---
 
-  // --- NEW: Function to add a selector block ---
   function addSelectorBlock() {
     let selectorIndex = selectorContainer.selectAll(".selector-block").size();
     if (selectorIndex >= colorPalette.length) {
@@ -212,7 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const color = colorPalette[selectorIndex];
     const blockId = `selector-block-${selectorIndex}`;
 
-    // Create the HTML for the new block
     const blockHtml = `
       <div class="selector-block" id="${blockId}" data-index="${selectorIndex}">
         ${
@@ -234,16 +328,12 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // Append the new block
     selectorContainer.node().insertAdjacentHTML("beforeend", blockHtml);
-
-    // Select the newly added block with D3
     const newBlock = d3.select(`#${blockId}`);
 
-    // Add event listeners for the new block
     newBlock.select(".remove-selector-btn").on("click", function () {
       newBlock.remove();
-      updateChart();
+      updateChart(); // Use router
     });
 
     newBlock
@@ -252,16 +342,14 @@ document.addEventListener("DOMContentLoaded", () => {
         populateItemSelector(newBlock);
       });
 
-    newBlock.select("select").on("change", updateChart);
+    newBlock.select("select").on("change", updateChart); // Use router
 
-    // If data is already loaded, enable and populate this new selector
     if (currentData.length > 0) {
       newBlock.selectAll("select, input").property("disabled", false);
       populateItemSelector(newBlock);
     }
   }
 
-  // --- MODIFIED: Generalized to work on a specific block element ---
   function populateItemSelector(blockElement) {
     const selectorIndex = blockElement.attr("data-index");
     const mode = blockElement
@@ -290,7 +378,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .attr("value", (d) => d.individualLabel)
         .text((d) => d.individualLabel);
     } else {
-      // mode === 'category'
       label.text("Select Category:");
       const categoryNames = Array.from(categoryAverages.keys()).sort();
       select
@@ -303,20 +390,32 @@ document.addEventListener("DOMContentLoaded", () => {
         .text((d) => d);
     }
 
-    // Try to re-select the previous value
     select.property("value", currentVal);
     if (select.property("selectedIndex") === -1) {
       select.property("value", "none");
     }
 
-    updateChart();
+    updateChart(); // Use router
   }
 
-  // --- MODIFIED: Gathers data from all active selectors ---
-  function updateChart() {
-    let dataArray = [];
+  // --- 6. Chart Update & View Routing ---
 
-    // Loop through all selector blocks
+  /**
+   * NEW: Router function to call the correct update logic based on the current view.
+   */
+  function updateChart() {
+    if (currentView === "radial") {
+      updateRadialChart();
+    } else {
+      updateUMAPHighlight();
+    }
+  }
+
+  /**
+   * RENAMED: This was the old updateChart()
+   */
+  function updateRadialChart() {
+    let dataArray = [];
     selectorContainer.selectAll(".selector-block").each(function () {
       const block = d3.select(this);
       const selectorIndex = block.attr("data-index");
@@ -332,30 +431,113 @@ document.addEventListener("DOMContentLoaded", () => {
             ? currentData.find((d) => d.individualLabel === val)
             : categoryAverages.get(val);
       }
-
-      // Add the data and its index (for coloring) to the array
       dataArray.push({ data: data, index: selectorIndex });
     });
 
     drawRadarChart(dataArray, currentMetrics);
   }
 
-  // --- MODIFIED: Clears dynamic selectors and adds one back ---
+  /**
+   * NEW: Update function for UMAP highlighting
+   */
+  function updateUMAPHighlight() {
+    // 1. Get all selected labels
+    const selectedLabels = new Map(); // Use a map to store label -> index
+    selectorContainer.selectAll(".selector-block").each(function () {
+      const block = d3.select(this);
+      const selectorIndex = block.attr("data-index");
+      const mode = block
+        .select(`input[name="compare-mode-${selectorIndex}"]:checked`)
+        .property("value");
+      const val = block.select("select").property("value");
+
+      if (val !== "none") {
+        if (mode === "individual") {
+          selectedLabels.set(val, selectorIndex);
+        } else {
+          // If category, find all items in that category
+          currentData.forEach((d) => {
+            if (d[categoryColumn] === val) {
+              selectedLabels.set(d.individualLabel, selectorIndex);
+            }
+          });
+        }
+      }
+    });
+
+    // 2. Clear all previous highlights
+    umapSvg
+      .selectAll(".umap-point")
+      .attr("class", "umap-point") // Reset class
+      .attr("r", 5);
+
+    // 3. Apply new highlights
+    umapSvg.selectAll(".umap-point").each(function () {
+      const point = d3.select(this);
+      const label = point.attr("data-label");
+      if (selectedLabels.has(label)) {
+        const index = selectedLabels.get(label);
+        point.attr("class", `umap-point highlight-index-${index}`).attr("r", 7);
+        point.raise(); // Bring to front
+      }
+    });
+  }
+
+  /**
+   * NEW: Function to change the active view
+   */
+  function setView(view) {
+    currentView = view;
+    if (view === "radial") {
+      radarChartContainer.classed("hidden", false);
+      umapChartContainer.classed("hidden", true);
+      updateRadialChart();
+    } else {
+      // umap
+      radarChartContainer.classed("hidden", true);
+      umapChartContainer.classed("hidden", false);
+      updateUMAPHighlight();
+    }
+  }
+
+  // --- 7. Tooltip Functions ---
+  function showTooltip(event, d) {
+    umapTooltip.style("opacity", 1);
+    umapTooltip
+      .html(
+        `<strong>${d.originalData[itemColumn]}</strong><br>${d.originalData[categoryColumn]}`
+      )
+      .style("left", `${event.pageX + 10}px`)
+      .style("top", `${event.pageY - 10}px`);
+  }
+
+  function hideTooltip() {
+    umapTooltip.style("opacity", 0);
+  }
+
+  // --- 8. Initialization ---
+
   function resetChart() {
     currentData = [];
     currentMetrics = [];
+    umapProjection = [];
     categoryAverages.clear();
 
-    // Remove all selector blocks
-    selectorContainer.html("");
-    // Disable the "Add" button
+    selectorContainer.html(""); // Remove all selectors
     addSelectorBtn.property("disabled", true);
+    addSelectorBlock(); // Add the first, disabled selector block
 
-    // Add the first, disabled selector block
-    addSelectorBlock();
+    // Reset views
+    viewRadios.property("checked", function () {
+      return d3.select(this).property("value") === "radial";
+    });
+    umapRadio.property("disabled", true);
+    setView("radial");
 
+    // Clear charts
     drawBase([]);
-    drawRadarChart([], []); // Pass empty array
+    drawRadarChart([], []);
+    drawUMAPPlot([]);
   }
 
   function initialize() {
@@ -371,20 +553,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add event listeners
     datasetSelect.on("change", loadDataset);
-    addSelectorBtn.on("click", addSelectorBlock); // Listener for the "Add" button
+    addSelectorBtn.on("click", addSelectorBlock);
+    viewRadios.on("change", function () {
+      setView(d3.select(this).property("value"));
+    });
 
     // --- PRE-LOAD LOGIC ---
-    resetChart(); // This will now add the first (disabled) selector block
-
-    // Find the beer dataset
+    resetChart();
     const beerDataset = datasets.find((d) => d.name.includes("Beer"));
     if (beerDataset) {
       datasetSelect.property("value", beerDataset.file);
-      loadDataset(); // This will load data, enable the "Add" button, and populate the first block
+      loadDataset();
     }
     // --- END PRE-LOAD LOGIC ---
   }
 
-  // --- 5. Run Initialization ---
+  // --- 9. Run Initialization ---
   initialize();
 });

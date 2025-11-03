@@ -23,6 +23,31 @@
           </select>
         </div>
 
+        <div class="selector">
+          <label>2. Select View:</label>
+          <div class="view-switcher">
+            <input
+              type="radio"
+              id="view-radial"
+              name="view-mode"
+              value="radial"
+              checked
+            />
+            <label for="view-radial">Radial Chart</label>
+            <input
+              type="radio"
+              id="view-umap"
+              name="view-mode"
+              value="umap"
+              disabled
+            />
+            <label for="view-umap">UMAP Plot</label>
+          </div>
+        </div>
+
+        <hr class="control-divider" />
+        <h2 id="selector-title">Selections</h2>
+
         <div id="selector-container"></div>
 
         <button id="add-selector-btn" class="add-selector-btn" disabled>
@@ -34,13 +59,20 @@
         <div id="radar-chart-container">
           <svg id="radar-chart"></svg>
         </div>
+        <div id="umap-chart-container" class="hidden">
+          <svg id="umap-chart"></svg>
+        </div>
       </main>
     </div>
+
+    <div id="umap-tooltip"></div>
+
     <footer>
       <p>A project by Shravya Munugala and Gordan Milovac.</p>
     </footer>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
