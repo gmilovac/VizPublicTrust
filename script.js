@@ -1,7 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- 0. Dataset Configuration (REMOVED) ---
-  // No longer needed, as files will be user-uploaded.
-
   // Color palette for selections
   const colorPalette = [
     "#1e90ff", // DodgerBlue
@@ -54,8 +51,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const umapTooltip = d3.select("#umap-tooltip");
 
   // --- 1C. UI Element Selections ---
-  const csvUploader = d3.select("#csv-uploader"); // NEW
-  const fileNameDisplay = d3.select(".file-name-display"); // NEW
+  const csvUploader = d3.select("#csv-uploader");
+  const fileNameDisplay = d3.select(".file-name-display");
   const selectorContainer = d3.select("#selector-container");
   const addSelectorBtn = d3.select("#add-selector-btn");
   const viewRadios = d3.selectAll('input[name="view-mode"]');
@@ -156,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
       currentMetrics.map((metric) => d[metric])
     );
     const umap = new UMAP({
-      nNeighbors: Math.min(15, vectors.length - 1), // Handle small datasets
+      nNeighbors: Math.min(15, vectors.length - 1),
       minDist: 0.1,
       nComponents: 2,
       spread: 1.0,
@@ -214,11 +211,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .on("mouseout", hideTooltip);
   }
 
-  // --- 4. Data Loading and Processing ---
+  // --- 4. Data Loading and Processing (Unchanged) ---
 
-  /**
-   * NEW: Handles the file input event
-   */
   function handleFileLoad(event) {
     const file = event.target.files[0];
     if (!file) {
@@ -227,18 +221,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    fileNameDisplay.text(file.name); // Show the file name
+    fileNameDisplay.text(file.name);
     const reader = new FileReader();
 
     reader.onload = (e) => {
       try {
         const fileContent = e.target.result;
-        // Parse the CSV text content
         const data = d3.csvParse(fileContent);
         if (data.length === 0) {
           throw new Error("CSV file is empty or invalid.");
         }
-        // Process the parsed data
         processData(data);
       } catch (error) {
         console.error("Error parsing data:", error);
@@ -255,11 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
     reader.readAsText(file);
   }
 
-  /**
-   * NEW: This function contains all the logic from the old loadDataset().then()
-   */
   function processData(data) {
-    // --- Data Validation ---
     if (data.columns.length < 3) {
       alert(
         "Error: Invalid CSV format. Must have at least 3 columns (Category, Item, Metric1...)."
@@ -267,8 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Reset everything for the new data
-    resetChart(true); // Pass true to keep the file name
+    resetChart(true);
 
     try {
       categoryColumn = data.columns[0];
@@ -279,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
       data.forEach((d) => {
         d.individualLabel = `${d[itemColumn]} - ${d[categoryColumn]}`;
         currentMetrics.forEach((metric) => {
-          d[metric] = +d[metric]; // Convert to number
+          d[metric] = +d[metric];
           if (isNaN(d[metric])) {
             throw new Error(
               `Invalid non-numeric data found in metric column: '${metric}'`
@@ -295,11 +282,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       calculateCategoryAverages();
 
-      runUMAP(); // Calculate UMAP projection
+      runUMAP();
 
       addSelectorBtn.property("disabled", false);
 
-      // Add the first selector block
       addSelectorBlock();
 
       drawBase(currentMetrics);
@@ -324,8 +310,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- 5. UI Population and Event Handling (Mostly Unchanged) ---
+  // --- 5. UI Population and Event Handling ---
 
+  /**
+   * HEAVILY MODIFIED: Creates the new collapsible selector block
+   */
   function addSelectorBlock() {
     let selectorIndex = selectorContainer.selectAll(".selector-block").size();
     if (selectorIndex >= colorPalette.length) {
@@ -335,48 +324,88 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const color = colorPalette[selectorIndex];
     const blockId = `selector-block-${selectorIndex}`;
+    const defaultTitle = `Selection ${selectorIndex + 1}`;
 
+    // New HTML structure
     const blockHtml = `
       <div class="selector-block" id="${blockId}" data-index="${selectorIndex}">
-        ${
-          selectorIndex > 0
-            ? '<button class="remove-selector-btn">&times;</button>'
-            : ""
-        }
-        <h3 style="color: ${color};">Selection ${selectorIndex + 1}</h3>
-        <div class="radio-group">
-          <input type="radio" id="mode-${selectorIndex}-individual" name="compare-mode-${selectorIndex}" value="individual" checked>
-          <label for="mode-${selectorIndex}-individual">Individual</label>
-          <input type="radio" id="mode-${selectorIndex}-category" name="compare-mode-${selectorIndex}" value="category">
-          <label for="mode-${selectorIndex}-category">Category</label>
+        <div class="selector-header">
+          <h3 class="selector-title" style="color: ${color};">${defaultTitle}</h3>
+          ${
+            selectorIndex > 0
+              ? '<button class="remove-selector-btn">&times;</button>'
+              : ""
+          }
         </div>
-        <label id="select-label-${selectorIndex}" for="item-select-${selectorIndex}">Select Item:</label>
-        <select id="item-select-${selectorIndex}">
-          <option value="none">None</option>
-        </select>
+        <div class="selector-content">
+          <div class="radio-group">
+            <input type="radio" id="mode-${selectorIndex}-individual" name="compare-mode-${selectorIndex}" value="individual" checked>
+            <label for="mode-${selectorIndex}-individual">Individual</label>
+            <input type="radio" id="mode-${selectorIndex}-category" name="compare-mode-${selectorIndex}" value="category">
+            <label for="mode-${selectorIndex}-category">Category</label>
+          </div>
+          <label id="select-label-${selectorIndex}" for="item-select-${selectorIndex}">Select Item:</label>
+          <select id="item-select-${selectorIndex}">
+            <option value="none">None</option>
+          </select>
+        </div>
       </div>
     `;
 
     selectorContainer.node().insertAdjacentHTML("beforeend", blockHtml);
     const newBlock = d3.select(`#${blockId}`);
 
+    // --- Add Event Listeners ---
+
+    // 1. Toggle collapse when header is clicked
+    newBlock.select(".selector-header").on("click", function (event) {
+      // Only toggle if the click is on the header or title, NOT the remove button
+      if (
+        event.target.classList.contains("selector-header") ||
+        event.target.classList.contains("selector-title")
+      ) {
+        newBlock.classed("collapsed", !newBlock.classed("collapsed"));
+      }
+    });
+
+    // 2. Remove button
     newBlock.select(".remove-selector-btn").on("click", function () {
       newBlock.remove();
       updateChart();
     });
 
+    // 3. Radio buttons
     newBlock
       .selectAll(`input[name="compare-mode-${selectorIndex}"]`)
       .on("change", () => {
         populateItemSelector(newBlock);
       });
 
-    newBlock.select("select").on("change", updateChart);
+    // 4. Dropdown selection
+    newBlock.select("select").on("change", function () {
+      const select = d3.select(this);
+      const title = newBlock.select(".selector-title");
+      const selectedValue = select.property("value");
 
-    // Data is already loaded, so populate this new selector
+      if (selectedValue === "none") {
+        title.text(defaultTitle); // Reset title
+        newBlock.classed("collapsed", false); // Expand
+      } else {
+        // Get the text of the selected option
+        const selectedText = select.select("option:checked").text();
+        title.text(selectedText);
+        newBlock.classed("collapsed", true); // Collapse
+      }
+      updateChart(); // Update the main chart
+    });
+
+    // Populate the dropdown for the new block
     populateItemSelector(newBlock);
   }
 
+  /**
+   * MODIFIED: Just populates the dropdown. UI logic is moved to the <select> event listener.
+   */
   function populateItemSelector(blockElement) {
     const selectorIndex = blockElement.attr("data-index");
     const mode = blockElement
@@ -385,7 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const select = blockElement.select("select");
     const label = blockElement.select(`label[id^="select-label"]`);
 
-    const currentVal = select.property("value");
+    const currentVal = select.property("value"); // Remember current value
 
     select.selectAll("option").remove();
     select.append("option").attr("value", "none").text("None");
@@ -417,12 +446,17 @@ document.addEventListener("DOMContentLoaded", () => {
         .text((d) => d);
     }
 
+    // Try to re-select the previous value, if it's still valid
     select.property("value", currentVal);
     if (select.property("selectedIndex") === -1) {
       select.property("value", "none");
+      // If selection became invalid, reset title and expand
+      const defaultTitle = `Selection ${selectorIndex + 1}`;
+      blockElement.select(".selector-title").text(defaultTitle);
+      blockElement.classed("collapsed", false);
     }
 
-    updateChart();
+    updateChart(); // Update chart in case the selection was reset
   }
 
   // --- 6. Chart Update & View Routing (Unchanged) ---
@@ -522,24 +556,20 @@ document.addEventListener("DOMContentLoaded", () => {
     umapTooltip.style("opacity", 0);
   }
 
-  // --- 8. Initialization ---
+  // --- 8. Initialization (Unchanged) ---
 
-  /**
-   * MODIFIED: Resets the app state.
-   * @param {boolean} [keepFileName=false] - If true, doesn't clear the file name display.
-   */
   function resetChart(keepFileName = false) {
     currentData = [];
     currentMetrics = [];
     umapProjection = [];
     categoryAverages.clear();
 
-    selectorContainer.html(""); // Remove all selectors
+    selectorContainer.html("");
     addSelectorBtn.property("disabled", true);
 
     if (!keepFileName) {
       fileNameDisplay.text("No file chosen...");
-      csvUploader.node().value = ""; // Clear the file input
+      csvUploader.node().value = "";
     }
 
     viewRadios.property("checked", function () {
@@ -553,19 +583,14 @@ document.addEventListener("DOMContentLoaded", () => {
     drawUMAPPlot([]);
   }
 
-  /**
-   * MODIFIED: Simplified to only add event listeners.
-   */
   function initialize() {
-    // Add event listeners
-    csvUploader.on("change", handleFileLoad); // NEW
+    csvUploader.on("change", handleFileLoad);
     addSelectorBtn.on("click", addSelectorBlock);
     viewRadios.on("change", function () {
       setView(d3.select(this).property("value"));
     });
 
-    // --- PRE-LOAD LOGIC (REMOVED) ---
-    resetChart(); // Just reset to initial state.
+    resetChart();
   }
 
   // --- 9. Run Initialization ---
