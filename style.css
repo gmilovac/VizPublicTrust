@@ -28,7 +28,7 @@ header h1 {
   margin: 0;
 }
 
-/* New Two-Column Layout */
+/* Two-Column Layout */
 .container {
   display: flex;
   flex: 1; /* Make container fill remaining vertical space */
@@ -77,10 +77,11 @@ header h1 {
 }
 
 .selector-block {
-  /* Removed the boxy background */
   border-radius: 8px;
   padding: 0;
   margin-bottom: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 1.5rem;
 }
 
 .selector label,
@@ -122,6 +123,49 @@ header h1 {
   margin: 0 0.25rem 0 0;
 }
 
+/* --- New Button Styles --- */
+.add-selector-btn {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  background-color: #28a745; /* Green */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+.add-selector-btn:hover {
+  background-color: #218838;
+}
+.add-selector-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.remove-selector-btn {
+  float: right;
+  background: none;
+  border: none;
+  color: #dc143c; /* Crimson */
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+  margin-top: -5px;
+}
+.remove-selector-btn:hover {
+  color: #a00;
+}
+
+.selector-block h3 {
+  display: inline-block; /* To allow button to float next to it */
+  margin-top: 0;
+}
+
 /* --- Chart Styles --- */
 #radar-chart-container {
   width: 100%;
@@ -154,13 +198,31 @@ header h1 {
   fill-opacity: 0.25;
   stroke-width: 2px;
 }
-.radar-polygon.beer1 {
+
+/* --- New Dynamic Polygon Colors --- */
+.radar-polygon.polygon-index-0 {
   fill: #1e90ff; /* DodgerBlue */
   stroke: #1e90ff;
 }
-.radar-polygon.beer2 {
+.radar-polygon.polygon-index-1 {
   fill: #dc143c; /* Crimson */
   stroke: #dc143c;
+}
+.radar-polygon.polygon-index-2 {
+  fill: #32cd32; /* LimeGreen */
+  stroke: #32cd32;
+}
+.radar-polygon.polygon-index-3 {
+  fill: #ff8c00; /* DarkOrange */
+  stroke: #ff8c00;
+}
+.radar-polygon.polygon-index-4 {
+  fill: #9400d3; /* DarkViolet */
+  stroke: #9400d3;
+}
+.radar-polygon.polygon-index-5 {
+  fill: #00ced1; /* DarkTurquoise */
+  stroke: #00ced1;
 }
 
 /* --- Footer --- */

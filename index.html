@@ -23,51 +23,11 @@
           </select>
         </div>
 
-        <div class="selector-block">
-          <h3>Selection 1 (Blue)</h3>
-          <div class="radio-group">
-            <input
-              type="radio"
-              id="mode-1-individual"
-              name="compare-mode-1"
-              value="individual"
-              checked
-            />
-            <label for="mode-1-individual">Individual</label>
-            <input
-              type="radio"
-              id="mode-1-category"
-              name="compare-mode-1"
-              value="category"
-            />
-            <label for="mode-1-category">Category</label>
-          </div>
-          <label id="select-1-label" for="item-select-1">Select Item:</label>
-          <select id="item-select-1" disabled></select>
-        </div>
+        <div id="selector-container"></div>
 
-        <div class="selector-block">
-          <h3>Selection 2 (Red)</h3>
-          <div class="radio-group">
-            <input
-              type="radio"
-              id="mode-2-individual"
-              name="compare-mode-2"
-              value="individual"
-              checked
-            />
-            <label for="mode-2-individual">Individual</label>
-            <input
-              type="radio"
-              id="mode-2-category"
-              name="compare-mode-2"
-              value="category"
-            />
-            <label for="mode-2-category">Category</label>
-          </div>
-          <label id="select-2-label" for="item-select-2">Select Item:</label>
-          <select id="item-select-2" disabled></select>
-        </div>
+        <button id="add-selector-btn" class="add-selector-btn" disabled>
+          + Add Another Selection
+        </button>
       </aside>
 
       <main class="chart-panel">
@@ -81,7 +41,6 @@
     </footer>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
-
     <script src="script.js"></script>
   </body>
 </html>

@@ -1,18 +1,27 @@
 document.addEventListener("DOMContentLoaded", () => {
   // --- 0. Dataset Configuration ---
-  // Updated to point to the new standardized files
   const datasets = [
     { name: "Beer Tasting Notes", file: "data/beer.csv" },
     { name: "Ice Cream Tasting", file: "data/icecream.csv" },
     { name: "Video Game Ratings", file: "data/games.csv" },
   ];
 
+  // Color palette for selections
+  const colorPalette = [
+    "#1e90ff", // DodgerBlue
+    "#dc143c", // Crimson
+    "#32cd32", // LimeGreen
+    "#ff8c00", // DarkOrange
+    "#9400d3", // DarkViolet
+    "#00ced1", // DarkTurquoise
+  ];
+
   // --- 1. Global State & Chart Dimensions ---
   let currentData = [];
   let currentMetrics = [];
-  let categoryColumn = ""; // Column to group by (e.g., Genre)
-  let itemColumn = ""; // Column for individual item (e.g., Game)
-  let categoryAverages = new Map(); // To store calculated averages
+  let categoryColumn = "";
+  let itemColumn = "";
+  let categoryAverages = new Map();
 
   const width = 600;
   const height = 500;
@@ -23,10 +32,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const rScale = d3.scaleLinear().range([0, radius]);
 
-  // Select the SVG and create the main 'g' element
   const svg = d3
     .select("#radar-chart")
-    .attr("viewBox", `0 0 ${width} ${height}`) // Make SVG responsive
+    .attr("viewBox", `0 0 ${width} ${height}`)
     .attr("preserveAspectRatio", "xMidYMid meet")
     .append("g")
     .attr(
@@ -38,25 +46,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Select UI elements
   const datasetSelect = d3.select("#dataset-select");
-  const itemSelect1 = d3.select("#item-select-1");
-  const itemSelect2 = d3.select("#item-select-2");
-  const select1Label = d3.select("#select-1-label");
-  const select2Label = d3.select("#select-2-label");
+  const selectorContainer = d3.select("#selector-container");
+  const addSelectorBtn = d3.select("#add-selector-btn");
 
-  const item1ModeRadios = d3.selectAll("input[name='compare-mode-1']");
-  const item2ModeRadios = d3.selectAll("input[name='compare-mode-2']");
-
-  // --- 2. Core Drawing Functions (Unchanged) ---
+  // --- 2. Core Drawing Functions ---
   function angleToCoordinate(angle, value) {
     const x = value * Math.cos(angle - Math.PI / 2);
     const y = value * Math.sin(angle - Math.PI / 2);
     return [x, y];
   }
 
-  function drawRadarChart(data1, data2, metrics) {
+  // --- MODIFIED: Accepts an array of data objects ---
+  function drawRadarChart(dataArray, metrics) {
     svg.selectAll(".radar-polygon").remove();
-    if (data1) drawPolygon(data1, "beer1", metrics);
-    if (data2) drawPolygon(data2, "beer2", metrics);
+    dataArray.forEach((item) => {
+      if (item.data) {
+        // Use the index for the CSS class
+        drawPolygon(item.data, `polygon-index-${item.index}`, metrics);
+      }
+    });
   }
 
   function drawPolygon(data, className, metrics) {
@@ -139,17 +147,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     d3.csv(selectedFile)
       .then((data) => {
-        // *** SIMPLIFIED DATA LOGIC ***
-        // All CSVs are standardized: Col 0 is Category, Col 1 is Item
         categoryColumn = data.columns[0];
         itemColumn = data.columns[1];
-        // *** NO MORE SWAPPING LOGIC NEEDED ***
-
         currentMetrics = data.columns.slice(2);
         let maxValue = 0;
 
         data.forEach((d) => {
-          // Standardized label: [Item] - [Category]
           d.individualLabel = `${d[itemColumn]} - ${d[categoryColumn]}`;
           currentMetrics.forEach((metric) => {
             d[metric] = +d[metric];
@@ -163,13 +166,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         calculateCategoryAverages();
 
-        itemSelect1.property("disabled", false);
-        itemSelect2.property("disabled", false);
-        item1ModeRadios.property("disabled", false);
-        item2ModeRadios.property("disabled", false);
+        // Enable the "Add" button
+        addSelectorBtn.property("disabled", false);
 
-        populateItemSelectors("1");
-        populateItemSelectors("2");
+        // --- MODIFIED: Populate all existing selectors ---
+        selectorContainer.selectAll(".selector-block").each(function () {
+          const block = d3.select(this);
+          block.selectAll("select, input").property("disabled", false);
+          populateItemSelector(block);
+        });
 
         drawBase(currentMetrics);
         updateChart();
@@ -183,11 +188,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function calculateCategoryAverages() {
     categoryAverages.clear();
-    // Group by the 'Category' column
     const categories = d3.group(currentData, (d) => d[categoryColumn]);
 
     categories.forEach((items, categoryName) => {
-      const avgData = { [categoryColumn]: categoryName }; // Use Category column for label
+      const avgData = { [categoryColumn]: categoryName };
       currentMetrics.forEach((metric) => {
         avgData[metric] = d3.mean(items, (d) => d[metric]);
       });
@@ -197,12 +201,74 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 4. UI Population and Event Handling ---
 
-  function populateItemSelectors(selectorNumber) {
-    const mode = d3
-      .select(`input[name='compare-mode-${selectorNumber}']:checked`)
+  // --- NEW: Function to add a selector block ---
+  function addSelectorBlock() {
+    let selectorIndex = selectorContainer.selectAll(".selector-block").size();
+    if (selectorIndex >= colorPalette.length) {
+      alert("Maximum number of comparisons reached.");
+      return;
+    }
+
+    const color = colorPalette[selectorIndex];
+    const blockId = `selector-block-${selectorIndex}`;
+
+    // Create the HTML for the new block
+    const blockHtml = `
+      <div class="selector-block" id="${blockId}" data-index="${selectorIndex}">
+        ${
+          selectorIndex > 0
+            ? '<button class="remove-selector-btn">&times;</button>'
+            : ""
+        }
+        <h3 style="color: ${color};">Selection ${selectorIndex + 1}</h3>
+        <div class="radio-group">
+          <input type="radio" id="mode-${selectorIndex}-individual" name="compare-mode-${selectorIndex}" value="individual" checked>
+          <label for="mode-${selectorIndex}-individual">Individual</label>
+          <input type="radio" id="mode-${selectorIndex}-category" name="compare-mode-${selectorIndex}" value="category">
+          <label for="mode-${selectorIndex}-category">Category</label>
+        </div>
+        <label id="select-label-${selectorIndex}" for="item-select-${selectorIndex}">Select Item:</label>
+        <select id="item-select-${selectorIndex}" disabled>
+          <option value="none">None</option>
+        </select>
+      </div>
+    `;
+
+    // Append the new block
+    selectorContainer.node().insertAdjacentHTML("beforeend", blockHtml);
+
+    // Select the newly added block with D3
+    const newBlock = d3.select(`#${blockId}`);
+
+    // Add event listeners for the new block
+    newBlock.select(".remove-selector-btn").on("click", function () {
+      newBlock.remove();
+      updateChart();
+    });
+
+    newBlock
+      .selectAll(`input[name="compare-mode-${selectorIndex}"]`)
+      .on("change", () => {
+        populateItemSelector(newBlock);
+      });
+
+    newBlock.select("select").on("change", updateChart);
+
+    // If data is already loaded, enable and populate this new selector
+    if (currentData.length > 0) {
+      newBlock.selectAll("select, input").property("disabled", false);
+      populateItemSelector(newBlock);
+    }
+  }
+
+  // --- MODIFIED: Generalized to work on a specific block element ---
+  function populateItemSelector(blockElement) {
+    const selectorIndex = blockElement.attr("data-index");
+    const mode = blockElement
+      .select(`input[name="compare-mode-${selectorIndex}"]:checked`)
       .property("value");
-    const select = selectorNumber === "1" ? itemSelect1 : itemSelect2;
-    const label = selectorNumber === "1" ? select1Label : select2Label;
+    const select = blockElement.select("select");
+    const label = blockElement.select(`label[id^="select-label"]`);
 
     const currentVal = select.property("value");
 
@@ -213,7 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
       label.text("Select Item:");
       select
         .selectAll("option.item-option")
-        // Use the individualLabel for sorting and display
         .data(
           currentData.sort((a, b) =>
             d3.ascending(a.individualLabel, b.individualLabel)
@@ -238,6 +303,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .text((d) => d);
     }
 
+    // Try to re-select the previous value
     select.property("value", currentVal);
     if (select.property("selectedIndex") === -1) {
       select.property("value", "none");
@@ -246,56 +312,50 @@ document.addEventListener("DOMContentLoaded", () => {
     updateChart();
   }
 
+  // --- MODIFIED: Gathers data from all active selectors ---
   function updateChart() {
-    const mode1 = d3
-      .select('input[name="compare-mode-1"]:checked')
-      .property("value");
-    const val1 = itemSelect1.property("value");
-    const mode2 = d3
-      .select('input[name="compare-mode-2"]:checked')
-      .property("value");
-    const val2 = itemSelect2.property("value");
+    let dataArray = [];
 
-    let data1 = null;
-    let data2 = null;
+    // Loop through all selector blocks
+    selectorContainer.selectAll(".selector-block").each(function () {
+      const block = d3.select(this);
+      const selectorIndex = block.attr("data-index");
+      const mode = block
+        .select(`input[name="compare-mode-${selectorIndex}"]:checked`)
+        .property("value");
+      const val = block.select("select").property("value");
 
-    if (val1 !== "none") {
-      data1 =
-        mode1 === "individual"
-          ? // Find by the standardized individualLabel
-            currentData.find((d) => d.individualLabel === val1)
-          : categoryAverages.get(val1);
-    }
+      let data = null;
+      if (val !== "none") {
+        data =
+          mode === "individual"
+            ? currentData.find((d) => d.individualLabel === val)
+            : categoryAverages.get(val);
+      }
 
-    if (val2 !== "none") {
-      data2 =
-        mode2 === "individual"
-          ? currentData.find((d) => d.individualLabel === val2)
-          : categoryAverages.get(val2);
-    }
+      // Add the data and its index (for coloring) to the array
+      dataArray.push({ data: data, index: selectorIndex });
+    });
 
-    drawRadarChart(data1, data2, currentMetrics);
+    drawRadarChart(dataArray, currentMetrics);
   }
 
+  // --- MODIFIED: Clears dynamic selectors and adds one back ---
   function resetChart() {
     currentData = [];
     currentMetrics = [];
     categoryAverages.clear();
 
-    itemSelect1.selectAll("option").remove();
-    itemSelect2.selectAll("option").remove();
-    itemSelect1.property("disabled", true);
-    itemSelect2.property("disabled", true);
+    // Remove all selector blocks
+    selectorContainer.html("");
+    // Disable the "Add" button
+    addSelectorBtn.property("disabled", true);
 
-    item1ModeRadios.property("disabled", true).property("checked", function () {
-      return d3.select(this).property("value") === "individual";
-    });
-    item2ModeRadios.property("disabled", true).property("checked", function () {
-      return d3.select(this).property("value") === "individual";
-    });
+    // Add the first, disabled selector block
+    addSelectorBlock();
 
     drawBase([]);
-    drawRadarChart(null, null, []);
+    drawRadarChart([], []); // Pass empty array
   }
 
   function initialize() {
@@ -311,19 +371,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add event listeners
     datasetSelect.on("change", loadDataset);
-    itemSelect1.on("change", updateChart);
-    itemSelect2.on("change", updateChart);
-    item1ModeRadios.on("change", () => populateItemSelectors("1"));
-    item2ModeRadios.on("change", () => populateItemSelectors("2"));
+    addSelectorBtn.on("click", addSelectorBlock); // Listener for the "Add" button
 
     // --- PRE-LOAD LOGIC ---
-    resetChart();
+    resetChart(); // This will now add the first (disabled) selector block
 
     // Find the beer dataset
     const beerDataset = datasets.find((d) => d.name.includes("Beer"));
     if (beerDataset) {
       datasetSelect.property("value", beerDataset.file);
-      loadDataset();
+      loadDataset(); // This will load data, enable the "Add" button, and populate the first block
     }
     // --- END PRE-LOAD LOGIC ---
   }
