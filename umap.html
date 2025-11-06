@@ -1,0 +1,215 @@
+<link rel="stylesheet" href="style.css">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Agency Trust Profile Explorer</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        #plot {
+            width: 100%;
+            height: 800px;
+        }
+        .info-box {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #2c5f7f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Government Agency Trust Profile Explorer</h1>
+        <p class="subtitle">UMAP projection of 5 trust dimensions | Size=Warmth | Shape=Dominance | Color=Overall Trust</p>
+        
+        <div id="plot"></div>
+        
+        <div class="info-box">
+            <h3>How to Use This Visualization</h3>
+            <p><strong>Hover</strong> over any agency to see detailed trust scores and interpersonal style metrics.</p>
+            <p><strong>Visual Encodings:</strong></p>
+            <ul>
+                <li><strong>Position:</strong> Agencies close together have similar trust profiles across all 5 dimensions</li>
+                <li><strong>Color:</strong> Overall trust score (red = low, green = high)</li>
+                <li><strong>Shape:</strong> Dominance level (circle = low, square = medium, diamond = high)</li>
+                <li><strong>Size:</strong> Warmth perception (larger = warmer)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Data from your analysis
+        const data = [
+            {
+                agencies: ['Ded', 'LaborDept', 'CDC', 'Lib', 'Amtrak', 'FairHousing', 'EPA', 'NEA', 'Zoo'],
+                x: [14.132977, 14.623857, 16.133823, 16.536005, 16.117989, 14.682542, 15.492891, 15.694931, 16.68661],
+                y: [6.780223, 7.4794054, 9.584203, 11.001816, 10.241018, 9.041379, 10.796051, 11.610754, 12.112645],
+                trust: [4.084176, 4.298374, 4.753446, 4.946098, 4.858962, 4.473768, 4.852278, 5.110834, 5.1182],
+                warmth: [-5.4, -6.4, -1.8, 15.7, 16.3, 11.3, 13.9, 32.8, 38.5],
+                dominance: [30.6, 32.8, 36.3, 32.5, 32.3, 24.2, 33.9, 29.4, 34.4],
+                dims: {
+                    COMPETENT: [4.29, 4.39, 5.39, 5.59, 5.12, 4.23, 4.92, 5.10, 5.42],
+                    RELIABLE: [4.22, 4.42, 4.82, 5.13, 5.33, 4.07, 4.70, 4.91, 5.00],
+                    ETHICAL: [4.13, 4.56, 4.77, 4.90, 4.74, 4.94, 5.03, 5.24, 5.08],
+                    SINCERE: [3.84, 4.12, 4.43, 4.64, 4.58, 4.50, 4.77, 5.16, 4.93],
+                    BENEVOLENT: [3.93, 4.00, 4.36, 4.46, 4.52, 4.63, 4.84, 5.14, 5.16]
+                },
+                category: 'Low',
+                symbol: 'circle'
+            },
+            {
+                agencies: ['Treas', 'CBP', 'SocSecurity', 'Census', 'FEMA', 'NASA', 'NSF', 'USPS', 'Mus'],
+                x: [11.721766, 13.846016, 14.472711, 16.735006, 15.135976, 16.517946, 16.104872, 15.575095, 16.054924],
+                y: [7.1034927, 7.292862, 8.076554, 10.232156, 9.891883, 13.019933, 12.543167, 12.746656, 13.354097],
+                trust: [3.724574, 4.20435, 4.332106, 4.869322, 4.734776, 5.264462, 5.165354, 5.341104, 5.636502],
+                warmth: [-27.3, -18.6, -12.8, -0.1, 18.7, 10.5, 13.5, 25.3, 32.7],
+                dominance: [42.6, 44.4, 39.0, 36.6, 39.1, 46.8, 43.9, 38.6, 44.4],
+                dims: {
+                    COMPETENT: [4.62, 4.69, 4.59, 5.19, 4.80, 6.13, 5.69, 5.52, 6.23],
+                    RELIABLE: [4.26, 4.45, 4.40, 5.28, 4.71, 5.09, 5.09, 5.66, 5.72],
+                    ETHICAL: [3.69, 4.21, 4.52, 4.92, 4.87, 5.36, 5.15, 5.38, 5.53],
+                    SINCERE: [3.34, 4.05, 4.25, 4.88, 4.50, 4.91, 5.05, 5.09, 5.47],
+                    BENEVOLENT: [2.70, 3.62, 3.91, 4.07, 4.80, 4.83, 4.83, 5.05, 5.22]
+                },
+                category: 'Medium',
+                symbol: 'square'
+            },
+            {
+                agencies: ['IRS', 'DOJ', 'BPR', 'TSA', 'DOD', 'FBI', 'CISA', 'FDA', 'FAA'],
+                x: [12.265455, 11.943965, 12.614617, 12.673388, 12.746812, 13.477103, 15.490471, 15.8875675, 16.151838],
+                y: [7.252337, 6.598156, 6.7214427, 6.126915, 7.981451, 7.9213533, 8.452569, 9.050943, 12.007575],
+                trust: [3.816332, 3.742544, 3.753502, 3.774516, 4.196666, 4.283052, 4.576682, 4.619636, 5.12748],
+                warmth: [-40.5, -26.7, -28.0, -30.5, -26.9, -31.8, -19.6, -8.9, -1.1],
+                dominance: [63.1, 55.1, 49.3, 47.0, 67.4, 59.6, 55.5, 52.1, 50.2],
+                dims: {
+                    COMPETENT: [4.87, 4.65, 4.24, 4.09, 5.50, 5.58, 5.47, 5.22, 5.75],
+                    RELIABLE: [4.19, 3.94, 4.03, 4.12, 4.70, 4.60, 4.71, 4.80, 5.47],
+                    ETHICAL: [3.82, 3.80, 3.84, 3.92, 3.94, 4.21, 4.67, 4.60, 5.23],
+                    SINCERE: [3.82, 3.38, 3.55, 3.56, 3.62, 3.78, 4.11, 4.35, 4.78],
+                    BENEVOLENT: [2.39, 2.94, 3.10, 3.18, 3.22, 3.25, 3.93, 4.13, 4.41]
+                },
+                category: 'High',
+                symbol: 'diamond'
+            }
+        ];
+
+        // Create traces
+        const traces = data.map(group => {
+            const sizes = group.warmth.map(w => {
+                const min = -40.5, max = 38.5;
+                const normalized = (w - min) / (max - min);
+                return 30 + normalized * 20;
+            });
+
+            const hoverText = group.agencies.map((agency, i) => {
+                return `<b>${agency}</b><br><br>` +
+                    `<b>Trust Dimensions:</b><br>` +
+                    `Competence: ${group.dims.COMPETENT[i].toFixed(2)}<br>` +
+                    `Reliability: ${group.dims.RELIABLE[i].toFixed(2)}<br>` +
+                    `Ethical Integrity: ${group.dims.ETHICAL[i].toFixed(2)}<br>` +
+                    `Sincerity: ${group.dims.SINCERE[i].toFixed(2)}<br>` +
+                    `Benevolence: ${group.dims.BENEVOLENT[i].toFixed(2)}<br>` +
+                    `<b>Overall Trust: ${group.trust[i].toFixed(2)}</b><br><br>` +
+                    `<b>Interpersonal Style:</b><br>` +
+                    `Warmth: ${group.warmth[i].toFixed(1)}<br>` +
+                    `Dominance: ${group.dominance[i].toFixed(1)} (${group.category})`;
+            });
+
+            return {
+                x: group.x,
+                y: group.y,
+                mode: 'markers+text',
+                type: 'scatter',
+                name: `Dominance: ${group.category}`,
+                text: group.agencies,
+                textposition: 'top center',
+                textfont: { size: 9, color: 'black' },
+                hovertext: hoverText,
+                hoverinfo: 'text',
+                marker: {
+                    size: sizes,
+                    color: group.trust,
+                    colorscale: 'RdYlGn',
+                    symbol: group.symbol,
+                    line: { width: 2, color: 'darkslategray' },
+                    showscale: group.category === 'High',
+                    colorbar: group.category === 'High' ? {
+                        title: 'Trust<br>Score',
+                        thickness: 15,
+                        len: 0.7,
+                        x: 1.12
+                    } : undefined,
+                    cmin: 3.72,
+                    cmax: 5.64
+                }
+            };
+        });
+
+        // Layout
+        const layout = {
+            title: {
+                text: 'Government Agency Trust Profile Explorer<br><sub>UMAP projection of 5 trust dimensions | Size=Warmth | Shape=Dominance | Color=Overall Trust</sub>',
+                x: 0.5,
+                xanchor: 'center'
+            },
+            xaxis: {
+                title: 'Trust Profile Dimension 1',
+                showgrid: true,
+                gridcolor: 'lightgray'
+            },
+            yaxis: {
+                title: 'Trust Profile Dimension 2',
+                showgrid: true,
+                gridcolor: 'lightgray'
+            },
+            hovermode: 'closest',
+            plot_bgcolor: 'rgba(240, 240, 240, 0.5)',
+            legend: {
+                title: { text: 'Dominance Level' },
+                orientation: 'v',
+                yanchor: 'top',
+                y: 0.98,
+                xanchor: 'left',
+                x: 0.01,
+                bgcolor: 'rgba(255, 255, 255, 0.8)',
+                bordercolor: 'Black',
+                borderwidth: 1
+            },
+            font: { size: 12 }
+        };
+
+        // Create plot
+        Plotly.newPlot('plot', traces, layout, { responsive: true });
+    </script>
+</body>
+</html>
