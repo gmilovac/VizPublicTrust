@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -141,4 +141,288 @@
     renderAgency(data[0].Agency);
   </script>
 </body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agency Trust Radar Viewer</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+      }
+      .sidebar {
+        width: 320px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 30px;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+      }
+      .sidebar h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 10px;
+      }
+      .sidebar h2 {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #667eea;
+        margin-bottom: 12px;
+      }
+      .file-upload-wrapper {
+        position: relative;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .file-upload-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: #667eea;
+        color: white;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        gap: 8px;
+      }
+      .file-upload-label:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+      .file-name {
+        margin-top: 10px;
+        font-size: 13px;
+        color: #4a5568;
+        text-align: center;
+      }
+      select {
+        width: 100%;
+        padding: 14px;
+        font-size: 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        background: white;
+        color: #1a202c;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+      }
+      select:hover:not(:disabled) {
+        border-color: #667eea;
+      }
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      select:disabled {
+        background: #f7fafc;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+      .main {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+      }
+      .chart-container {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        max-width: 700px;
+        width: 100%;
+      }
+      #chart {
+        width: 100%;
+        height: 600px;
+      }
+      #description {
+        margin-top: 30px;
+        text-align: center;
+        background: white;
+        padding: 25px 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        max-width: 500px;
+      }
+      #description strong {
+        font-size: 24px;
+        color: #1a202c;
+        display: block;
+        margin-bottom: 12px;
+      }
+      #description .metric {
+        font-size: 16px;
+        color: #4a5568;
+        margin-top: 8px;
+      }
+      #description .score {
+        font-size: 36px;
+        font-weight: 700;
+        color: #667eea;
+        margin: 10px 0;
+      }
+      .placeholder {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 18px;
+        font-weight: 500;
+      }
+      .placeholder-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <div>
+        <h1>Trust Radar</h1>
+        <p style="color: #718096; font-size: 14px;">Visualize agency trust metrics</p>
+      </div>
+      
+      <div>
+        <h2>Upload Data</h2>
+        <div class="file-upload-wrapper">
+          <input type="file" id="csvFile" accept=".csv" />
+          <label for="csvFile" class="file-upload-label">
+            <span>📂</span>
+            <span>Choose CSV File</span>
+          </label>
+          <div class="file-name" id="fileName">No file selected</div>
+        </div>
+      </div>
+      
+      <div>
+        <h2>Select Agency</h2>
+        <select id="agencySelect" disabled>
+          <option>Upload a CSV file first</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="main">
+      <div class="placeholder" id="placeholder">
+        <div class="placeholder-icon">📊</div>
+        <div>Upload a CSV and select an agency<br>to view the trust radar</div>
+      </div>
+      <div class="chart-container" id="chartContainer" style="display: none;">
+        <div id="chart"></div>
+      </div>
+      <div id="description"></div>
+    </div>
+    
+    <script>
+      let agencyData = [];
+      
+      document.getElementById('csvFile').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        document.getElementById('fileName').textContent = file.name;
+        
+        Papa.parse(file, {
+          header: true,
+          dynamicTyping: true,
+          skipEmptyLines: true,
+          complete: function (results) {
+            agencyData = results.data.filter(row => row.Agency);
+            const select = document.getElementById('agencySelect');
+            select.innerHTML = '<option value="">Choose an agency...</option>';
+            agencyData.forEach(row => {
+              const opt = document.createElement('option');
+              opt.value = row.Agency;
+              opt.textContent = row.Agency;
+              select.appendChild(opt);
+            });
+            select.disabled = false;
+          },
+        });
+      });
+      
+      document.getElementById('agencySelect').addEventListener('change', function () {
+        const agency = this.value;
+        if (!agency) return;
+        
+        const selected = agencyData.find(row => row.Agency === agency);
+        if (!selected) return;
+        
+        document.getElementById('placeholder').style.display = 'none';
+        document.getElementById('chartContainer').style.display = 'block';
+        
+        const dimensions = Object.keys(selected).filter(k => k !== 'Agency');
+        const values = dimensions.map(k => selected[k]);
+        
+        const trace = {
+          type: 'scatterpolar',
+          r: values,
+          theta: dimensions,
+          fill: 'toself',
+          line: { color: '#667eea', width: 3 },
+          fillcolor: 'rgba(102, 126, 234, 0.3)',
+          marker: { color: '#667eea', size: 8 },
+        };
+        
+        const layout = {
+          polar: {
+            radialaxis: {
+              visible: true,
+              range: [0, Math.max(...values) * 1.1],
+              tickfont: { size: 12, color: '#4a5568' },
+              gridcolor: '#e2e8f0',
+            },
+            angularaxis: {
+              tickfont: { size: 13, color: '#1a202c', weight: 600 },
+              gridcolor: '#e2e8f0',
+            },
+            bgcolor: '#fafafa',
+          },
+          showlegend: false,
+          paper_bgcolor: 'white',
+          plot_bgcolor: 'white',
+          margin: { t: 40, b: 40, l: 60, r: 60 },
+        };
+        
+        Plotly.newPlot('chart', [trace], layout, { responsive: true, displayModeBar: false });
+        
+        const meanScore = values.reduce((a, b) => a + b, 0) / values.length;
+        
+        document.getElementById('description').innerHTML = `
+          <strong>${agency}</strong>
+          <div class="score">${meanScore.toFixed(2)}</div>
+          <div class="metric">Mean Trust Score</div>
+        `;
+      });
+    </script>
+  </body>
 </html>
