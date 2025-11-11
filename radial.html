@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -337,6 +337,360 @@
           </div>
         `;
       });
+    </script>
+  </body>
+</html>
+ -->
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agency Trust Chart Viewer</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+        background: #f8f9fa;
+        min-height: 100vh;
+        display: flex;
+      }
+      .sidebar {
+        width: 340px;
+        background: white;
+        padding: 30px;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .home-button {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 16px; background: #f7fafc; color: #2d3748; text-decoration: none;
+        border-radius: 8px; font-size: 14px; font-weight: 500; transition: .2s ease;
+        border: 1px solid #e2e8f0;
+      }
+      .home-button:hover { background: #edf2f7; border-color: #cbd5e0; }
+      .sidebar h1 { font-size: 24px; font-weight: 600; color: #1a202c; margin-bottom: 6px; }
+      .sidebar h2 {
+        font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+        color: #718096; margin-bottom: 10px;
+      }
+      .muted { color:#718096; font-size: 14px; }
+      .file-upload-wrapper { position: relative; }
+      input[type="file"] { display: none; }
+      .file-upload-label {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 14px; background:#2d3748; color:#fff; border-radius: 8px; cursor: pointer;
+        transition: .2s ease; font-weight: 600;
+      }
+      .file-upload-label:hover { background:#1a202c; }
+      .file-name { margin-top: 8px; font-size: 13px; color: #718096; text-align:center; }
+      select, .segmented {
+        width: 100%; background: white; border:1px solid #e2e8f0; border-radius: 8px;
+        padding: 12px; font-size: 15px; color:#1a202c; font-family: inherit; cursor: pointer;
+      }
+      select:hover:not(:disabled), .segmented:hover { border-color:#cbd5e0; }
+      select:focus, .segmented:focus { outline: none; border-color:#4a5568; }
+      select:disabled { background:#f7fafc; cursor:not-allowed; opacity:.6; }
+      .segmented { display:flex; gap:6px; padding:6px; }
+      .segmented button {
+        flex:1; padding:10px 12px; border-radius: 6px; border:1px solid #e2e8f0;
+        background:#fff; cursor:pointer; font-weight:600; color:#2d3748;
+      }
+      .segmented button.active { background:#2d3748; color:#fff; border-color:#2d3748; }
+      .main {
+        flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;
+      }
+      .chart-container {
+        background:white; border-radius:12px; padding:30px; box-shadow:0 2px 10px rgba(0,0,0,.08);
+        max-width: 900px; width: 100%;
+      }
+      #chart { width: 100%; height: 600px; }
+      #description {
+        margin-top: 30px; text-align:center; background:white; padding: 30px 40px;
+        border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.08); max-width: 560px;
+      }
+      #description strong { font-size: 22px; color:#1a202c; display:block; margin-bottom: 16px; }
+      .scores-grid { display:grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-top:14px; }
+      .score-item { text-align:left; padding:12px; background:#f7fafc; border-radius:8px; }
+      .score-label { font-size:12px; color:#718096; text-transform:uppercase; letter-spacing:.5px; font-weight:700; margin-bottom:4px; }
+      .score-value { font-size:22px; font-weight:700; color:#2d3748; }
+      .mean-score { margin-top:16px; padding-top:16px; border-top: 2px solid #e2e8f0; }
+      .mean-score .score-label { font-size:13px; margin-bottom:6px; }
+      .mean-score .score-value { font-size:30px; color:#1a202c; }
+      .placeholder { text-align:center; color:#718096; font-size: 18px; font-weight: 500; }
+      .placeholder-icon { font-size:64px; margin-bottom:20px; opacity:.5; }
+      .error { color:#b00020; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <a href="index.html" class="home-button">
+        <span>←</span><span>Back to Home</span>
+      </a>
+
+      <div>
+        <h1>Trust Charts</h1>
+        <p class="muted">Visualize agency trust metrics</p>
+      </div>
+
+      <div>
+        <h2>Choose Chart Type</h2>
+        <div class="segmented" role="tablist" aria-label="Chart Type">
+          <button id="btnRadar" class="active" data-type="radar" role="tab" aria-selected="true">Radial (Radar)</button>
+          <button id="btnBar" data-type="bar" role="tab" aria-selected="false">Bar</button>
+        </div>
+      </div>
+
+      <div>
+        <h2>Upload Data</h2>
+        <div class="file-upload-wrapper">
+          <input type="file" id="csvFile" accept=".csv" />
+          <label for="csvFile" class="file-upload-label">
+            <span>📂</span><span>Choose CSV File</span>
+          </label>
+          <div class="file-name" id="fileName">No file selected</div>
+          <div id="fileError" class="error" role="alert" style="display:none;"></div>
+        </div>
+        <p class="muted" style="font-size:12px; margin-top:6px;">
+          CSV must have a column named <code>Agency</code> and one or more metric columns (e.g., COMPETENT, RELIABLE, ...).
+        </p>
+      </div>
+
+      <div>
+        <h2>Select Agency</h2>
+        <select id="agencySelect" disabled>
+          <option>Upload a CSV file first</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="placeholder" id="placeholder">
+        <div class="placeholder-icon">📊</div>
+        <div>
+          Choose a chart type, upload a CSV, then select an agency<br>
+          to view the <span id="chartTypeName">radar</span> chart.
+        </div>
+      </div>
+
+      <div class="chart-container" id="chartContainer" style="display:none;">
+        <div id="chart"></div>
+      </div>
+
+      <div id="description"></div>
+    </div>
+
+    <script>
+      let agencyData = [];
+      let chartType = 'radar'; // 'radar' or 'bar'
+
+      // Toggle buttons
+      const btnRadar = document.getElementById('btnRadar');
+      const btnBar = document.getElementById('btnBar');
+      const chartTypeName = document.getElementById('chartTypeName');
+
+      function setChartType(type) {
+        chartType = type;
+        btnRadar.classList.toggle('active', type === 'radar');
+        btnBar.classList.toggle('active', type === 'bar');
+        btnRadar.setAttribute('aria-selected', type === 'radar');
+        btnBar.setAttribute('aria-selected', type === 'bar');
+        chartTypeName.textContent = type === 'radar' ? 'radar' : 'bar';
+        // Rerender if an agency is already selected
+        const agency = document.getElementById('agencySelect').value;
+        if (agency && agency !== '') renderForAgency(agency);
+      }
+      btnRadar.addEventListener('click', () => setChartType('radar'));
+      btnBar.addEventListener('click', () => setChartType('bar'));
+
+      // File parsing
+      document.getElementById('csvFile').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileError').style.display = 'none';
+
+        Papa.parse(file, {
+          header: true,
+          dynamicTyping: true,
+          skipEmptyLines: true,
+          complete: function (results) {
+            // Keep rows that have an Agency value
+            agencyData = (results.data || []).filter(row => row.Agency != null && String(row.Agency).trim() !== '');
+            // Coerce numeric fields
+            agencyData = agencyData.map(row => {
+              const copy = { ...row };
+              Object.keys(copy).forEach(k => {
+                if (k !== 'Agency' && copy[k] !== '' && copy[k] != null && !Number.isNaN(Number(copy[k]))) {
+                  copy[k] = Number(copy[k]);
+                }
+              });
+              return copy;
+            });
+
+            if (!agencyData.length) {
+              showFileError('No valid rows with an "Agency" column were found.');
+              return;
+            }
+
+            const select = document.getElementById('agencySelect');
+            select.innerHTML = '<option value="">Choose an agency...</option>';
+            agencyData.forEach(row => {
+              const opt = document.createElement('option');
+              opt.value = row.Agency;
+              opt.textContent = row.Agency;
+              select.appendChild(opt);
+            });
+            select.disabled = false;
+
+            // reset view state
+            document.getElementById('placeholder').style.display = 'block';
+            document.getElementById('chartContainer').style.display = 'none';
+            document.getElementById('description').innerHTML = '';
+          },
+          error: function(err) {
+            showFileError('Failed to parse CSV: ' + (err?.message || err));
+          }
+        });
+      });
+
+      function showFileError(msg) {
+        const el = document.getElementById('fileError');
+        el.textContent = msg;
+        el.style.display = 'block';
+      }
+
+      // Agency select
+      document.getElementById('agencySelect').addEventListener('change', function () {
+        const agency = this.value;
+        if (!agency) return;
+        renderForAgency(agency);
+      });
+
+      function renderForAgency(agency) {
+        const selected = agencyData.find(row => String(row.Agency) === String(agency));
+        if (!selected) return;
+
+        // Prepare dims/values (exclude Agency)
+        const dimensions = Object.keys(selected).filter(k => k !== 'Agency');
+        // Only keep numeric columns for plotting
+        const numericDims = dimensions.filter(k => typeof selected[k] === 'number' && isFinite(selected[k]));
+        const values = numericDims.map(k => selected[k]);
+
+        if (!values.length) {
+          showFileError('No numeric metric columns found for "' + agency + '".');
+          return;
+        }
+
+        document.getElementById('placeholder').style.display = 'none';
+        document.getElementById('chartContainer').style.display = 'block';
+
+        // Build chart by type
+        if (chartType === 'radar') {
+          renderRadar(numericDims, values);
+        } else {
+          renderBar(numericDims, values);
+        }
+
+        renderDescription(agency, numericDims, values);
+      }
+
+      function renderRadar(dimensions, values) {
+        const trace = {
+          type: 'scatterpolar',
+          r: values,
+          theta: dimensions,
+          fill: 'toself',
+          line: { color: '#2d3748', width: 2 },
+          fillcolor: 'rgba(45, 55, 72, 0.18)',
+          marker: { color: '#2d3748', size: 6 },
+        };
+        const layout = {
+          polar: {
+            radialaxis: {
+              visible: true,
+              range: [0, Math.max(...values) * 1.1],
+              tickfont: { size: 12, color: '#4a5568' },
+              gridcolor: '#e2e8f0',
+            },
+            angularaxis: {
+              tickfont: { size: 13, color: '#1a202c' },
+              gridcolor: '#e2e8f0',
+              linecolor: '#cbd5e0',
+              linewidth: 1,
+            },
+            bgcolor: 'white',
+          },
+          showlegend: false,
+          paper_bgcolor: 'white',
+          plot_bgcolor: 'white',
+          margin: { t: 60, b: 60, l: 80, r: 80 },
+        };
+        Plotly.newPlot('chart', [trace], layout, { responsive: true, displayModeBar: false });
+      }
+
+      function renderBar(dimensions, values) {
+        const trace = {
+          type: 'bar',
+          x: dimensions,
+          y: values,
+          marker: { line: { width: 1, color: '#2d3748' } },
+          hovertemplate: '%{x}: <b>%{y:.2f}</b><extra></extra>'
+        };
+        const yMax = Math.max(...values) * 1.15;
+        const layout = {
+          paper_bgcolor: 'white',
+          plot_bgcolor: 'white',
+          margin: { t: 40, b: 80, l: 60, r: 40 },
+          yaxis: {
+            title: 'Score',
+            range: [0, yMax],
+            gridcolor: '#e2e8f0',
+            zeroline: true,
+            zerolinecolor: '#cbd5e0'
+          },
+          xaxis: {
+            tickangle: -20,
+            gridcolor: 'rgba(0,0,0,0)',
+            tickfont: { size: 12, color: '#1a202c' }
+          },
+          showlegend: false
+        };
+        Plotly.newPlot('chart', [trace], layout, { responsive: true, displayModeBar: false });
+      }
+
+      function renderDescription(agency, dimensions, values) {
+        const meanScore = values.reduce((a,b)=>a+b,0) / values.length;
+        let scoresHTML = '<div class="scores-grid">';
+        dimensions.forEach((dim, idx) => {
+          scoresHTML += `
+            <div class="score-item">
+              <div class="score-label">${dim}</div>
+              <div class="score-value">${Number(values[idx]).toFixed(2)}</div>
+            </div>
+          `;
+        });
+        scoresHTML += '</div>';
+
+        document.getElementById('description').innerHTML = `
+          <strong>${agency}</strong>
+          ${scoresHTML}
+          <div class="mean-score">
+            <div class="score-label">Mean Score</div>
+            <div class="score-value">${meanScore.toFixed(2)}</div>
+          </div>
+        `;
+      }
     </script>
   </body>
 </html>
