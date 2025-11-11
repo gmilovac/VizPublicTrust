@@ -1,4 +1,4 @@
-<!-- <link rel="stylesheet" href="style.css"> -->
+<!-- 
 <p style="text-align:center;">
   <a href="index.html" style="color:#2c5f7f; text-decoration:none; font-weight:600;">
     ← Back to Home
@@ -235,4 +235,120 @@
 
 
 
+ -->
+
+<p style="text-align:center;">
+  <a href="index.html" style="color:#2c5f7f; text-decoration:none; font-weight:600;">
+    ← Back to Home
+  </a>
+</p>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Government Agency Trust Profile Explorer — RAW UMAP (18–60px)</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; margin:0; padding:20px; background:#f5f5f5; color:#333; }
+  .container { max-width:1400px; margin:0 auto; background:#fff; padding:30px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+  h1 { text-align:center; margin:0 0 8px; font-weight:800; }
+  .subtitle { text-align:center; color:#666; margin:0 0 24px; }
+  #plot { width:100%; height:800px; }
+  .info-box { background:#e8f4f8; padding:16px; border-radius:8px; margin-top:20px; }
+  .info-box h3 { margin:0 0 6px; color:#2c5f7f; }
+  .legend-row { display:flex; align-items:center; gap:14px; margin-top:8px; flex-wrap:wrap; }
+  .bubble { display:inline-block; border:2px solid #555; border-radius:50%; vertical-align:middle; }
+  .legend-item { display:flex; align-items:center; gap:8px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Government Agency Trust Profile Explorer</h1>
+    <p class="subtitle">UMAP projection (raw coordinates) | <b>Size</b>=Warmth (18–60px) | <b>Shape</b>=Dominance | <b>Color</b>=Overall Trust</p>
+    <div id="plot"></div>
+
+    <div class="info-box">
+      <h3>How to Use This Visualization</h3>
+      <p><strong>Hover</strong> over any agency to see detailed trust scores and interpersonal style metrics.</p>
+      <p><strong>Visual Encodings:</strong></p>
+      <ul>
+        <li><strong>Position:</strong> Agencies close together have similar trust profiles across all 5 dimensions</li>
+        <li><strong>Color:</strong> Overall trust score (red = low, green = high)</li>
+        <li><strong>Shape:</strong> Dominance level (circle = low, square = medium, diamond = high)</li>
+        <li><strong>Size:</strong> Warmth perception (larger = warmer)</li>
+      </ul>
+      <div class="legend-row" id="size-legend"></div>
+    </div>
+  </div>
+
+  <script id="inline" type="application/json">{"data":[{"agencies":["Ded","LaborDept","CDC","Lib","Amtrak","FairHousing","EPA","NEA","Zoo"],"x":[-4.925031,-5.698486,-8.002745,-8.981279,-8.367841,-6.484627,-8.131387,-8.805964,-8.971384],"y":[16.28306,16.7128,15.354984,15.393048,16.031654,16.777233,17.176863,17.587723,17.067368],"trust":[4.084176,4.298374,4.753446,4.946098,4.858962,4.473768,4.852278,5.110834,5.1182],"warmth":[-5.370833,-6.432249,-1.774011,15.672414,16.255464,11.296832,13.851776,32.822829,38.465972],"dominance":[30.65,32.821138,36.341808,32.522989,32.284153,24.158402,33.852459,29.352778,34.419444],"dims":{"COMPETENT":[4.29,4.39,5.39,5.59,5.12,4.23,4.92,5.1,5.42],"RELIABLE":[4.22,4.42,4.82,5.13,5.33,4.07,4.7,4.91,5.0],"ETHICAL":[4.13,4.56,4.77,4.9,4.74,4.94,5.03,5.24,5.08],"SINCERE":[3.84,4.12,4.43,4.64,4.58,4.5,4.77,5.16,4.93],"BENEVOLENT":[3.93,4.0,4.36,4.46,4.52,4.63,4.84,5.14,5.16]},"category":"Low","symbol":"circle"},{"agencies":["Treas","CBP","SocSecurity","Census","FEMA","NASA","NSF","USPS","Mus"],"x":[-4.422571,-5.524602,-6.139551,-9.037837,-7.539671,-10.091173,-9.491166,-9.948327,-10.28408],"y":[14.720646,15.793175,16.1126,16.018991,16.81739,15.639256,16.628279,17.045425,16.415955],"trust":[3.724574,4.20435,4.332106,4.869322,4.734776,5.264462,5.165354,5.341104,5.636502],"warmth":[-27.298319,-18.577186,-12.764905,-0.073446,18.680556,10.483607,13.48645,25.317204,32.735537],"dominance":[42.602241,44.375683,38.963415,36.614407,39.079167,46.784153,43.910569,38.586022,44.432507],"dims":{"COMPETENT":[4.62,4.69,4.59,5.19,4.8,6.13,5.69,5.52,6.23],"RELIABLE":[4.26,4.45,4.4,5.28,4.71,5.09,5.09,5.66,5.72],"ETHICAL":[3.69,4.21,4.52,4.92,4.87,5.36,5.15,5.38,5.53],"SINCERE":[3.34,4.05,4.25,4.88,4.5,4.91,5.05,5.09,5.47],"BENEVOLENT":[2.7,3.62,3.91,4.07,4.8,4.83,4.83,5.05,5.22]},"category":"Medium","symbol":"square"},{"agencies":["IRS","DOJ","BPR","TSA","DOD","FBI","CISA","FDA","FAA"],"x":[-4.808236,-4.395276,-3.897035,-4.290844,-5.500588,-5.926917,-6.989103,-7.443941,-9.832022],"y":[15.003118,14.302881,15.058982,15.614716,14.612806,14.904658,15.255276,15.873497,16.060476],"trust":[3.816332,3.742544,3.753502,3.774516,4.196666,4.283052,4.576682,4.619636,5.12748],"warmth":[-40.494624,-26.732194,-28.046143,-30.527778,-26.903472,-31.822581,-19.56694,-8.921488,-1.112022],"dominance":[63.139785,55.081197,49.341598,46.994444,67.35,59.583333,55.483607,52.095041,50.210383],"dims":{"COMPETENT":[4.87,4.65,4.24,4.09,5.5,5.58,5.47,5.22,5.75],"RELIABLE":[4.19,3.94,4.03,4.12,4.7,4.6,4.71,4.8,5.47],"ETHICAL":[3.82,3.8,3.84,3.92,3.94,4.21,4.67,4.6,5.23],"SINCERE":[3.82,3.38,3.55,3.56,3.62,3.78,4.11,4.35,4.78],"BENEVOLENT":[2.39,2.94,3.1,3.18,3.22,3.25,3.93,4.13,4.41]},"category":"High","symbol":"diamond"}],"meta":{"cmin":3.7245739999999996,"cmax":5.636502,"warmth_min":-40.494623655913976,"warmth_max":38.46597222222223,"warmth_median":-1.774011299435028}}</script>
+  <script>
+    const payload = JSON.parse(document.getElementById('inline').textContent);
+    // Linear mapping: 18px .. 60px
+    function sizeFromWarmth(w, wmin, wmax){ const t=(w-wmin)/(wmax-wmin); return 18 + t*42; }
+    function hover(group){
+      const out=[];
+      for(let i=0;i<group.agencies.length;i++){
+        out.push(
+          `<b>${group.agencies[i]}</b><br><br>`+
+          `Competence: ${group.dims.COMPETENT[i]}<br>`+
+          `Reliability: ${group.dims.RELIABLE[i]}<br>`+
+          `Ethical Integrity: ${group.dims.ETHICAL[i]}<br>`+
+          `Sincerity: ${group.dims.SINCERE[i]}<br>`+
+          `Benevolence: ${group.dims.BENEVOLENT[i]}<br>`+
+          `<b>Overall Trust: ${group.trust[i]}</b><br><br>`+
+          `Warmth: ${group.warmth[i]}<br>`+
+          `Dominance: ${group.dominance[i]} (${group.category})`
+        );
+      }
+      return out;
+    }
+    const traces = payload.data.map(group => ({
+      x: group.x, y: group.y, mode: 'markers+text', type:'scatter',
+      name: `Dominance: ${group.category}`,
+      text: group.agencies, textposition: 'top center',
+      hovertext: hover(group), hoverinfo: 'text',
+      marker: {
+        size: group.warmth.map(w => sizeFromWarmth(w, payload.meta.warmth_min, payload.meta.warmth_max)),
+        color: group.trust,
+        colorscale: [[0,'#f8d7da'],[0.5,'#a5d6a7'],[1,'#1b5e20']],
+        symbol: group.symbol,
+        line: { width: 2, color: 'darkslategray' },
+        showscale: group.category === 'High',
+        colorbar: group.category === 'High' ? { title: 'Trust', thickness: 15, len: 0.7, x: 1.12 } : undefined,
+        cmin: payload.meta.cmin, cmax: payload.meta.cmax
+      }
+    }));
+    const layout = {
+      title: { text: 'Government Agency Trust Profile Explorer<br><sub>UMAP projection (raw coordinates)</sub>', x: 0.5, xanchor: 'center' },
+      xaxis: { title: 'UMAP-1', showgrid: true, gridcolor: 'lightgray', zeroline: true, zerolinecolor: '#aaa' },
+      yaxis: { title: 'UMAP-2', showgrid: true, gridcolor: 'lightgray', zeroline: true, zerolinecolor: '#aaa' },
+      hovermode: 'closest',
+      plot_bgcolor: 'rgba(240, 240, 240, 0.5)',
+      legend: { title: { text: 'Dominance Level' }, orientation: 'v', yanchor: 'top', y: 0.98, xanchor: 'left', x: 0.01, bgcolor: 'rgba(255, 255, 255, 0.8)', bordercolor: 'Black', borderwidth: 1 },
+      font: { size: 12 }
+    };
+    Plotly.newPlot('plot', traces, layout, { responsive: true });
+
+    // Size legend for min/median/max warmth
+    (function addSizeLegend(){
+      const wrap = document.getElementById('size-legend');
+      const wmin = payload.meta.warmth_min, wmax = payload.meta.warmth_max, wmed = payload.meta.warmth_median;
+      const sizes = [
+        {label:`Min warmth (${wmin.toFixed(1)})`, px: sizeFromWarmth(wmin, wmin, wmax)},
+        {label:`Median warmth (${wmed.toFixed(1)})`, px: sizeFromWarmth(wmed, wmin, wmax)},
+        {label:`Max warmth (${wmax.toFixed(1)})`, px: sizeFromWarmth(wmax, wmin, wmax)}
+      ];
+      sizes.forEach(s=>{
+        const item = document.createElement('div'); item.className = 'legend-item';
+        const b = document.createElement('span'); b.className = 'bubble'; b.style.width = `${s.px}px`; b.style.height = `${s.px}px`; b.style.borderRadius = '50%';
+        const t = document.createElement('span'); t.textContent = s.label;
+        item.appendChild(b); item.appendChild(t); wrap.appendChild(item);
+      });
+    })();
+  </script>
+</body>
+</html>
 
