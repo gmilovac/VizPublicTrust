@@ -1,151 +1,3 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agency Trust Radar</title>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      background: #f8f8f8;
-      display: flex;
-      height: 100vh;
-    }
-    .sidebar {
-      width: 250px;
-      background: #ffffff;
-      border-right: 1px solid #ccc;
-      padding: 20px;
-    }
-    select {
-      width: 100%;
-      padding: 8px;
-      font-size: 14px;
-    }
-    .main {
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 20px;
-    }
-    #radar {
-      width: 600px;
-      height: 600px;
-    }
-    #description {
-      margin-top: 20px;
-      background: #ffffff;
-      padding: 15px;
-      border-radius: 5px;
-      width: 600px;
-      border: 1px solid #ddd;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="sidebar">
-    <h3>Select Agency</h3>
-    <select id="agencySelect"></select>
-  </div>
-
-  <div class="main">
-    <div id="radar"></div>
-    <div id="description"></div>
-  </div>
-
-  <script>
-    const data = [
-      {"Agency":"IRS","COMPETENT":4.87097,"RELIABLE":4.18548,"ETHICAL":3.82258,"SINCERE":3.81667,"BENEVOLENT":2.38596},
-      {"Agency":"Treas","COMPETENT":4.625,"RELIABLE":4.2625,"ETHICAL":3.68908,"SINCERE":3.34454,"BENEVOLENT":2.70175},
-      {"Agency":"DOJ","COMPETENT":4.65385,"RELIABLE":3.94017,"ETHICAL":3.79915,"SINCERE":3.37607,"BENEVOLENT":2.94348},
-      {"Agency":"BPR","COMPETENT":4.24167,"RELIABLE":4.03333,"ETHICAL":3.8375,"SINCERE":3.55417,"BENEVOLENT":3.10084},
-      {"Agency":"TSA","COMPETENT":4.09322,"RELIABLE":4.11864,"ETHICAL":3.92241,"SINCERE":3.56034,"BENEVOLENT":3.17797},
-      {"Agency":"DOD","COMPETENT":5.5,"RELIABLE":4.7,"ETHICAL":3.94,"SINCERE":3.62,"BENEVOLENT":3.22},
-      {"Agency":"FBI","COMPETENT":5.58,"RELIABLE":4.6,"ETHICAL":4.21,"SINCERE":3.78,"BENEVOLENT":3.25},
-      {"Agency":"CISA","COMPETENT":5.47,"RELIABLE":4.71,"ETHICAL":4.67,"SINCERE":4.11,"BENEVOLENT":3.93},
-      {"Agency":"FDA","COMPETENT":5.22,"RELIABLE":4.8,"ETHICAL":4.6,"SINCERE":4.35,"BENEVOLENT":4.13},
-      {"Agency":"FAA","COMPETENT":5.75,"RELIABLE":5.47,"ETHICAL":5.23,"SINCERE":4.78,"BENEVOLENT":4.41},
-      {"Agency":"Treas","COMPETENT":4.62,"RELIABLE":4.26,"ETHICAL":3.69,"SINCERE":3.34,"BENEVOLENT":2.70},
-      {"Agency":"CBP","COMPETENT":4.69,"RELIABLE":4.45,"ETHICAL":4.21,"SINCERE":4.05,"BENEVOLENT":3.62},
-      {"Agency":"SocSecurity","COMPETENT":4.59,"RELIABLE":4.4,"ETHICAL":4.52,"SINCERE":4.25,"BENEVOLENT":3.91},
-      {"Agency":"Census","COMPETENT":5.19,"RELIABLE":5.28,"ETHICAL":4.92,"SINCERE":4.88,"BENEVOLENT":4.07},
-      {"Agency":"FEMA","COMPETENT":4.80,"RELIABLE":4.71,"ETHICAL":4.87,"SINCERE":4.50,"BENEVOLENT":4.80},
-      {"Agency":"NASA","COMPETENT":6.13,"RELIABLE":5.09,"ETHICAL":5.36,"SINCERE":4.91,"BENEVOLENT":4.83},
-      {"Agency":"NSF","COMPETENT":5.69,"RELIABLE":5.09,"ETHICAL":5.15,"SINCERE":5.05,"BENEVOLENT":4.83},
-      {"Agency":"USPS","COMPETENT":5.52,"RELIABLE":5.66,"ETHICAL":5.38,"SINCERE":5.09,"BENEVOLENT":5.05},
-      {"Agency":"Mus","COMPETENT":6.23,"RELIABLE":5.72,"ETHICAL":5.53,"SINCERE":5.47,"BENEVOLENT":5.22},
-      {"Agency":"Ded","COMPETENT":4.29,"RELIABLE":4.22,"ETHICAL":4.13,"SINCERE":3.84,"BENEVOLENT":3.93},
-      {"Agency":"LaborDept","COMPETENT":4.39,"RELIABLE":4.42,"ETHICAL":4.56,"SINCERE":4.12,"BENEVOLENT":4.00},
-      {"Agency":"CDC","COMPETENT":5.39,"RELIABLE":4.82,"ETHICAL":4.77,"SINCERE":4.43,"BENEVOLENT":4.36},
-      {"Agency":"Lib","COMPETENT":5.59,"RELIABLE":5.13,"ETHICAL":4.90,"SINCERE":4.64,"BENEVOLENT":4.46},
-      {"Agency":"Amtrak","COMPETENT":5.12,"RELIABLE":5.33,"ETHICAL":4.74,"SINCERE":4.58,"BENEVOLENT":4.52},
-      {"Agency":"FairHousing","COMPETENT":4.23,"RELIABLE":4.07,"ETHICAL":4.94,"SINCERE":4.50,"BENEVOLENT":4.63},
-      {"Agency":"EPA","COMPETENT":4.92,"RELIABLE":4.70,"ETHICAL":5.03,"SINCERE":4.77,"BENEVOLENT":4.84},
-      {"Agency":"NEA","COMPETENT":5.10,"RELIABLE":4.91,"ETHICAL":5.24,"SINCERE":5.16,"BENEVOLENT":5.14},
-      {"Agency":"Zoo","COMPETENT":5.42,"RELIABLE":5.00,"ETHICAL":5.08,"SINCERE":4.93,"BENEVOLENT":5.16}
-    ];
-
-    const dropdown = document.getElementById("agencySelect");
-    const radarDiv = document.getElementById("radar");
-    const desc = document.getElementById("description");
-
-    data.forEach(d => {
-      const option = document.createElement("option");
-      option.value = d.Agency;
-      option.textContent = d.Agency;
-      dropdown.appendChild(option);
-    });
-
-    function renderAgency(agencyName) {
-      const agency = data.find(d => d.Agency === agencyName);
-      const dimensions = ["COMPETENT", "RELIABLE", "ETHICAL", "SINCERE", "BENEVOLENT"];
-      const scores = dimensions.map(k => agency[k]);
-      scores.push(scores[0]); // close the loop
-      const labels = [...dimensions, dimensions[0]];
-
-      const trace = {
-        type: 'scatterpolar',
-        r: scores,
-        theta: labels,
-        fill: 'toself',
-        line: { color: 'black' },
-        marker: { color: 'black' },
-        name: agencyName
-      };
-
-      const layout = {
-        polar: {
-          radialaxis: { visible: true, range: [0, 7], color: "#888" },
-          angularaxis: { color: "#555" }
-        },
-        showlegend: false,
-        margin: { t: 30, b: 30, l: 30, r: 30 }
-      };
-
-      Plotly.newPlot(radarDiv, [trace], layout, { responsive: true });
-
-      desc.innerHTML = `<b>${agencyName}</b><br>
-        Competent: ${agency.COMPENT}<br>
-        Reliable: ${agency.RELIABLE}<br>
-        Ethical: ${agency.ETHICAL}<br>
-        Sincere: ${agency.SINCERE}<br>
-        Benevolent: ${agency.BENEVOLENT}`;
-    }
-
-    dropdown.addEventListener("change", e => renderAgency(e.target.value));
-    renderAgency(data[0].Agency);
-  </script>
-</body>
-</html> -->
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -162,23 +14,40 @@
       }
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #f8f9fa;
         min-height: 100vh;
         display: flex;
       }
       .sidebar {
         width: 320px;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
+        background: white;
         padding: 30px;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
         display: flex;
         flex-direction: column;
         gap: 25px;
       }
+      .home-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #f7fafc;
+        color: #2d3748;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid #e2e8f0;
+      }
+      .home-button:hover {
+        background: #edf2f7;
+        border-color: #cbd5e0;
+      }
       .sidebar h1 {
         font-size: 24px;
-        font-weight: 700;
+        font-weight: 600;
         color: #1a202c;
         margin-bottom: 10px;
       }
@@ -187,7 +56,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: #667eea;
+        color: #718096;
         margin-bottom: 12px;
       }
       .file-upload-wrapper {
@@ -201,44 +70,41 @@
         align-items: center;
         justify-content: center;
         padding: 16px;
-        background: #667eea;
+        background: #2d3748;
         color: white;
-        border-radius: 12px;
+        border-radius: 8px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         font-weight: 500;
         gap: 8px;
       }
       .file-upload-label:hover {
-        background: #5568d3;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        background: #1a202c;
       }
       .file-name {
         margin-top: 10px;
         font-size: 13px;
-        color: #4a5568;
+        color: #718096;
         text-align: center;
       }
       select {
         width: 100%;
         padding: 14px;
         font-size: 15px;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
         background: white;
         color: #1a202c;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         font-family: inherit;
       }
       select:hover:not(:disabled) {
-        border-color: #667eea;
+        border-color: #cbd5e0;
       }
       select:focus {
         outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        border-color: #4a5568;
       }
       select:disabled {
         background: #f7fafc;
@@ -255,9 +121,9 @@
       }
       .chart-container {
         background: white;
-        border-radius: 20px;
+        border-radius: 12px;
         padding: 30px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         max-width: 700px;
         width: 100%;
       }
@@ -269,43 +135,75 @@
         margin-top: 30px;
         text-align: center;
         background: white;
-        padding: 25px 40px;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        padding: 30px 40px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         max-width: 500px;
       }
       #description strong {
         font-size: 24px;
         color: #1a202c;
         display: block;
-        margin-bottom: 12px;
+        margin-bottom: 20px;
       }
-      #description .metric {
-        font-size: 16px;
-        color: #4a5568;
-        margin-top: 8px;
+      .scores-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-top: 20px;
       }
-      #description .score {
+      .score-item {
+        text-align: left;
+        padding: 12px;
+        background: #f7fafc;
+        border-radius: 8px;
+      }
+      .score-label {
+        font-size: 13px;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .score-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: #2d3748;
+      }
+      .mean-score {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid #e2e8f0;
+      }
+      .mean-score .score-label {
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+      .mean-score .score-value {
         font-size: 36px;
-        font-weight: 700;
-        color: #667eea;
-        margin: 10px 0;
+        color: #1a202c;
       }
       .placeholder {
         text-align: center;
-        color: rgba(255, 255, 255, 0.9);
+        color: #718096;
         font-size: 18px;
         font-weight: 500;
       }
       .placeholder-icon {
         font-size: 64px;
         margin-bottom: 20px;
-        opacity: 0.8;
+        opacity: 0.5;
       }
     </style>
   </head>
   <body>
     <div class="sidebar">
+      <a href="index.html" class="home-button">
+        <span>←</span>
+        <span>Back to Home</span>
+      </a>
+      
       <div>
         <h1>Trust Radar</h1>
         <p style="color: #718096; font-size: 14px;">Visualize agency trust metrics</p>
@@ -388,9 +286,9 @@
           r: values,
           theta: dimensions,
           fill: 'toself',
-          line: { color: '#667eea', width: 3 },
-          fillcolor: 'rgba(102, 126, 234, 0.3)',
-          marker: { color: '#667eea', size: 8 },
+          line: { color: '#2d3748', width: 2 },
+          fillcolor: 'rgba(45, 55, 72, 0.2)',
+          marker: { color: '#2d3748', size: 6 },
         };
         
         const layout = {
@@ -402,25 +300,41 @@
               gridcolor: '#e2e8f0',
             },
             angularaxis: {
-              tickfont: { size: 13, color: '#1a202c', weight: 600 },
+              tickfont: { size: 13, color: '#1a202c' },
               gridcolor: '#e2e8f0',
+              linecolor: '#cbd5e0',
+              linewidth: 1,
             },
-            bgcolor: '#fafafa',
+            bgcolor: 'white',
           },
           showlegend: false,
           paper_bgcolor: 'white',
           plot_bgcolor: 'white',
-          margin: { t: 40, b: 40, l: 60, r: 60 },
+          margin: { t: 60, b: 60, l: 80, r: 80 },
         };
         
         Plotly.newPlot('chart', [trace], layout, { responsive: true, displayModeBar: false });
         
         const meanScore = values.reduce((a, b) => a + b, 0) / values.length;
         
+        let scoresHTML = '<div class="scores-grid">';
+        dimensions.forEach((dim, idx) => {
+          scoresHTML += `
+            <div class="score-item">
+              <div class="score-label">${dim}</div>
+              <div class="score-value">${values[idx].toFixed(2)}</div>
+            </div>
+          `;
+        });
+        scoresHTML += '</div>';
+        
         document.getElementById('description').innerHTML = `
           <strong>${agency}</strong>
-          <div class="score">${meanScore.toFixed(2)}</div>
-          <div class="metric">Mean Trust Score</div>
+          ${scoresHTML}
+          <div class="mean-score">
+            <div class="score-label">Mean Trust Score</div>
+            <div class="score-value">${meanScore.toFixed(2)}</div>
+          </div>
         `;
       });
     </script>
