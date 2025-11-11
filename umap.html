@@ -165,7 +165,12 @@
                 marker: {
                     size: sizes,
                     color: group.trust,
-                    colorscale: 'RdYlGn',
+                    // colorscale: 'RdYlGn',
+                    colorscale: [
+                      [0, '#d0f0c0'],
+                      [0.5, '#6cc070'],
+                      [1, '#1b5e20']
+                    ],
                     symbol: group.symbol,
                     line: { width: 2, color: 'darkslategray' },
                     showscale: group.category === 'High',
