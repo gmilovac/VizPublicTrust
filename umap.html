@@ -166,11 +166,18 @@
                     size: sizes,
                     color: group.trust,
                     // colorscale: 'RdYlGn',
+                    // colorscale: [
+                    //   [0, '#d0f0c0'],
+                    //   [0.5, '#6cc070'],
+                    //   [1, '#1b5e20']
+                    // ],
+
                     colorscale: [
-                      [0, '#d0f0c0'],
-                      [0.5, '#6cc070'],
-                      [1, '#1b5e20']
-                    ],
+                    [0, '#f8d7da'],  // light red for low trust
+                    [0.5, '#a5d6a7'], // soft green in the middle
+                    [1, '#1b5e20']    // dark green for high trust
+                  ],
+
                     symbol: group.symbol,
                     line: { width: 2, color: 'darkslategray' },
                     showscale: group.category === 'High',
