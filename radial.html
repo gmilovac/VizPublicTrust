@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Trust Radar</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      background: #f8f8f8;
+      display: flex;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background: #ffffff;
+      border-right: 1px solid #ccc;
+      padding: 20px;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .main {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 20px;
+    }
+    #radar {
+      width: 600px;
+      height: 600px;
+    }
+    #description {
+      margin-top: 20px;
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 5px;
+      width: 600px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h3>Select Agency</h3>
+    <select id="agencySelect"></select>
+  </div>
+
+  <div class="main">
+    <div id="radar"></div>
+    <div id="description"></div>
+  </div>
+
+  <script>
+    const data = [
+      {"Agency":"IRS","COMPETENT":4.87097,"RELIABLE":4.18548,"ETHICAL":3.82258,"SINCERE":3.81667,"BENEVOLENT":2.38596},
+      {"Agency":"Treas","COMPETENT":4.625,"RELIABLE":4.2625,"ETHICAL":3.68908,"SINCERE":3.34454,"BENEVOLENT":2.70175},
+      {"Agency":"DOJ","COMPETENT":4.65385,"RELIABLE":3.94017,"ETHICAL":3.79915,"SINCERE":3.37607,"BENEVOLENT":2.94348},
+      {"Agency":"BPR","COMPETENT":4.24167,"RELIABLE":4.03333,"ETHICAL":3.8375,"SINCERE":3.55417,"BENEVOLENT":3.10084},
+      {"Agency":"TSA","COMPETENT":4.09322,"RELIABLE":4.11864,"ETHICAL":3.92241,"SINCERE":3.56034,"BENEVOLENT":3.17797},
+      {"Agency":"DOD","COMPETENT":5.5,"RELIABLE":4.7,"ETHICAL":3.94,"SINCERE":3.62,"BENEVOLENT":3.22},
+      {"Agency":"FBI","COMPETENT":5.58,"RELIABLE":4.6,"ETHICAL":4.21,"SINCERE":3.78,"BENEVOLENT":3.25},
+      {"Agency":"CISA","COMPETENT":5.47,"RELIABLE":4.71,"ETHICAL":4.67,"SINCERE":4.11,"BENEVOLENT":3.93},
+      {"Agency":"FDA","COMPETENT":5.22,"RELIABLE":4.8,"ETHICAL":4.6,"SINCERE":4.35,"BENEVOLENT":4.13},
+      {"Agency":"FAA","COMPETENT":5.75,"RELIABLE":5.47,"ETHICAL":5.23,"SINCERE":4.78,"BENEVOLENT":4.41},
+      {"Agency":"Treas","COMPETENT":4.62,"RELIABLE":4.26,"ETHICAL":3.69,"SINCERE":3.34,"BENEVOLENT":2.70},
+      {"Agency":"CBP","COMPETENT":4.69,"RELIABLE":4.45,"ETHICAL":4.21,"SINCERE":4.05,"BENEVOLENT":3.62},
+      {"Agency":"SocSecurity","COMPETENT":4.59,"RELIABLE":4.4,"ETHICAL":4.52,"SINCERE":4.25,"BENEVOLENT":3.91},
+      {"Agency":"Census","COMPETENT":5.19,"RELIABLE":5.28,"ETHICAL":4.92,"SINCERE":4.88,"BENEVOLENT":4.07},
+      {"Agency":"FEMA","COMPETENT":4.80,"RELIABLE":4.71,"ETHICAL":4.87,"SINCERE":4.50,"BENEVOLENT":4.80},
+      {"Agency":"NASA","COMPETENT":6.13,"RELIABLE":5.09,"ETHICAL":5.36,"SINCERE":4.91,"BENEVOLENT":4.83},
+      {"Agency":"NSF","COMPETENT":5.69,"RELIABLE":5.09,"ETHICAL":5.15,"SINCERE":5.05,"BENEVOLENT":4.83},
+      {"Agency":"USPS","COMPETENT":5.52,"RELIABLE":5.66,"ETHICAL":5.38,"SINCERE":5.09,"BENEVOLENT":5.05},
+      {"Agency":"Mus","COMPETENT":6.23,"RELIABLE":5.72,"ETHICAL":5.53,"SINCERE":5.47,"BENEVOLENT":5.22},
+      {"Agency":"Ded","COMPETENT":4.29,"RELIABLE":4.22,"ETHICAL":4.13,"SINCERE":3.84,"BENEVOLENT":3.93},
+      {"Agency":"LaborDept","COMPETENT":4.39,"RELIABLE":4.42,"ETHICAL":4.56,"SINCERE":4.12,"BENEVOLENT":4.00},
+      {"Agency":"CDC","COMPETENT":5.39,"RELIABLE":4.82,"ETHICAL":4.77,"SINCERE":4.43,"BENEVOLENT":4.36},
+      {"Agency":"Lib","COMPETENT":5.59,"RELIABLE":5.13,"ETHICAL":4.90,"SINCERE":4.64,"BENEVOLENT":4.46},
+      {"Agency":"Amtrak","COMPETENT":5.12,"RELIABLE":5.33,"ETHICAL":4.74,"SINCERE":4.58,"BENEVOLENT":4.52},
+      {"Agency":"FairHousing","COMPETENT":4.23,"RELIABLE":4.07,"ETHICAL":4.94,"SINCERE":4.50,"BENEVOLENT":4.63},
+      {"Agency":"EPA","COMPETENT":4.92,"RELIABLE":4.70,"ETHICAL":5.03,"SINCERE":4.77,"BENEVOLENT":4.84},
+      {"Agency":"NEA","COMPETENT":5.10,"RELIABLE":4.91,"ETHICAL":5.24,"SINCERE":5.16,"BENEVOLENT":5.14},
+      {"Agency":"Zoo","COMPETENT":5.42,"RELIABLE":5.00,"ETHICAL":5.08,"SINCERE":4.93,"BENEVOLENT":5.16}
+    ];
+
+    const dropdown = document.getElementById("agencySelect");
+    const radarDiv = document.getElementById("radar");
+    const desc = document.getElementById("description");
+
+    data.forEach(d => {
+      const option = document.createElement("option");
+      option.value = d.Agency;
+      option.textContent = d.Agency;
+      dropdown.appendChild(option);
+    });
+
+    function renderAgency(agencyName) {
+      const agency = data.find(d => d.Agency === agencyName);
+      const dimensions = ["COMPETENT", "RELIABLE", "ETHICAL", "SINCERE", "BENEVOLENT"];
+      const scores = dimensions.map(k => agency[k]);
+      scores.push(scores[0]); // close the loop
+      const labels = [...dimensions, dimensions[0]];
+
+      const trace = {
+        type: 'scatterpolar',
+        r: scores,
+        theta: labels,
+        fill: 'toself',
+        line: { color: 'black' },
+        marker: { color: 'black' },
+        name: agencyName
+      };
+
+      const layout = {
+        polar: {
+          radialaxis: { visible: true, range: [0, 7], color: "#888" },
+          angularaxis: { color: "#555" }
+        },
+        showlegend: false,
+        margin: { t: 30, b: 30, l: 30, r: 30 }
+      };
+
+      Plotly.newPlot(radarDiv, [trace], layout, { responsive: true });
+
+      desc.innerHTML = `<b>${agencyName}</b><br>
+        Competent: ${agency.COMPENT}<br>
+        Reliable: ${agency.RELIABLE}<br>
+        Ethical: ${agency.ETHICAL}<br>
+        Sincere: ${agency.SINCERE}<br>
+        Benevolent: ${agency.BENEVOLENT}`;
+    }
+
+    dropdown.addEventListener("change", e => renderAgency(e.target.value));
+    renderAgency(data[0].Agency);
+  </script>
+</body>
+</html>
