@@ -31,6 +31,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        z-index: 100;
+        position: relative;
       }
       .nav-brand {
         font-size: 1.25rem;
@@ -62,16 +64,18 @@
       /* Main Layout */
       .container {
         flex: 1;
-        max-width: 1400px;
+        max-width: 1600px;
         margin: 0 auto;
-        padding: 30px;
+        padding: 20px;
         width: 100%;
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
       }
 
       .header-section {
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
       }
       h1 {
         margin: 0 0 10px 0;
@@ -82,40 +86,126 @@
         font-size: 1.1rem;
       }
 
-      /* Visualization Containers */
+      /* Visualization Card */
       .viz-card {
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         padding: 20px;
-        margin-bottom: 30px;
+        position: relative; /* For absolute positioning of overlays */
+        flex: 1;
+        min-height: 700px;
       }
       #plot {
         width: 100%;
-        height: 750px;
+        height: 100%;
+        min-height: 700px;
       }
 
-      .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-        margin-top: 20px;
+      /* Info Button & Tooltip */
+      .info-container {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
       }
-      .info-box {
-        background: #e8f4f8;
-        padding: 20px;
+      .info-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-family: serif;
+        font-style: italic;
+        cursor: help;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        font-size: 18px;
+      }
+      .info-tooltip {
+        visibility: hidden;
+        width: 300px;
+        background-color: #fff;
+        color: #333;
+        text-align: left;
         border-radius: 8px;
-        border-left: 4px solid var(--primary-color);
+        padding: 15px;
+        position: absolute;
+        top: 40px;
+        right: 0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        border: 1px solid #eee;
+        pointer-events: none;
       }
-      .info-box h3 {
+      .info-container:hover .info-tooltip {
+        visibility: visible;
+        opacity: 1;
+      }
+      .info-tooltip h4 {
         margin-top: 0;
         color: var(--primary-color);
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
       }
-      ul {
-        padding-left: 20px;
+      .info-tooltip strong {
+        color: #444;
       }
-      li {
+      .def-item {
         margin-bottom: 8px;
+      }
+
+      /* Custom Legend Overlay */
+      .legend-overlay {
+        position: absolute;
+        bottom: 30px;
+        right: 30px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #eee;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        font-size: 0.85rem;
+        pointer-events: none;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .legend-circle {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      .legend-border-thin {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 1px solid #333;
+        margin-right: 8px;
+        background: #ddd;
+      }
+      .legend-border-thick {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 4px solid #333;
+        margin-right: 8px;
+        background: #ddd;
+      }
+      .gradient-bar {
+        width: 100px;
+        height: 10px;
+        background: linear-gradient(to right, #2166ac, #f7f7f7, #b2182b);
+        margin-right: 8px;
       }
     </style>
   </head>
@@ -133,213 +223,629 @@
       <div class="header-section">
         <h1>Agency Trust Profile Explorer</h1>
         <p class="subtitle">
-          A high-dimensional projection of public trust and interpersonal style
-          metrics.
+          Agencies positioned by similarity.
+          <strong>Higher Y-Axis = More Trusted.</strong>
         </p>
       </div>
 
       <div class="viz-card">
-        <div id="plot"></div>
-      </div>
+        <div class="info-container">
+          <div class="info-icon">i</div>
+          <div class="info-tooltip">
+            <h4>Metric Definitions</h4>
+            <div class="def-item">
+              <strong>Trust:</strong> Overall public confidence (Y-Axis).
+            </div>
+            <div class="def-item">
+              <strong>Warmth:</strong> Perceived friendliness (Color).
+            </div>
+            <div class="def-item">
+              <strong>Dominance:</strong> Perceived power (Border Thickness).
+            </div>
+            <div
+              style="
+                margin-top: 10px;
+                border-top: 1px solid #eee;
+                padding-top: 5px;
+              "
+            >
+              <strong>5 Dimensions of Trust:</strong>
+            </div>
+            <ul style="padding-left: 15px; margin: 5px 0">
+              <li><strong>Competence:</strong> Ability to execute.</li>
+              <li><strong>Reliability:</strong> Consistency.</li>
+              <li><strong>Ethics:</strong> Moral principles.</li>
+              <li><strong>Sincerity:</strong> Honesty.</li>
+              <li><strong>Benevolence:</strong> Care for public interest.</li>
+            </ul>
+          </div>
+        </div>
 
-      <div class="info-grid">
-        <div class="info-box">
-          <h3>Visual Encodings</h3>
-          <ul>
-            <li>
-              <strong>Position:</strong> Similarity in trust profiles (5
-              dimensions).
-            </li>
-            <li><strong>Color:</strong> Overall Trust Score (Red → Green).</li>
-            <li>
-              <strong>Shape:</strong> Dominance Level (Circle=Low, Square=Med,
-              Diamond=High).
-            </li>
-            <li><strong>Size:</strong> Warmth Perception (Larger = Warmer).</li>
-          </ul>
+        <div class="legend-overlay">
+          <div class="legend-item">
+            <div class="gradient-bar"></div>
+            <span>Warmth (Color)</span>
+          </div>
+          <div
+            style="
+              font-size: 0.75rem;
+              color: #666;
+              margin-bottom: 8px;
+              display: flex;
+              justify-content: space-between;
+              width: 100px;
+            "
+          >
+            <span>Cold</span><span>Warm</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-border-thin"></div>
+            <span>Low Dominance</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-border-thick"></div>
+            <span>High Dominance</span>
+          </div>
         </div>
-        <div class="info-box">
-          <h3>Context</h3>
-          <p>
-            This map compresses 5 dimensions of trust (Competence, Reliability,
-            Ethics, Sincerity, Benevolence) into 2D space using UMAP. It reveals
-            clusters of agencies with similar public perception profiles.
-          </p>
-        </div>
+
+        <div id="plot"></div>
       </div>
     </div>
 
     <script>
-      // Embedded Data
-      const data = [
+      // Data calculated from your uploaded CSVs + UMAP Coordinates
+      // x_rot/y_rot are rotated so y_rot correlates with Trust.
+      const dataset = [
         {
-          agencies: [
-            "Ded",
-            "LaborDept",
-            "CDC",
-            "Lib",
-            "Amtrak",
-            "FairHousing",
-            "EPA",
-            "NEA",
-            "Zoo",
-          ],
-          x: [
-            14.132977, 14.623857, 16.133823, 16.536005, 16.117989, 14.682542,
-            15.492891, 15.694931, 16.68661,
-          ],
-          y: [
-            6.780223, 7.4794054, 9.584203, 11.001816, 10.241018, 9.041379,
-            10.796051, 11.610754, 12.112645,
-          ],
-          trust: [
-            4.084176, 4.298374, 4.753446, 4.946098, 4.858962, 4.473768,
-            4.852278, 5.110834, 5.1182,
-          ],
-          warmth: [-5.4, -6.4, -1.8, 15.7, 16.3, 11.3, 13.9, 32.8, 38.5],
-          dominance: [30.6, 32.8, 36.3, 32.5, 32.3, 24.2, 33.9, 29.4, 34.4],
-          category: "Low",
-          symbol: "circle",
+          Agency: "IRS",
+          COMPETENT: 4.87097,
+          RELIABLE: 4.18548,
+          ETHICAL: 3.82258,
+          SINCERE: 3.81667,
+          BENEVOLENT: 2.38596,
+          Trust: 3.816332,
+          Warmth_mean: -40.494623655913976,
+          Dominance_mean: 63.13978494623656,
+          x: 12.265455,
+          y: 7.252337,
+          x_rot: 6.379759074074359,
+          y_rot: 12.74113230742699,
+          lineWidth: 7.317656514689631,
+          hoverText:
+            "<b>IRS</b><br>Trust: 3.82<br>Warmth: -40.5<br>Dominance: 63.1<br><i>Dimensions:</i><br>Competence: 4.87<br>Reliability: 4.19<br>Ethics: 3.82<br>Sincerity: 3.82<br>Benevolence: 2.39",
         },
         {
-          agencies: [
-            "Treas",
-            "CBP",
-            "SocSecurity",
-            "Census",
-            "FEMA",
-            "NASA",
-            "NSF",
-            "USPS",
-            "Mus",
-          ],
-          x: [
-            11.721766, 13.846016, 14.472711, 16.735006, 15.135976, 16.517946,
-            16.104872, 15.575095, 16.054924,
-          ],
-          y: [
-            7.1034927, 7.292862, 8.076554, 10.232156, 9.891883, 13.019933,
-            12.543167, 12.746656, 13.354097,
-          ],
-          trust: [
-            3.724574, 4.20435, 4.332106, 4.869322, 4.734776, 5.264462, 5.165354,
-            5.341104, 5.636502,
-          ],
-          warmth: [-27.3, -18.6, -12.8, -0.1, 18.7, 10.5, 13.5, 25.3, 32.7],
-          dominance: [42.6, 44.4, 39.0, 36.6, 39.1, 46.8, 43.9, 38.6, 44.4],
-          category: "Medium",
-          symbol: "square",
+          Agency: "Treas",
+          COMPETENT: 4.625,
+          RELIABLE: 4.2625,
+          ETHICAL: 3.68908,
+          SINCERE: 3.34454,
+          BENEVOLENT: 2.70175,
+          Trust: 3.7245739999999996,
+          Warmth_mean: -27.298319327731093,
+          Dominance_mean: 42.60224089635855,
+          x: 11.721766,
+          y: 7.1034927,
+          x_rot: 6.003432578409655,
+          y_rot: 12.32145299768655,
+          lineWidth: 3.9891663526057632,
+          hoverText:
+            "<b>Treas</b><br>Trust: 3.72<br>Warmth: -27.3<br>Dominance: 42.6<br><i>Dimensions:</i><br>Competence: 4.62<br>Reliability: 4.26<br>Ethics: 3.69<br>Sincerity: 3.34<br>Benevolence: 2.70",
         },
         {
-          agencies: [
-            "IRS",
-            "DOJ",
-            "BPR",
-            "TSA",
-            "DOD",
-            "FBI",
-            "CISA",
-            "FDA",
-            "FAA",
-          ],
-          x: [
-            12.265455, 11.943965, 12.614617, 12.673388, 12.746812, 13.477103,
-            15.490471, 15.8875675, 16.151838,
-          ],
-          y: [
-            7.252337, 6.598156, 6.7214427, 6.126915, 7.981451, 7.9213533,
-            8.452569, 9.050943, 10.638038,
-          ],
-          trust: [
-            3.765636, 3.87127, 3.897838, 4.008492, 4.34847, 4.470532, 4.859802,
-            5.179336, 4.831274,
-          ],
-          warmth: [-28.3, -26.2, -26.4, -17.4, -14.1, -15.8, 1.6, 9.0, 6.5],
-          dominance: [51.8, 58.7, 52.9, 52.6, 62.7, 56.8, 47.5, 49.8, 49.6],
-          category: "High",
-          symbol: "diamond",
+          Agency: "DOJ",
+          COMPETENT: 4.65385,
+          RELIABLE: 3.94017,
+          ETHICAL: 3.79915,
+          SINCERE: 3.37607,
+          BENEVOLENT: 2.94348,
+          Trust: 3.742544,
+          Warmth_mean: -26.732193732193736,
+          Dominance_mean: 55.08119658119658,
+          x: 11.943965,
+          y: 6.598156,
+          x_rot: 6.463987043501357,
+          y_rot: 12.017105892144231,
+          lineWidth: 6.011612713728025,
+          hoverText:
+            "<b>DOJ</b><br>Trust: 3.74<br>Warmth: -26.7<br>Dominance: 55.1<br><i>Dimensions:</i><br>Competence: 4.65<br>Reliability: 3.94<br>Ethics: 3.80<br>Sincerity: 3.38<br>Benevolence: 2.94",
+        },
+        {
+          Agency: "BPR",
+          COMPETENT: 4.24167,
+          RELIABLE: 4.03333,
+          ETHICAL: 3.8375,
+          SINCERE: 3.55417,
+          BENEVOLENT: 3.10084,
+          Trust: 3.753502,
+          Warmth_mean: -28.046143250688708,
+          Dominance_mean: 49.34159779614325,
+          x: 12.614617,
+          y: 6.7214427,
+          x_rot: 6.960873506996954,
+          y_rot: 12.484093641336571,
+          lineWidth: 5.081404211486395,
+          hoverText:
+            "<b>BPR</b><br>Trust: 3.75<br>Warmth: -28.0<br>Dominance: 49.3<br><i>Dimensions:</i><br>Competence: 4.24<br>Reliability: 4.03<br>Ethics: 3.84<br>Sincerity: 3.55<br>Benevolence: 3.10",
+        },
+        {
+          Agency: "TSA",
+          COMPETENT: 4.09322,
+          RELIABLE: 4.11864,
+          ETHICAL: 3.92241,
+          SINCERE: 3.56034,
+          BENEVOLENT: 3.17797,
+          Trust: 3.7745159999999998,
+          Warmth_mean: -30.52777777777778,
+          Dominance_mean: 46.99444444444444,
+          x: 12.673388,
+          y: 6.126915,
+          x_rot: 7.332390886142621,
+          y_rot: 12.01623463105567,
+          lineWidth: 4.70100445087928,
+          hoverText:
+            "<b>TSA</b><br>Trust: 3.77<br>Warmth: -30.5<br>Dominance: 47.0<br><i>Dimensions:</i><br>Competence: 4.09<br>Reliability: 4.12<br>Ethics: 3.92<br>Sincerity: 3.56<br>Benevolence: 3.18",
+        },
+        {
+          Agency: "DOD",
+          COMPETENT: 5.5,
+          RELIABLE: 4.69583,
+          ETHICAL: 3.94167,
+          SINCERE: 3.625,
+          BENEVOLENT: 3.22083,
+          Trust: 4.1966660000000005,
+          Warmth_mean: -26.90347222222222,
+          Dominance_mean: 67.35,
+          x: 12.746812,
+          y: 7.981451,
+          x_rot: 6.389300270985504,
+          y_rot: 13.614757371173734,
+          lineWidth: 8.0,
+          hoverText:
+            "<b>DOD</b><br>Trust: 4.20<br>Warmth: -26.9<br>Dominance: 67.3<br><i>Dimensions:</i><br>Competence: 5.50<br>Reliability: 4.70<br>Ethics: 3.94<br>Sincerity: 3.62<br>Benevolence: 3.22",
+        },
+        {
+          Agency: "FBI",
+          COMPETENT: 5.58065,
+          RELIABLE: 4.59677,
+          ETHICAL: 4.20968,
+          SINCERE: 3.78226,
+          BENEVOLENT: 3.2459,
+          Trust: 4.283052,
+          Warmth_mean: -31.82258064516129,
+          Dominance_mean: 59.58333333333333,
+          x: 13.477103,
+          y: 7.9213533,
+          x_rot: 7.035672677759114,
+          y_rot: 13.959923113952446,
+          lineWidth: 6.741267527928284,
+          hoverText:
+            "<b>FBI</b><br>Trust: 4.28<br>Warmth: -31.8<br>Dominance: 59.6<br><i>Dimensions:</i><br>Competence: 5.58<br>Reliability: 4.60<br>Ethics: 4.21<br>Sincerity: 3.78<br>Benevolence: 3.25",
+        },
+        {
+          Agency: "CBP",
+          COMPETENT: 4.69421,
+          RELIABLE: 4.45041,
+          ETHICAL: 4.20588,
+          SINCERE: 4.05042,
+          BENEVOLENT: 3.62083,
+          Trust: 4.20435,
+          Warmth_mean: -18.577185792349727,
+          Dominance_mean: 44.37568306010929,
+          x: 13.846016,
+          y: 7.292862,
+          x_rot: 7.686266760853416,
+          y_rot: 13.631555248917856,
+          lineWidth: 4.276585567908876,
+          hoverText:
+            "<b>CBP</b><br>Trust: 4.20<br>Warmth: -18.6<br>Dominance: 44.4<br><i>Dimensions:</i><br>Competence: 4.69<br>Reliability: 4.45<br>Ethics: 4.21<br>Sincerity: 4.05<br>Benevolence: 3.62",
+        },
+        {
+          Agency: "SocSecurity",
+          COMPETENT: 4.58607,
+          RELIABLE: 4.39754,
+          ETHICAL: 4.52066,
+          SINCERE: 4.24793,
+          BENEVOLENT: 3.90833,
+          Trust: 4.3321060000000005,
+          Warmth_mean: -12.76490514905149,
+          Dominance_mean: 38.96341463414634,
+          x: 14.472711,
+          y: 8.076554,
+          x_rot: 7.788393987212468,
+          y_rot: 14.629798607786427,
+          lineWidth: 3.399427025162777,
+          hoverText:
+            "<b>SocSecurity</b><br>Trust: 4.33<br>Warmth: -12.8<br>Dominance: 39.0<br><i>Dimensions:</i><br>Competence: 4.59<br>Reliability: 4.40<br>Ethics: 4.52<br>Sincerity: 4.25<br>Benevolence: 3.91",
+        },
+        {
+          Agency: "CISA",
+          COMPETENT: 5.46721,
+          RELIABLE: 4.70902,
+          ETHICAL: 4.67213,
+          SINCERE: 4.10833,
+          BENEVOLENT: 3.92672,
+          Trust: 4.576682,
+          Warmth_mean: -19.56693989071038,
+          Dominance_mean: 55.48360655737705,
+          x: 15.490471,
+          y: 8.452569,
+          x_rot: 8.440094998983254,
+          y_rot: 15.497271079442982,
+          lineWidth: 6.076830718548278,
+          hoverText:
+            "<b>CISA</b><br>Trust: 4.58<br>Warmth: -19.6<br>Dominance: 55.5<br><i>Dimensions:</i><br>Competence: 5.47<br>Reliability: 4.71<br>Ethics: 4.67<br>Sincerity: 4.11<br>Benevolence: 3.93",
+        },
+        {
+          Agency: "Ded",
+          COMPETENT: 4.29339,
+          RELIABLE: 4.22314,
+          ETHICAL: 4.12917,
+          SINCERE: 3.84298,
+          BENEVOLENT: 3.9322,
+          Trust: 4.084175999999999,
+          Warmth_mean: -5.370833333333334,
+          Dominance_mean: 30.65,
+          x: 14.132977,
+          y: 6.780223,
+          x_rot: 8.205210257502397,
+          y_rot: 13.356159157573536,
+          lineWidth: 2.052083898064553,
+          hoverText:
+            "<b>Ded</b><br>Trust: 4.08<br>Warmth: -5.4<br>Dominance: 30.6<br><i>Dimensions:</i><br>Competence: 4.29<br>Reliability: 4.22<br>Ethics: 4.13<br>Sincerity: 3.84<br>Benevolence: 3.93",
+        },
+        {
+          Agency: "LaborDept",
+          COMPETENT: 4.39024,
+          RELIABLE: 4.4187,
+          ETHICAL: 4.56098,
+          SINCERE: 4.12195,
+          BENEVOLENT: 4.0,
+          Trust: 4.298374,
+          Warmth_mean: -6.432249322493225,
+          Dominance_mean: 32.82113821138211,
+          x: 14.623857,
+          y: 7.4794054,
+          x_rot: 8.238972753192163,
+          y_rot: 14.209786299102294,
+          lineWidth: 2.4039571385824554,
+          hoverText:
+            "<b>LaborDept</b><br>Trust: 4.30<br>Warmth: -6.4<br>Dominance: 32.8<br><i>Dimensions:</i><br>Competence: 4.39<br>Reliability: 4.42<br>Ethics: 4.56<br>Sincerity: 4.12<br>Benevolence: 4.00",
+        },
+        {
+          Agency: "Census",
+          COMPETENT: 5.19492,
+          RELIABLE: 5.2839,
+          ETHICAL: 4.9181,
+          SINCERE: 4.87826,
+          BENEVOLENT: 4.07143,
+          Trust: 4.8693219999999995,
+          Warmth_mean: -0.0734463276836159,
+          Dominance_mean: 36.61440677966102,
+          x: 16.735006,
+          y: 10.232156,
+          x_rot: 8.52193338915045,
+          y_rot: 17.667317100772678,
+          lineWidth: 3.0187267079620663,
+          hoverText:
+            "<b>Census</b><br>Trust: 4.87<br>Warmth: -0.1<br>Dominance: 36.6<br><i>Dimensions:</i><br>Competence: 5.19<br>Reliability: 5.28<br>Ethics: 4.92<br>Sincerity: 4.88<br>Benevolence: 4.07",
+        },
+        {
+          Agency: "FDA",
+          COMPETENT: 5.22314,
+          RELIABLE: 4.79752,
+          ETHICAL: 4.59504,
+          SINCERE: 4.35,
+          BENEVOLENT: 4.13248,
+          Trust: 4.619636,
+          Warmth_mean: -8.921487603305785,
+          Dominance_mean: 52.09504132231405,
+          x: 15.8875675,
+          y: 9.050943,
+          x_rot: 8.449651149136999,
+          y_rot: 16.215355861472577,
+          lineWidth: 5.527650835058091,
+          hoverText:
+            "<b>FDA</b><br>Trust: 4.62<br>Warmth: -8.9<br>Dominance: 52.1<br><i>Dimensions:</i><br>Competence: 5.22<br>Reliability: 4.80<br>Ethics: 4.60<br>Sincerity: 4.35<br>Benevolence: 4.13",
+        },
+        {
+          Agency: "CDC",
+          COMPETENT: 5.38983,
+          RELIABLE: 4.82203,
+          ETHICAL: 4.76724,
+          SINCERE: 4.4322,
+          BENEVOLENT: 4.35593,
+          Trust: 4.753445999999999,
+          Warmth_mean: -1.774011299435028,
+          Dominance_mean: 36.34180790960452,
+          x: 16.133823,
+          y: 9.584203,
+          x_rot: 8.36770448384488,
+          y_rot: 16.796985247703837,
+          lineWidth: 2.97454700200625,
+          hoverText:
+            "<b>CDC</b><br>Trust: 4.75<br>Warmth: -1.8<br>Dominance: 36.3<br><i>Dimensions:</i><br>Competence: 5.39<br>Reliability: 4.82<br>Ethics: 4.77<br>Sincerity: 4.43<br>Benevolence: 4.36",
+        },
+        {
+          Agency: "FAA",
+          COMPETENT: 5.75,
+          RELIABLE: 5.46721,
+          ETHICAL: 5.2314,
+          SINCERE: 4.775,
+          BENEVOLENT: 4.41379,
+          Trust: 5.12748,
+          Warmth_mean: -1.112021857923497,
+          Dominance_mean: 50.2103825136612,
+          x: 16.151838,
+          y: 12.007575,
+          x_rot: 7.069842241832184,
+          y_rot: 18.843594636758517,
+          lineWidth: 5.222206898419378,
+          hoverText:
+            "<b>FAA</b><br>Trust: 5.13<br>Warmth: -1.1<br>Dominance: 50.2<br><i>Dimensions:</i><br>Competence: 5.75<br>Reliability: 5.47<br>Ethics: 5.23<br>Sincerity: 4.78<br>Benevolence: 4.41",
+        },
+        {
+          Agency: "Lib",
+          COMPETENT: 5.59483,
+          RELIABLE: 5.12931,
+          ETHICAL: 4.90351,
+          SINCERE: 4.63793,
+          BENEVOLENT: 4.46491,
+          Trust: 4.946098,
+          Warmth_mean: 15.672413793103448,
+          Dominance_mean: 32.52298850574712,
+          x: 16.536005,
+          y: 11.001816,
+          x_rot: 7.937664239294846,
+          y_rot: 18.206397311991758,
+          lineWidth: 2.3556364455324914,
+          hoverText:
+            "<b>Lib</b><br>Trust: 4.95<br>Warmth: 15.7<br>Dominance: 32.5<br><i>Dimensions:</i><br>Competence: 5.59<br>Reliability: 5.13<br>Ethics: 4.90<br>Sincerity: 4.64<br>Benevolence: 4.46",
+        },
+        {
+          Agency: "Amtrak",
+          COMPETENT: 5.12397,
+          RELIABLE: 5.33197,
+          ETHICAL: 4.73504,
+          SINCERE: 4.5819,
+          BENEVOLENT: 4.52193,
+          Trust: 4.858962,
+          Warmth_mean: 16.255464480874316,
+          Dominance_mean: 32.28415300546448,
+          x: 16.117989,
+          y: 10.241018,
+          x_rot: 7.998527936453539,
+          y_rot: 17.340460487836456,
+          lineWidth: 2.3169287202506137,
+          hoverText:
+            "<b>Amtrak</b><br>Trust: 4.86<br>Warmth: 16.3<br>Dominance: 32.3<br><i>Dimensions:</i><br>Competence: 5.12<br>Reliability: 5.33<br>Ethics: 4.74<br>Sincerity: 4.58<br>Benevolence: 4.52",
+        },
+        {
+          Agency: "FairHousing",
+          COMPETENT: 4.2314,
+          RELIABLE: 4.06612,
+          ETHICAL: 4.93802,
+          SINCERE: 4.50413,
+          BENEVOLENT: 4.62917,
+          Trust: 4.473768,
+          Warmth_mean: 11.296831955922864,
+          Dominance_mean: 24.15840220385675,
+          x: 14.682542,
+          y: 9.041379,
+          x_rot: 7.442006816463841,
+          y_rot: 15.554424076355598,
+          lineWidth: 1.0,
+          hoverText:
+            "<b>FairHousing</b><br>Trust: 4.47<br>Warmth: 11.3<br>Dominance: 24.2<br><i>Dimensions:</i><br>Competence: 4.23<br>Reliability: 4.07<br>Ethics: 4.94<br>Sincerity: 4.50<br>Benevolence: 4.63",
+        },
+        {
+          Agency: "FEMA",
+          COMPETENT: 4.8,
+          RELIABLE: 4.7125,
+          ETHICAL: 4.86555,
+          SINCERE: 4.49583,
+          BENEVOLENT: 4.8,
+          Trust: 4.734776,
+          Warmth_mean: 18.680555555555557,
+          Dominance_mean: 39.079166666666666,
+          x: 15.135976,
+          y: 9.891883,
+          x_rot: 7.362308528962579,
+          y_rot: 16.51494873993346,
+          lineWidth: 3.418186790232516,
+          hoverText:
+            "<b>FEMA</b><br>Trust: 4.73<br>Warmth: 18.7<br>Dominance: 39.1<br><i>Dimensions:</i><br>Competence: 4.80<br>Reliability: 4.71<br>Ethics: 4.87<br>Sincerity: 4.50<br>Benevolence: 4.80",
+        },
+        {
+          Agency: "NASA",
+          COMPETENT: 6.12705,
+          RELIABLE: 5.09016,
+          ETHICAL: 5.36475,
+          SINCERE: 4.90984,
+          BENEVOLENT: 4.83051,
+          Trust: 5.264462,
+          Warmth_mean: 10.48360655737705,
+          Dominance_mean: 46.78415300546448,
+          x: 16.517946,
+          y: 13.019933,
+          x_rot: 6.829052392383197,
+          y_rot: 19.892843909443677,
+          lineWidth: 4.666922820470341,
+          hoverText:
+            "<b>NASA</b><br>Trust: 5.26<br>Warmth: 10.5<br>Dominance: 46.8<br><i>Dimensions:</i><br>Competence: 6.13<br>Reliability: 5.09<br>Ethics: 5.36<br>Sincerity: 4.91<br>Benevolence: 4.83",
+        },
+        {
+          Agency: "NSF",
+          COMPETENT: 5.69262,
+          RELIABLE: 5.0935,
+          ETHICAL: 5.15447,
+          SINCERE: 5.05285,
+          BENEVOLENT: 4.83333,
+          Trust: 5.165354,
+          Warmth_mean: 13.486449864498644,
+          Dominance_mean: 43.91056910569106,
+          x: 16.104872,
+          y: 12.543167,
+          x_rot: 6.740178858665037,
+          y_rot: 19.268314131741725,
+          lineWidth: 4.201205219714897,
+          hoverText:
+            "<b>NSF</b><br>Trust: 5.17<br>Warmth: 13.5<br>Dominance: 43.9<br><i>Dimensions:</i><br>Competence: 5.69<br>Reliability: 5.09<br>Ethics: 5.15<br>Sincerity: 5.05<br>Benevolence: 4.83",
+        },
+        {
+          Agency: "EPA",
+          COMPETENT: 4.92149,
+          RELIABLE: 4.69835,
+          ETHICAL: 5.02869,
+          SINCERE: 4.7686,
+          BENEVOLENT: 4.84426,
+          Trust: 4.852278,
+          Warmth_mean: 13.851775956284154,
+          Dominance_mean: 33.85245901639344,
+          x: 15.492891,
+          y: 10.796051,
+          x_rot: 7.172410222360604,
+          y_rot: 17.468283268102198,
+          lineWidth: 2.5711018149417986,
+          hoverText:
+            "<b>EPA</b><br>Trust: 4.85<br>Warmth: 13.9<br>Dominance: 33.9<br><i>Dimensions:</i><br>Competence: 4.92<br>Reliability: 4.70<br>Ethics: 5.03<br>Sincerity: 4.77<br>Benevolence: 4.84",
+        },
+        {
+          Agency: "USPS",
+          COMPETENT: 5.52419,
+          RELIABLE: 5.66129,
+          ETHICAL: 5.37903,
+          SINCERE: 5.08929,
+          BENEVOLENT: 5.05172,
+          Trust: 5.341104,
+          Warmth_mean: 25.317204301075268,
+          Dominance_mean: 38.58602150537634,
+          x: 15.575095,
+          y: 12.746656,
+          x_rot: 6.18464819958677,
+          y_rot: 19.152309262559154,
+          lineWidth: 3.3382634647439513,
+          hoverText:
+            "<b>USPS</b><br>Trust: 5.34<br>Warmth: 25.3<br>Dominance: 38.6<br><i>Dimensions:</i><br>Competence: 5.52<br>Reliability: 5.66<br>Ethics: 5.38<br>Sincerity: 5.09<br>Benevolence: 5.05",
+        },
+        {
+          Agency: "NEA",
+          COMPETENT: 5.1,
+          RELIABLE: 4.9125,
+          ETHICAL: 5.24167,
+          SINCERE: 5.1625,
+          BENEVOLENT: 5.1375,
+          Trust: 5.110833999999999,
+          Warmth_mean: 32.82282913165266,
+          Dominance_mean: 29.352777777777774,
+          x: 15.694931,
+          y: 11.610754,
+          x_rot: 6.900812097904398,
+          y_rot: 18.262509683301836,
+          lineWidth: 1.8418449622786117,
+          hoverText:
+            "<b>NEA</b><br>Trust: 5.11<br>Warmth: 32.8<br>Dominance: 29.4<br><i>Dimensions:</i><br>Competence: 5.10<br>Reliability: 4.91<br>Ethics: 5.24<br>Sincerity: 5.16<br>Benevolence: 5.14",
+        },
+        {
+          Agency: "Zoo",
+          COMPETENT: 5.41597,
+          RELIABLE: 5.0042,
+          ETHICAL: 5.07917,
+          SINCERE: 4.93333,
+          BENEVOLENT: 5.15833,
+          Trust: 5.1182,
+          Warmth_mean: 38.46597222222223,
+          Dominance_mean: 34.419444444444444,
+          x: 16.68661,
+          y: 12.112645,
+          x_rot: 7.46239127616282,
+          y_rot: 19.22165025770613,
+          lineWidth: 2.6629923260335513,
+          hoverText:
+            "<b>Zoo</b><br>Trust: 5.12<br>Warmth: 38.5<br>Dominance: 34.4<br><i>Dimensions:</i><br>Competence: 5.42<br>Reliability: 5.00<br>Ethics: 5.08<br>Sincerity: 4.93<br>Benevolence: 5.16",
+        },
+        {
+          Agency: "Mus",
+          COMPETENT: 6.23109,
+          RELIABLE: 5.725,
+          ETHICAL: 5.53361,
+          SINCERE: 5.47059,
+          BENEVOLENT: 5.22222,
+          Trust: 5.636502,
+          Warmth_mean: 32.735537190082646,
+          Dominance_mean: 44.43250688705234,
+          x: 16.054924,
+          y: 13.354097,
+          x_rot: 6.258828592075457,
+          y_rot: 19.92284005823978,
+          lineWidth: 4.2857949236377095,
+          hoverText:
+            "<b>Mus</b><br>Trust: 5.64<br>Warmth: 32.7<br>Dominance: 44.4<br><i>Dimensions:</i><br>Competence: 6.23<br>Reliability: 5.72<br>Ethics: 5.53<br>Sincerity: 5.47<br>Benevolence: 5.22",
         },
       ];
 
-      // Helper for point sizing based on warmth
-      function sizeFromWarmth(w, minW, maxW) {
-        const minPx = 18,
-          maxPx = 60;
-        return minPx + ((w - minW) / (maxW - minW)) * (maxPx - minPx);
-      }
-
-      // Flatten data to find min/max warmth for scaling
-      const allWarmth = data.flatMap((g) => g.warmth);
-      const wMin = Math.min(...allWarmth);
-      const wMax = Math.max(...allWarmth);
-
       // Create Traces
-      const traces = data.map((group) => {
-        return {
-          x: group.x,
-          y: group.y,
-          text: group.agencies.map(
-            (a, i) =>
-              `<b>${a}</b><br>Trust: ${group.trust[i].toFixed(2)}<br>Warmth: ${
-                group.warmth[i]
-              }<br>Dominance: ${group.dominance[i]}`
-          ),
-          mode: "markers+text",
-          textposition: "top center",
-          marker: {
-            size: group.warmth.map((w) => sizeFromWarmth(w, wMin, wMax)),
-            color: group.trust,
-            colorscale: [
-              [0, "#d32f2f"], // Red
-              [0.5, "#a5d6a7"], // Soft green
-              [1, "#1b5e20"], // Dark green
-            ],
-            symbol: group.symbol,
-            line: { width: 1, color: "#444" },
-            showscale: group.category === "High",
-            colorbar:
-              group.category === "High"
-                ? {
-                    title: "Overall<br>Trust",
-                    thickness: 15,
-                    len: 0.5,
-                    y: 0.5,
-                  }
-                : undefined,
-            cmin: 3.72,
-            cmax: 5.64,
+      const trace = {
+        x: dataset.map((d) => d.x_rot),
+        y: dataset.map((d) => d.y_rot),
+        text: dataset.map((d) => d.Agency),
+        hovertemplate: dataset.map((d) => d.hoverText + "<extra></extra>"), // Hide secondary box
+        mode: "markers+text",
+        textposition: "top center",
+        marker: {
+          size: 25,
+          color: dataset.map((d) => d.Warmth_mean),
+          // Diverging Color Scale: Blue (Cold) -> White -> Red (Warm)
+          colorscale: "RdBu",
+          reversescale: false, // Standard RdBu is Red(High) to Blue(Low). We want Warm(Red) to Cold(Blue).
+          // Wait, usually RdBu is Red->Blue. If we want Red=Warm (high value) and Blue=Cold (low value),
+          // standard RdBu maps High->Blue, Low->Red. So we typically need to reverse it.
+          // Let's check Plotly docs or just use 'reversescale: true' if standard is Red-Blue.
+          // Standard RdBu: Low=Red, High=Blue.
+          // We want: Low=Blue(Cold), High=Red(Warm).
+          // So we DO need reversescale: true.
+          reversescale: true,
+          cmin: -45,
+          cmax: 45,
+          colorbar: {
+            title: "Warmth",
+            thickness: 15,
+            len: 0.5,
+            y: 0.5,
+            x: 1.05,
           },
-          type: "scatter",
-          name: `${group.category} Dominance`,
-        };
-      });
+          line: {
+            width: dataset.map((d) => d.lineWidth),
+            color: "#333", // Dark grey border
+          },
+          symbol: "circle",
+        },
+        type: "scatter",
+      };
 
-      // Layout
       const layout = {
         hovermode: "closest",
         dragmode: "zoom",
-        showlegend: true,
-        legend: { x: 0.02, y: 0.98 },
-        margin: { t: 30, b: 40, l: 50, r: 20 },
+        showlegend: false, // Custom legend used
+        margin: { t: 40, b: 40, l: 40, r: 80 },
         xaxis: {
-          showgrid: true,
-          gridcolor: "#f0f0f0",
+          visible: false,
+          showgrid: false,
           zeroline: false,
-          showticklabels: false,
-          title: "Dimension 1",
         },
         yaxis: {
-          showgrid: true,
-          gridcolor: "#f0f0f0",
+          visible: true,
+          showgrid: false,
           zeroline: false,
           showticklabels: false,
-          title: "Dimension 2",
+          title: "Trust Score (Low → High)",
+          titlefont: { size: 14, color: "#888" },
         },
         plot_bgcolor: "#fff",
         paper_bgcolor: "#fff",
       };
 
-      Plotly.newPlot("plot", traces, layout, {
+      Plotly.newPlot("plot", [trace], layout, {
         responsive: true,
         displayModeBar: false,
       });
