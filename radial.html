@@ -466,23 +466,27 @@
        */
       function drawBarChart(agencies) {
         barChartEl.innerHTML = "";
-        const agencyNames = agencies.map((a) => a.Agency);
 
-        const traces = WD_DIMS.map((dim) => {
+        // New logic: Create one trace PER AGENCY, not per metric
+        const traces = agencies.map((agency, i) => {
+          const color = colorPalette[i % colorPalette.length];
           return {
             type: "bar",
-            x: agencyNames,
-            y: agencies.map((a) => a[dim]),
-            name: dim,
+            x: WD_DIMS, // X-axis categories are ['Warmth', 'Dominance']
+            y: WD_DIMS.map((dim) => agency[dim]), // Get the values [agency.Warmth, agency.Dominance]
+            name: agency.Agency,
+            marker: {
+              color: color, // Apply the agency's consistent color
+            },
           };
         });
 
         const layout = {
-          barmode: "group",
+          barmode: "group", // This will group the bars by the X-axis categories (Warmth, Dominance)
           showlegend: true,
           yaxis: { title: "Score" },
-          xaxis: { tickangle: -45 },
-          margin: { t: 50, b: 120 }, // Add bottom margin for angled labels
+          xaxis: { tickangle: 0 }, // No angle needed for short labels
+          margin: { t: 50, b: 50, l: 50, r: 50 }, // Standard margin
         };
 
         Plotly.newPlot(barChartEl, traces, layout, {
