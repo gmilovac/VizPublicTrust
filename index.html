@@ -4,7 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Public Trust in Government | UMAP Explorer</title>
+    <!-- Plotly.js for charting -->
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <!-- PapaParse for CSV loading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- UMAP-JS for client-side dimensionality reduction -->
+    <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
+
     <style>
       :root {
         --primary-color: #2c5f7f;
@@ -43,6 +49,7 @@
       .nav-links {
         display: flex;
         gap: 20px;
+        align-items: center;
       }
       .nav-item {
         text-decoration: none;
@@ -59,6 +66,29 @@
       .nav-item.active {
         background-color: var(--primary-color);
         color: white;
+      }
+
+      /* File Uploader */
+      #csv-uploader {
+        display: none;
+      }
+      #upload-label {
+        display: inline-block;
+        background-color: #eef2f5;
+        color: var(--primary-color);
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      #upload-label:hover {
+        background-color: #dbe4eb;
+      }
+      #file-name {
+        font-size: 0.8rem;
+        color: #777;
+        margin-left: 10px;
       }
 
       /* Main Layout */
@@ -92,7 +122,7 @@
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         padding: 20px;
-        position: relative; /* For absolute positioning of overlays */
+        position: relative;
         flex: 1;
         min-height: 700px;
       }
@@ -100,6 +130,30 @@
         width: 100%;
         height: 100%;
         min-height: 700px;
+      }
+
+      /* Loading Overlay */
+      #loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: var(--primary-color);
+        z-index: 20;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      #loading-overlay.visible {
+        visibility: visible;
+        opacity: 1;
       }
 
       /* Info Button & Tooltip */
@@ -173,18 +227,16 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         font-size: 0.85rem;
         pointer-events: none;
+        z-index: 10;
       }
       .legend-item {
         display: flex;
         align-items: center;
         margin-bottom: 8px;
       }
-      .legend-circle {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        margin-right: 8px;
-      }
+      .legend-item:last-child {
+        margin-bottom: 0;
+      } /* Remove margin from last item */
       .legend-border-thin {
         width: 12px;
         height: 12px;
@@ -201,20 +253,18 @@
         margin-right: 8px;
         background: #ddd;
       }
-      .gradient-bar {
-        width: 100px;
-        height: 10px;
-        background: linear-gradient(to right, #2166ac, #f7f7f7, #b2182b);
-        margin-right: 8px;
-      }
     </style>
   </head>
   <body>
     <nav>
       <a href="index.html" class="nav-brand">Trust in Gov</a>
       <div class="nav-links">
+        <!-- File Uploader -->
+        <input type="file" id="csv-uploader" accept=".csv" />
+        <label for="csv-uploader" id="upload-label">Load New CSV</label>
+        <span id="file-name">Loading default...</span>
+
         <a href="index.html" class="nav-item active">High-Dimensional (UMAP)</a>
-        <a href="generalized.html" class="nav-item">Generalized Viewer</a>
         <a href="radial.html" class="nav-item">Radial/Bar Views</a>
       </div>
     </nav>
@@ -224,17 +274,23 @@
         <h1>Agency Trust Profile Explorer</h1>
         <p class="subtitle">
           Agencies positioned by similarity.
-          <strong>Higher Y-Axis = More Trusted.</strong>
+          <strong>Right X-Axis = More Trusted.</strong>
         </p>
       </div>
 
       <div class="viz-card">
+        <!-- Loading Overlay -->
+        <div id="loading-overlay">
+          <div>Calculating UMAP...</div>
+        </div>
+
+        <!-- Info Button with Tooltip -->
         <div class="info-container">
           <div class="info-icon">i</div>
           <div class="info-tooltip">
             <h4>Metric Definitions</h4>
             <div class="def-item">
-              <strong>Trust:</strong> Overall public confidence (Y-Axis).
+              <strong>Trust:</strong> Overall confidence (X-Axis).
             </div>
             <div class="def-item">
               <strong>Warmth:</strong> Perceived friendliness (Color).
@@ -261,23 +317,8 @@
           </div>
         </div>
 
+        <!-- Custom Legend Overlay -->
         <div class="legend-overlay">
-          <div class="legend-item">
-            <div class="gradient-bar"></div>
-            <span>Warmth (Color)</span>
-          </div>
-          <div
-            style="
-              font-size: 0.75rem;
-              color: #666;
-              margin-bottom: 8px;
-              display: flex;
-              justify-content: space-between;
-              width: 100px;
-            "
-          >
-            <span>Cold</span><span>Warm</span>
-          </div>
           <div class="legend-item">
             <div class="legend-border-thin"></div>
             <span>Low Dominance</span>
@@ -293,561 +334,325 @@
     </div>
 
     <script>
-      // Data calculated from your uploaded CSVs + UMAP Coordinates
-      // x_rot/y_rot are rotated so y_rot correlates with Trust.
-      const dataset = [
-        {
-          Agency: "IRS",
-          COMPETENT: 4.87097,
-          RELIABLE: 4.18548,
-          ETHICAL: 3.82258,
-          SINCERE: 3.81667,
-          BENEVOLENT: 2.38596,
-          Trust: 3.816332,
-          Warmth_mean: -40.494623655913976,
-          Dominance_mean: 63.13978494623656,
-          x: 12.265455,
-          y: 7.252337,
-          x_rot: 6.379759074074359,
-          y_rot: 12.74113230742699,
-          lineWidth: 7.317656514689631,
-          hoverText:
-            "<b>IRS</b><br>Trust: 3.82<br>Warmth: -40.5<br>Dominance: 63.1<br><i>Dimensions:</i><br>Competence: 4.87<br>Reliability: 4.19<br>Ethics: 3.82<br>Sincerity: 3.82<br>Benevolence: 2.39",
-        },
-        {
-          Agency: "Treas",
-          COMPETENT: 4.625,
-          RELIABLE: 4.2625,
-          ETHICAL: 3.68908,
-          SINCERE: 3.34454,
-          BENEVOLENT: 2.70175,
-          Trust: 3.7245739999999996,
-          Warmth_mean: -27.298319327731093,
-          Dominance_mean: 42.60224089635855,
-          x: 11.721766,
-          y: 7.1034927,
-          x_rot: 6.003432578409655,
-          y_rot: 12.32145299768655,
-          lineWidth: 3.9891663526057632,
-          hoverText:
-            "<b>Treas</b><br>Trust: 3.72<br>Warmth: -27.3<br>Dominance: 42.6<br><i>Dimensions:</i><br>Competence: 4.62<br>Reliability: 4.26<br>Ethics: 3.69<br>Sincerity: 3.34<br>Benevolence: 2.70",
-        },
-        {
-          Agency: "DOJ",
-          COMPETENT: 4.65385,
-          RELIABLE: 3.94017,
-          ETHICAL: 3.79915,
-          SINCERE: 3.37607,
-          BENEVOLENT: 2.94348,
-          Trust: 3.742544,
-          Warmth_mean: -26.732193732193736,
-          Dominance_mean: 55.08119658119658,
-          x: 11.943965,
-          y: 6.598156,
-          x_rot: 6.463987043501357,
-          y_rot: 12.017105892144231,
-          lineWidth: 6.011612713728025,
-          hoverText:
-            "<b>DOJ</b><br>Trust: 3.74<br>Warmth: -26.7<br>Dominance: 55.1<br><i>Dimensions:</i><br>Competence: 4.65<br>Reliability: 3.94<br>Ethics: 3.80<br>Sincerity: 3.38<br>Benevolence: 2.94",
-        },
-        {
-          Agency: "BPR",
-          COMPETENT: 4.24167,
-          RELIABLE: 4.03333,
-          ETHICAL: 3.8375,
-          SINCERE: 3.55417,
-          BENEVOLENT: 3.10084,
-          Trust: 3.753502,
-          Warmth_mean: -28.046143250688708,
-          Dominance_mean: 49.34159779614325,
-          x: 12.614617,
-          y: 6.7214427,
-          x_rot: 6.960873506996954,
-          y_rot: 12.484093641336571,
-          lineWidth: 5.081404211486395,
-          hoverText:
-            "<b>BPR</b><br>Trust: 3.75<br>Warmth: -28.0<br>Dominance: 49.3<br><i>Dimensions:</i><br>Competence: 4.24<br>Reliability: 4.03<br>Ethics: 3.84<br>Sincerity: 3.55<br>Benevolence: 3.10",
-        },
-        {
-          Agency: "TSA",
-          COMPETENT: 4.09322,
-          RELIABLE: 4.11864,
-          ETHICAL: 3.92241,
-          SINCERE: 3.56034,
-          BENEVOLENT: 3.17797,
-          Trust: 3.7745159999999998,
-          Warmth_mean: -30.52777777777778,
-          Dominance_mean: 46.99444444444444,
-          x: 12.673388,
-          y: 6.126915,
-          x_rot: 7.332390886142621,
-          y_rot: 12.01623463105567,
-          lineWidth: 4.70100445087928,
-          hoverText:
-            "<b>TSA</b><br>Trust: 3.77<br>Warmth: -30.5<br>Dominance: 47.0<br><i>Dimensions:</i><br>Competence: 4.09<br>Reliability: 4.12<br>Ethics: 3.92<br>Sincerity: 3.56<br>Benevolence: 3.18",
-        },
-        {
-          Agency: "DOD",
-          COMPETENT: 5.5,
-          RELIABLE: 4.69583,
-          ETHICAL: 3.94167,
-          SINCERE: 3.625,
-          BENEVOLENT: 3.22083,
-          Trust: 4.1966660000000005,
-          Warmth_mean: -26.90347222222222,
-          Dominance_mean: 67.35,
-          x: 12.746812,
-          y: 7.981451,
-          x_rot: 6.389300270985504,
-          y_rot: 13.614757371173734,
-          lineWidth: 8.0,
-          hoverText:
-            "<b>DOD</b><br>Trust: 4.20<br>Warmth: -26.9<br>Dominance: 67.3<br><i>Dimensions:</i><br>Competence: 5.50<br>Reliability: 4.70<br>Ethics: 3.94<br>Sincerity: 3.62<br>Benevolence: 3.22",
-        },
-        {
-          Agency: "FBI",
-          COMPETENT: 5.58065,
-          RELIABLE: 4.59677,
-          ETHICAL: 4.20968,
-          SINCERE: 3.78226,
-          BENEVOLENT: 3.2459,
-          Trust: 4.283052,
-          Warmth_mean: -31.82258064516129,
-          Dominance_mean: 59.58333333333333,
-          x: 13.477103,
-          y: 7.9213533,
-          x_rot: 7.035672677759114,
-          y_rot: 13.959923113952446,
-          lineWidth: 6.741267527928284,
-          hoverText:
-            "<b>FBI</b><br>Trust: 4.28<br>Warmth: -31.8<br>Dominance: 59.6<br><i>Dimensions:</i><br>Competence: 5.58<br>Reliability: 4.60<br>Ethics: 4.21<br>Sincerity: 3.78<br>Benevolence: 3.25",
-        },
-        {
-          Agency: "CBP",
-          COMPETENT: 4.69421,
-          RELIABLE: 4.45041,
-          ETHICAL: 4.20588,
-          SINCERE: 4.05042,
-          BENEVOLENT: 3.62083,
-          Trust: 4.20435,
-          Warmth_mean: -18.577185792349727,
-          Dominance_mean: 44.37568306010929,
-          x: 13.846016,
-          y: 7.292862,
-          x_rot: 7.686266760853416,
-          y_rot: 13.631555248917856,
-          lineWidth: 4.276585567908876,
-          hoverText:
-            "<b>CBP</b><br>Trust: 4.20<br>Warmth: -18.6<br>Dominance: 44.4<br><i>Dimensions:</i><br>Competence: 4.69<br>Reliability: 4.45<br>Ethics: 4.21<br>Sincerity: 4.05<br>Benevolence: 3.62",
-        },
-        {
-          Agency: "SocSecurity",
-          COMPETENT: 4.58607,
-          RELIABLE: 4.39754,
-          ETHICAL: 4.52066,
-          SINCERE: 4.24793,
-          BENEVOLENT: 3.90833,
-          Trust: 4.3321060000000005,
-          Warmth_mean: -12.76490514905149,
-          Dominance_mean: 38.96341463414634,
-          x: 14.472711,
-          y: 8.076554,
-          x_rot: 7.788393987212468,
-          y_rot: 14.629798607786427,
-          lineWidth: 3.399427025162777,
-          hoverText:
-            "<b>SocSecurity</b><br>Trust: 4.33<br>Warmth: -12.8<br>Dominance: 39.0<br><i>Dimensions:</i><br>Competence: 4.59<br>Reliability: 4.40<br>Ethics: 4.52<br>Sincerity: 4.25<br>Benevolence: 3.91",
-        },
-        {
-          Agency: "CISA",
-          COMPETENT: 5.46721,
-          RELIABLE: 4.70902,
-          ETHICAL: 4.67213,
-          SINCERE: 4.10833,
-          BENEVOLENT: 3.92672,
-          Trust: 4.576682,
-          Warmth_mean: -19.56693989071038,
-          Dominance_mean: 55.48360655737705,
-          x: 15.490471,
-          y: 8.452569,
-          x_rot: 8.440094998983254,
-          y_rot: 15.497271079442982,
-          lineWidth: 6.076830718548278,
-          hoverText:
-            "<b>CISA</b><br>Trust: 4.58<br>Warmth: -19.6<br>Dominance: 55.5<br><i>Dimensions:</i><br>Competence: 5.47<br>Reliability: 4.71<br>Ethics: 4.67<br>Sincerity: 4.11<br>Benevolence: 3.93",
-        },
-        {
-          Agency: "Ded",
-          COMPETENT: 4.29339,
-          RELIABLE: 4.22314,
-          ETHICAL: 4.12917,
-          SINCERE: 3.84298,
-          BENEVOLENT: 3.9322,
-          Trust: 4.084175999999999,
-          Warmth_mean: -5.370833333333334,
-          Dominance_mean: 30.65,
-          x: 14.132977,
-          y: 6.780223,
-          x_rot: 8.205210257502397,
-          y_rot: 13.356159157573536,
-          lineWidth: 2.052083898064553,
-          hoverText:
-            "<b>Ded</b><br>Trust: 4.08<br>Warmth: -5.4<br>Dominance: 30.6<br><i>Dimensions:</i><br>Competence: 4.29<br>Reliability: 4.22<br>Ethics: 4.13<br>Sincerity: 3.84<br>Benevolence: 3.93",
-        },
-        {
-          Agency: "LaborDept",
-          COMPETENT: 4.39024,
-          RELIABLE: 4.4187,
-          ETHICAL: 4.56098,
-          SINCERE: 4.12195,
-          BENEVOLENT: 4.0,
-          Trust: 4.298374,
-          Warmth_mean: -6.432249322493225,
-          Dominance_mean: 32.82113821138211,
-          x: 14.623857,
-          y: 7.4794054,
-          x_rot: 8.238972753192163,
-          y_rot: 14.209786299102294,
-          lineWidth: 2.4039571385824554,
-          hoverText:
-            "<b>LaborDept</b><br>Trust: 4.30<br>Warmth: -6.4<br>Dominance: 32.8<br><i>Dimensions:</i><br>Competence: 4.39<br>Reliability: 4.42<br>Ethics: 4.56<br>Sincerity: 4.12<br>Benevolence: 4.00",
-        },
-        {
-          Agency: "Census",
-          COMPETENT: 5.19492,
-          RELIABLE: 5.2839,
-          ETHICAL: 4.9181,
-          SINCERE: 4.87826,
-          BENEVOLENT: 4.07143,
-          Trust: 4.8693219999999995,
-          Warmth_mean: -0.0734463276836159,
-          Dominance_mean: 36.61440677966102,
-          x: 16.735006,
-          y: 10.232156,
-          x_rot: 8.52193338915045,
-          y_rot: 17.667317100772678,
-          lineWidth: 3.0187267079620663,
-          hoverText:
-            "<b>Census</b><br>Trust: 4.87<br>Warmth: -0.1<br>Dominance: 36.6<br><i>Dimensions:</i><br>Competence: 5.19<br>Reliability: 5.28<br>Ethics: 4.92<br>Sincerity: 4.88<br>Benevolence: 4.07",
-        },
-        {
-          Agency: "FDA",
-          COMPETENT: 5.22314,
-          RELIABLE: 4.79752,
-          ETHICAL: 4.59504,
-          SINCERE: 4.35,
-          BENEVOLENT: 4.13248,
-          Trust: 4.619636,
-          Warmth_mean: -8.921487603305785,
-          Dominance_mean: 52.09504132231405,
-          x: 15.8875675,
-          y: 9.050943,
-          x_rot: 8.449651149136999,
-          y_rot: 16.215355861472577,
-          lineWidth: 5.527650835058091,
-          hoverText:
-            "<b>FDA</b><br>Trust: 4.62<br>Warmth: -8.9<br>Dominance: 52.1<br><i>Dimensions:</i><br>Competence: 5.22<br>Reliability: 4.80<br>Ethics: 4.60<br>Sincerity: 4.35<br>Benevolence: 4.13",
-        },
-        {
-          Agency: "CDC",
-          COMPETENT: 5.38983,
-          RELIABLE: 4.82203,
-          ETHICAL: 4.76724,
-          SINCERE: 4.4322,
-          BENEVOLENT: 4.35593,
-          Trust: 4.753445999999999,
-          Warmth_mean: -1.774011299435028,
-          Dominance_mean: 36.34180790960452,
-          x: 16.133823,
-          y: 9.584203,
-          x_rot: 8.36770448384488,
-          y_rot: 16.796985247703837,
-          lineWidth: 2.97454700200625,
-          hoverText:
-            "<b>CDC</b><br>Trust: 4.75<br>Warmth: -1.8<br>Dominance: 36.3<br><i>Dimensions:</i><br>Competence: 5.39<br>Reliability: 4.82<br>Ethics: 4.77<br>Sincerity: 4.43<br>Benevolence: 4.36",
-        },
-        {
-          Agency: "FAA",
-          COMPETENT: 5.75,
-          RELIABLE: 5.46721,
-          ETHICAL: 5.2314,
-          SINCERE: 4.775,
-          BENEVOLENT: 4.41379,
-          Trust: 5.12748,
-          Warmth_mean: -1.112021857923497,
-          Dominance_mean: 50.2103825136612,
-          x: 16.151838,
-          y: 12.007575,
-          x_rot: 7.069842241832184,
-          y_rot: 18.843594636758517,
-          lineWidth: 5.222206898419378,
-          hoverText:
-            "<b>FAA</b><br>Trust: 5.13<br>Warmth: -1.1<br>Dominance: 50.2<br><i>Dimensions:</i><br>Competence: 5.75<br>Reliability: 5.47<br>Ethics: 5.23<br>Sincerity: 4.78<br>Benevolence: 4.41",
-        },
-        {
-          Agency: "Lib",
-          COMPETENT: 5.59483,
-          RELIABLE: 5.12931,
-          ETHICAL: 4.90351,
-          SINCERE: 4.63793,
-          BENEVOLENT: 4.46491,
-          Trust: 4.946098,
-          Warmth_mean: 15.672413793103448,
-          Dominance_mean: 32.52298850574712,
-          x: 16.536005,
-          y: 11.001816,
-          x_rot: 7.937664239294846,
-          y_rot: 18.206397311991758,
-          lineWidth: 2.3556364455324914,
-          hoverText:
-            "<b>Lib</b><br>Trust: 4.95<br>Warmth: 15.7<br>Dominance: 32.5<br><i>Dimensions:</i><br>Competence: 5.59<br>Reliability: 5.13<br>Ethics: 4.90<br>Sincerity: 4.64<br>Benevolence: 4.46",
-        },
-        {
-          Agency: "Amtrak",
-          COMPETENT: 5.12397,
-          RELIABLE: 5.33197,
-          ETHICAL: 4.73504,
-          SINCERE: 4.5819,
-          BENEVOLENT: 4.52193,
-          Trust: 4.858962,
-          Warmth_mean: 16.255464480874316,
-          Dominance_mean: 32.28415300546448,
-          x: 16.117989,
-          y: 10.241018,
-          x_rot: 7.998527936453539,
-          y_rot: 17.340460487836456,
-          lineWidth: 2.3169287202506137,
-          hoverText:
-            "<b>Amtrak</b><br>Trust: 4.86<br>Warmth: 16.3<br>Dominance: 32.3<br><i>Dimensions:</i><br>Competence: 5.12<br>Reliability: 5.33<br>Ethics: 4.74<br>Sincerity: 4.58<br>Benevolence: 4.52",
-        },
-        {
-          Agency: "FairHousing",
-          COMPETENT: 4.2314,
-          RELIABLE: 4.06612,
-          ETHICAL: 4.93802,
-          SINCERE: 4.50413,
-          BENEVOLENT: 4.62917,
-          Trust: 4.473768,
-          Warmth_mean: 11.296831955922864,
-          Dominance_mean: 24.15840220385675,
-          x: 14.682542,
-          y: 9.041379,
-          x_rot: 7.442006816463841,
-          y_rot: 15.554424076355598,
-          lineWidth: 1.0,
-          hoverText:
-            "<b>FairHousing</b><br>Trust: 4.47<br>Warmth: 11.3<br>Dominance: 24.2<br><i>Dimensions:</i><br>Competence: 4.23<br>Reliability: 4.07<br>Ethics: 4.94<br>Sincerity: 4.50<br>Benevolence: 4.63",
-        },
-        {
-          Agency: "FEMA",
-          COMPETENT: 4.8,
-          RELIABLE: 4.7125,
-          ETHICAL: 4.86555,
-          SINCERE: 4.49583,
-          BENEVOLENT: 4.8,
-          Trust: 4.734776,
-          Warmth_mean: 18.680555555555557,
-          Dominance_mean: 39.079166666666666,
-          x: 15.135976,
-          y: 9.891883,
-          x_rot: 7.362308528962579,
-          y_rot: 16.51494873993346,
-          lineWidth: 3.418186790232516,
-          hoverText:
-            "<b>FEMA</b><br>Trust: 4.73<br>Warmth: 18.7<br>Dominance: 39.1<br><i>Dimensions:</i><br>Competence: 4.80<br>Reliability: 4.71<br>Ethics: 4.87<br>Sincerity: 4.50<br>Benevolence: 4.80",
-        },
-        {
-          Agency: "NASA",
-          COMPETENT: 6.12705,
-          RELIABLE: 5.09016,
-          ETHICAL: 5.36475,
-          SINCERE: 4.90984,
-          BENEVOLENT: 4.83051,
-          Trust: 5.264462,
-          Warmth_mean: 10.48360655737705,
-          Dominance_mean: 46.78415300546448,
-          x: 16.517946,
-          y: 13.019933,
-          x_rot: 6.829052392383197,
-          y_rot: 19.892843909443677,
-          lineWidth: 4.666922820470341,
-          hoverText:
-            "<b>NASA</b><br>Trust: 5.26<br>Warmth: 10.5<br>Dominance: 46.8<br><i>Dimensions:</i><br>Competence: 6.13<br>Reliability: 5.09<br>Ethics: 5.36<br>Sincerity: 4.91<br>Benevolence: 4.83",
-        },
-        {
-          Agency: "NSF",
-          COMPETENT: 5.69262,
-          RELIABLE: 5.0935,
-          ETHICAL: 5.15447,
-          SINCERE: 5.05285,
-          BENEVOLENT: 4.83333,
-          Trust: 5.165354,
-          Warmth_mean: 13.486449864498644,
-          Dominance_mean: 43.91056910569106,
-          x: 16.104872,
-          y: 12.543167,
-          x_rot: 6.740178858665037,
-          y_rot: 19.268314131741725,
-          lineWidth: 4.201205219714897,
-          hoverText:
-            "<b>NSF</b><br>Trust: 5.17<br>Warmth: 13.5<br>Dominance: 43.9<br><i>Dimensions:</i><br>Competence: 5.69<br>Reliability: 5.09<br>Ethics: 5.15<br>Sincerity: 5.05<br>Benevolence: 4.83",
-        },
-        {
-          Agency: "EPA",
-          COMPETENT: 4.92149,
-          RELIABLE: 4.69835,
-          ETHICAL: 5.02869,
-          SINCERE: 4.7686,
-          BENEVOLENT: 4.84426,
-          Trust: 4.852278,
-          Warmth_mean: 13.851775956284154,
-          Dominance_mean: 33.85245901639344,
-          x: 15.492891,
-          y: 10.796051,
-          x_rot: 7.172410222360604,
-          y_rot: 17.468283268102198,
-          lineWidth: 2.5711018149417986,
-          hoverText:
-            "<b>EPA</b><br>Trust: 4.85<br>Warmth: 13.9<br>Dominance: 33.9<br><i>Dimensions:</i><br>Competence: 4.92<br>Reliability: 4.70<br>Ethics: 5.03<br>Sincerity: 4.77<br>Benevolence: 4.84",
-        },
-        {
-          Agency: "USPS",
-          COMPETENT: 5.52419,
-          RELIABLE: 5.66129,
-          ETHICAL: 5.37903,
-          SINCERE: 5.08929,
-          BENEVOLENT: 5.05172,
-          Trust: 5.341104,
-          Warmth_mean: 25.317204301075268,
-          Dominance_mean: 38.58602150537634,
-          x: 15.575095,
-          y: 12.746656,
-          x_rot: 6.18464819958677,
-          y_rot: 19.152309262559154,
-          lineWidth: 3.3382634647439513,
-          hoverText:
-            "<b>USPS</b><br>Trust: 5.34<br>Warmth: 25.3<br>Dominance: 38.6<br><i>Dimensions:</i><br>Competence: 5.52<br>Reliability: 5.66<br>Ethics: 5.38<br>Sincerity: 5.09<br>Benevolence: 5.05",
-        },
-        {
-          Agency: "NEA",
-          COMPETENT: 5.1,
-          RELIABLE: 4.9125,
-          ETHICAL: 5.24167,
-          SINCERE: 5.1625,
-          BENEVOLENT: 5.1375,
-          Trust: 5.110833999999999,
-          Warmth_mean: 32.82282913165266,
-          Dominance_mean: 29.352777777777774,
-          x: 15.694931,
-          y: 11.610754,
-          x_rot: 6.900812097904398,
-          y_rot: 18.262509683301836,
-          lineWidth: 1.8418449622786117,
-          hoverText:
-            "<b>NEA</b><br>Trust: 5.11<br>Warmth: 32.8<br>Dominance: 29.4<br><i>Dimensions:</i><br>Competence: 5.10<br>Reliability: 4.91<br>Ethics: 5.24<br>Sincerity: 5.16<br>Benevolence: 5.14",
-        },
-        {
-          Agency: "Zoo",
-          COMPETENT: 5.41597,
-          RELIABLE: 5.0042,
-          ETHICAL: 5.07917,
-          SINCERE: 4.93333,
-          BENEVOLENT: 5.15833,
-          Trust: 5.1182,
-          Warmth_mean: 38.46597222222223,
-          Dominance_mean: 34.419444444444444,
-          x: 16.68661,
-          y: 12.112645,
-          x_rot: 7.46239127616282,
-          y_rot: 19.22165025770613,
-          lineWidth: 2.6629923260335513,
-          hoverText:
-            "<b>Zoo</b><br>Trust: 5.12<br>Warmth: 38.5<br>Dominance: 34.4<br><i>Dimensions:</i><br>Competence: 5.42<br>Reliability: 5.00<br>Ethics: 5.08<br>Sincerity: 4.93<br>Benevolence: 5.16",
-        },
-        {
-          Agency: "Mus",
-          COMPETENT: 6.23109,
-          RELIABLE: 5.725,
-          ETHICAL: 5.53361,
-          SINCERE: 5.47059,
-          BENEVOLENT: 5.22222,
-          Trust: 5.636502,
-          Warmth_mean: 32.735537190082646,
-          Dominance_mean: 44.43250688705234,
-          x: 16.054924,
-          y: 13.354097,
-          x_rot: 6.258828592075457,
-          y_rot: 19.92284005823978,
-          lineWidth: 4.2857949236377095,
-          hoverText:
-            "<b>Mus</b><br>Trust: 5.64<br>Warmth: 32.7<br>Dominance: 44.4<br><i>Dimensions:</i><br>Competence: 6.23<br>Reliability: 5.72<br>Ethics: 5.53<br>Sincerity: 5.47<br>Benevolence: 5.22",
-        },
+      // --- Globals ---
+      const TRUST_DIMS = [
+        "Competent",
+        "Reliable",
+        "Ethical",
+        "Sincere",
+        "Benevolent",
       ];
+      const METRICS = ["Warmth", "Dominance"];
+      const AGENCY_COL = "Agency";
 
-      // Create Traces
-      const trace = {
-        x: dataset.map((d) => d.x_rot),
-        y: dataset.map((d) => d.y_rot),
-        text: dataset.map((d) => d.Agency),
-        hovertemplate: dataset.map((d) => d.hoverText + "<extra></extra>"), // Hide secondary box
-        mode: "markers+text",
-        textposition: "top center",
-        marker: {
-          size: 25,
-          color: dataset.map((d) => d.Warmth_mean),
-          // Diverging Color Scale: Blue (Cold) -> White -> Red (Warm)
-          colorscale: "RdBu",
-          reversescale: false, // Standard RdBu is Red(High) to Blue(Low). We want Warm(Red) to Cold(Blue).
-          // Wait, usually RdBu is Red->Blue. If we want Red=Warm (high value) and Blue=Cold (low value),
-          // standard RdBu maps High->Blue, Low->Red. So we typically need to reverse it.
-          // Let's check Plotly docs or just use 'reversescale: true' if standard is Red-Blue.
-          // Standard RdBu: Low=Red, High=Blue.
-          // We want: Low=Blue(Cold), High=Red(Warm).
-          // So we DO need reversescale: true.
-          reversescale: true,
-          cmin: -45,
-          cmax: 45,
-          colorbar: {
-            title: "Warmth",
-            thickness: 15,
-            len: 0.5,
-            y: 0.5,
-            x: 1.05,
+      const loadingOverlay = document.getElementById("loading-overlay");
+      const fileNameDisplay = document.getElementById("file-name");
+      const fileInput = document.getElementById("csv-uploader");
+
+      // --- Core Functions ---
+
+      /**
+       * Takes raw CSV data from PapaParse and processes it completely.
+       * 1. Validates data
+       * 2. Calculates metrics (Trust)
+       * 3. Runs UMAP
+       * 4. Rotates plot
+       * 5. Renders plot
+       */
+      async function processAndPlot(parsedData) {
+        loadingOverlay.classList.add("visible");
+
+        // 1. Validate and Process Data
+        const requiredCols = [...TRUST_DIMS, ...METRICS];
+        let processedData = [];
+
+        if (!parsedData || !parsedData.length || !parsedData[0][AGENCY_COL]) {
+          alert(
+            "Error: Invalid CSV file. Make sure it has an 'Agency' column and all metric columns."
+          );
+          loadingOverlay.classList.remove("visible");
+          return;
+        }
+
+        try {
+          // Filter out bad rows, calculate Trust
+          processedData = parsedData
+            .map((row) => {
+              const data = { Agency: row[AGENCY_COL] };
+              let trustSum = 0;
+              let trustCount = 0;
+              let isValid = true;
+
+              // This loop now only processes numeric columns
+              for (const col of requiredCols) {
+                const val = parseFloat(row[col]);
+                if (isNaN(val)) {
+                  isValid = false; // Mark row as invalid
+                }
+                data[col] = val; // Store value (or NaN)
+              }
+
+              if (!isValid) return null; // Skip invalid rows
+
+              for (const dim of TRUST_DIMS) {
+                trustSum += data[dim];
+                trustCount++;
+              }
+              data.Trust = trustSum / trustCount;
+
+              return data;
+            })
+            .filter((d) => d); // Filter out nulls (invalid rows)
+
+          if (processedData.length === 0) {
+            throw new Error("No valid data rows found.");
+          }
+        } catch (error) {
+          alert(`Error processing data: ${error.message}`);
+          loadingOverlay.classList.remove("visible");
+          return;
+        }
+
+        // 2. Run UMAP
+        // UMAP needs a 2D array of numbers
+        const umapInput = processedData.map((d) =>
+          TRUST_DIMS.map((dim) => d[dim])
+        );
+
+        // Run UMAP in a timeout to allow UI to update
+        await new Promise((resolve) =>
+          setTimeout(() => {
+            // Check for sufficient data
+            if (umapInput.length < 3) {
+              alert("Not enough data to run UMAP (requires at least 3 rows).");
+              loadingOverlay.classList.remove("visible");
+              return;
+            }
+
+            try {
+              const umap = new UMAP({
+                // Ensure nNeighbors is less than the number of samples
+                nNeighbors: Math.min(15, umapInput.length - 1),
+                nComponents: 2,
+                minDist: 0.1,
+                spread: 1.0,
+              });
+              const embedding = umap.fit(umapInput);
+
+              // Add UMAP coords to our data
+              processedData.forEach((d, i) => {
+                d.x_umap = embedding[i][0];
+                d.y_umap = embedding[i][1];
+              });
+              resolve();
+            } catch (err) {
+              alert(`Error during UMAP calculation: ${err.message}`);
+              loadingOverlay.classList.remove("visible");
+            }
+          }, 50)
+        ); // 50ms delay to show "Loading..."
+
+        // Stop if UMAP failed
+        if (!processedData[0].hasOwnProperty("x_umap")) return;
+
+        // 3. Find Optimal Rotation for X-Axis = Trust
+        const { rotatedData, angle } = rotateToMaximizeCorrelation(
+          processedData,
+          "x_umap",
+          "y_umap",
+          "Trust"
+        );
+
+        // 4. Render Plot
+        renderPlot(rotatedData);
+        loadingOverlay.classList.remove("visible");
+      }
+
+      /**
+       * Renders the Plotly chart
+       */
+      function renderPlot(dataset) {
+        // Find min/max for scaling
+        const domMin = Math.min(...dataset.map((d) => d.Dominance));
+        const domMax = Math.max(...dataset.map((d) => d.Dominance));
+
+        // Handle case where all dominance values are the same
+        const getLineWidth = (d) => {
+          if (domMin === domMax) return 2; // Default width
+          return 1 + ((d - domMin) / (domMax - domMin)) * 7;
+        };
+
+        const trace = {
+          x: dataset.map((d) => d.x_rot),
+          y: dataset.map((d) => d.y_rot),
+          text: dataset.map((d) => d.Agency),
+          hovertemplate: dataset.map((d) => {
+            let hover =
+              `<b>${d.Agency}</b><br>` +
+              `Trust: ${d.Trust.toFixed(2)}<br>` +
+              `Warmth: ${d.Warmth.toFixed(1)}<br>` +
+              `Dominance: ${d.Dominance.toFixed(1)}<br>` +
+              `<i>Dimensions:</i><br>`;
+            TRUST_DIMS.forEach((dim) => {
+              hover += `${dim}: ${d[dim].toFixed(2)}<br>`;
+            });
+            return hover + "<extra></extra>";
+          }),
+          mode: "markers+text",
+          textposition: "top center",
+          marker: {
+            size: 25,
+            color: dataset.map((d) => d.Warmth),
+            colorscale: "RdBu",
+            reversescale: true, // Blue=Cold(Low) to Red=Warm(High)
+            cmin: -45,
+            cmax: 45,
+            colorbar: {
+              title: "Warmth",
+              thickness: 15,
+              len: 0.5,
+              y: 0.5,
+              x: 1.05,
+            },
+            line: {
+              width: dataset.map((d) => getLineWidth(d.Dominance)),
+              color: "#333",
+            },
+            symbol: "circle",
           },
-          line: {
-            width: dataset.map((d) => d.lineWidth),
-            color: "#333", // Dark grey border
+          type: "scatter",
+        };
+
+        const layout = {
+          hovermode: "closest",
+          dragmode: "zoom",
+          showlegend: false,
+          margin: { t: 40, b: 40, l: 40, r: 80 },
+          xaxis: {
+            visible: true,
+            showgrid: false,
+            zeroline: false,
+            showticklabels: false,
+            title: "Trust Score (Low → High)",
+            titlefont: { size: 14, color: "#888" },
           },
-          symbol: "circle",
-        },
-        type: "scatter",
-      };
+          yaxis: {
+            visible: false,
+            showgrid: false,
+            zeroline: false,
+          },
+          plot_bgcolor: "#fff",
+          paper_bgcolor: "#fff",
+        };
 
-      const layout = {
-        hovermode: "closest",
-        dragmode: "zoom",
-        showlegend: false, // Custom legend used
-        margin: { t: 40, b: 40, l: 40, r: 80 },
-        xaxis: {
-          visible: false,
-          showgrid: false,
-          zeroline: false,
-        },
-        yaxis: {
-          visible: true,
-          showgrid: false,
-          zeroline: false,
-          showticklabels: false,
-          title: "Trust Score (Low → High)",
-          titlefont: { size: 14, color: "#888" },
-        },
-        plot_bgcolor: "#fff",
-        paper_bgcolor: "#fff",
-      };
+        Plotly.newPlot("plot", [trace], layout, {
+          responsive: true,
+          displayModeBar: false,
+        });
+      }
 
-      Plotly.newPlot("plot", [trace], layout, {
-        responsive: true,
-        displayModeBar: false,
+      // --- Rotation & Correlation Helpers ---
+
+      function rotateToMaximizeCorrelation(data, xCol, yCol, targetCol) {
+        // Find optimal angle by checking a range
+        let bestAngle = 0;
+        let maxCorr = -1;
+
+        for (let i = -180; i <= 180; i += 2) {
+          const angle = i * (Math.PI / 180); // to radians
+          const rotatedX = data.map(
+            (d) => d[xCol] * Math.cos(angle) + d[yCol] * Math.sin(angle)
+          );
+          const corr = correlation(
+            rotatedX,
+            data.map((d) => d[targetCol])
+          );
+
+          if (corr > maxCorr) {
+            maxCorr = corr;
+            bestAngle = angle;
+          }
+        }
+
+        // Apply the best rotation
+        const rotatedData = data.map((d) => ({
+          ...d,
+          x_rot: d[xCol] * Math.cos(bestAngle) + d[yCol] * Math.sin(bestAngle),
+          y_rot: -d[xCol] * Math.sin(bestAngle) + d[yCol] * Math.cos(bestAngle),
+        }));
+
+        return { rotatedData, angle: bestAngle };
+      }
+
+      // Standard Pearson correlation
+      function correlation(x, y) {
+        const n = x.length;
+        if (n === 0) return 0;
+
+        const meanX = x.reduce((a, b) => a + b) / n;
+        const meanY = y.reduce((a, b) => a + b) / n;
+
+        let num = 0,
+          denX = 0,
+          denY = 0;
+
+        for (let i = 0; i < n; i++) {
+          num += (x[i] - meanX) * (y[i] - meanY);
+          denX += Math.pow(x[i] - meanX, 2);
+          denY += Math.pow(y[i] - meanY, 2);
+        }
+
+        if (denX === 0 || denY === 0) return 0;
+        return num / Math.sqrt(denX * denY);
+      }
+
+      // --- Event Listeners ---
+
+      // 1. Load default data on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        loadingOverlay.classList.add("visible");
+        fetch("agency.csv")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Could not find default 'agency.csv' file.");
+            }
+            return response.text();
+          })
+          .then((csvText) => {
+            fileNameDisplay.textContent = "agency.csv (default)";
+            Papa.parse(csvText, {
+              header: true,
+              dynamicTyping: false, // Parse as strings, convert manually
+              skipEmptyLines: true,
+              complete: (results) => processAndPlot(results.data),
+              error: (err) => {
+                alert(`Error parsing default CSV: ${err.message}`);
+                loadingOverlay.classList.remove("visible");
+              },
+            });
+          })
+          .catch((err) => {
+            alert(`Error loading default data: ${err.message}`);
+            loadingOverlay.classList.remove("visible");
+            fileNameDisplay.textContent = "No file loaded.";
+          });
+      });
+
+      // 2. Listen for user-uploaded file
+      fileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          fileNameDisplay.textContent = file.name;
+          Papa.parse(file, {
+            header: true,
+            dynamicTyping: false, // Parse as strings, convert manually
+            skipEmptyLines: true,
+            complete: (results) => processAndPlot(results.data),
+            error: (err) => {
+              alert(`Error parsing file: ${err.message}`);
+            },
+          });
+        }
       });
     </script>
   </body>

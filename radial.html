@@ -3,661 +3,562 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Limited 2D Representations</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <title>Radial/Bar Comparison | Trust in Gov</title>
+    <!-- Plotly.js for charting -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <!-- PapaParse for CSV loading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+      :root {
+        --primary-color: #2c5f7f;
+        --bg-color: #f8f9fa;
+        --text-color: #333;
       }
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter",
-          sans-serif;
-        background: #f8f9fa;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+        flex-direction: column;
         min-height: 100vh;
-        display: flex;
-      }
-      .sidebar {
-        width: 360px;
-        background: white;
-        padding: 30px;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-        display: flex;
-        flex-direction: column;
-        gap: 22px;
-      }
-      /* Styling the Nav links to look consistent */
-      .nav-group {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 20px;
-      }
-      .home-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        background: #f7fafc;
-        color: #2d3748;
-        text-decoration: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        transition: 0.2s ease;
-        border: 1px solid #e2e8f0;
-        justify-content: center;
-      }
-      .home-button:hover {
-        background: #edf2f7;
-        border-color: #cbd5e0;
       }
 
-      .sidebar h1 {
-        font-size: 24px;
-        font-weight: 600;
-        color: #1a202c;
-        margin-bottom: 6px;
-      }
-      .sidebar h2 {
-        font-size: 13px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #718096;
-        margin-bottom: 10px;
-      }
-      .muted {
-        color: #718096;
-        font-size: 14px;
-      }
-      .file-upload-wrapper {
+      /* Navigation Bar */
+      nav {
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
         position: relative;
       }
-      input[type="file"] {
+      .nav-brand {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+      .nav-item {
+        text-decoration: none;
+        color: #666;
+        font-weight: 500;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+      .nav-item:hover {
+        background-color: #eef2f5;
+        color: var(--primary-color);
+      }
+      .nav-item.active {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      /* File Uploader */
+      #csv-uploader {
         display: none;
       }
-      .file-upload-label {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 14px;
-        background: #2d3748;
-        color: #fff;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: 0.2s ease;
-        font-weight: 600;
-      }
-      .file-upload-label:hover {
-        background: #1a202c;
-      }
-      .file-name {
-        margin-top: 8px;
-        font-size: 13px;
-        color: #718096;
-        text-align: center;
-      }
-      .error {
-        color: #b00020;
-        font-size: 14px;
-      }
-
-      select,
-      .segmented {
-        width: 100%;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 12px;
-        font-size: 15px;
-        color: #1a202c;
-        font-family: inherit;
-        cursor: pointer;
-      }
-      select:hover:not(:disabled),
-      .segmented:hover {
-        border-color: #cbd5e0;
-      }
-      select:focus,
-      .segmented:focus {
-        outline: none;
-        border-color: #4a5568;
-      }
-      select:disabled {
-        background: #f7fafc;
-        cursor: not-allowed;
-        opacity: 0.6;
-      }
-      .segmented {
-        display: flex;
-        gap: 6px;
-        padding: 6px;
-      }
-      .segmented button {
-        flex: 1;
-        padding: 10px 12px;
+      #upload-label {
+        display: inline-block;
+        background-color: #eef2f5;
+        color: var(--primary-color);
+        padding: 8px 16px;
         border-radius: 6px;
-        border: 1px solid #e2e8f0;
-        background: #fff;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      #upload-label:hover {
+        background-color: #dbe4eb;
+      }
+      #file-name {
+        font-size: 0.8rem;
+        color: #777;
+        margin-left: 10px;
+      }
+
+      /* Main Layout */
+      .container {
+        flex: 1;
+        max-width: 1600px;
+        margin: 20px auto;
+        padding: 0 20px;
+        width: 100%;
+        box-sizing: border-box;
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 20px;
+      }
+
+      /* Controls Panel */
+      .controls-panel {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        align-self: start;
+      }
+      .controls-panel h2 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+      }
+      .control-group {
+        margin-bottom: 20px;
+      }
+      .control-group label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+      }
+      #agency-select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+      }
+      #add-agency-btn {
+        width: 100%;
+        padding: 10px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 6px;
         cursor: pointer;
         font-weight: 600;
-        color: #2d3748;
+        margin-top: 10px;
+        transition: background 0.2s;
       }
-      .segmented button.active {
-        background: #2d3748;
-        color: #fff;
-        border-color: #2d3748;
+      #add-agency-btn:hover {
+        background: #224a64;
       }
-      .segmented button:disabled {
-        opacity: 0.5;
+      #add-agency-btn:disabled {
+        background: #ccc;
         cursor: not-allowed;
       }
 
-      .main {
-        flex-grow: 1;
+      /* Comparison List */
+      #comparison-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .comparison-item {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        padding: 40px;
+        justify-content: space-between;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        background: #f8f9fa;
       }
-      .chart-container {
-        background: white;
-        border-radius: 12px;
-        padding: 30px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        max-width: 980px;
-        width: 100%;
-      }
-      #chart {
-        width: 100%;
-        height: 600px;
-      }
-      #description {
-        margin-top: 30px;
-        text-align: center;
-        background: white;
-        padding: 30px 40px;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        max-width: 600px;
-      }
-      #description strong {
-        font-size: 22px;
-        color: #1a202c;
-        display: block;
-        margin-bottom: 16px;
-      }
-      .scores-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
-        margin-top: 14px;
-      }
-      .score-item {
-        text-align: left;
-        padding: 12px;
-        background: #f7fafc;
-        border-radius: 8px;
-      }
-      .score-label {
-        font-size: 12px;
-        color: #718096;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 700;
-        margin-bottom: 4px;
-      }
-      .score-value {
-        font-size: 22px;
-        font-weight: 700;
-        color: #2d3748;
-      }
-      .mean-score {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 2px solid #e2e8f0;
-      }
-      .mean-score .score-label {
-        font-size: 13px;
-        margin-bottom: 6px;
-      }
-      .mean-score .score-value {
-        font-size: 30px;
-        color: #1a202c;
-      }
-      .placeholder {
-        text-align: center;
-        color: #718096;
-        font-size: 18px;
+      .comparison-item-name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         font-weight: 500;
       }
-      .placeholder-icon {
-        font-size: 64px;
-        margin-bottom: 20px;
-        opacity: 0.5;
+      .color-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        display: inline-block;
       }
-      .note {
-        font-size: 12px;
-        color: #718096;
-        margin-top: 6px;
+      .remove-btn {
+        background: transparent;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+      .remove-btn:hover {
+        color: #d9534f;
+      }
+
+      /* Visualization Area */
+      .viz-area {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .viz-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        position: relative;
+        flex: 1;
+      }
+      .viz-card h3 {
+        margin-top: 0;
+        color: #333;
+      }
+      #radar-chart,
+      #bar-chart {
+        width: 100%;
+        min-height: 450px;
+      }
+      #placeholder {
+        min-height: 450px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 1.2rem;
       }
     </style>
   </head>
   <body>
-    <div class="sidebar">
-      <div class="nav-group">
-        <a href="index.html" class="home-button"
-          ><span>←</span><span>Back to Home</span></a
-        >
-        <a href="generalized.html" class="home-button"
-          ><span>☷</span><span>Generalized Viewer</span></a
-        >
-      </div>
+    <nav>
+      <a href="index.html" class="nav-brand">Trust in Gov</a>
+      <div class="nav-links">
+        <!-- File Uploader -->
+        <input type="file" id="csv-uploader" accept=".csv" />
+        <label for="csv-uploader" id="upload-label">Load New CSV</label>
+        <span id="file-name">Loading default...</span>
 
-      <div>
-        <h1>Trust Charts</h1>
-        <p class="muted">Visualize agency trust metrics</p>
+        <a href="index.html" class="nav-item">High-Dimensional (UMAP)</a>
+        <a href="radial.html" class="nav-item active">Radial/Bar Views</a>
       </div>
+    </nav>
 
-      <div class="file-upload-wrapper">
-        <label for="csvFile" class="file-upload-label">
-          <span>Upload CSV</span>
-        </label>
-        <input type="file" id="csvFile" accept=".csv" />
-        <div id="fileName" class="file-name">No file selected</div>
-        <div
-          id="fileError"
-          class="error"
-          style="display: none; margin-top: 5px"
-        ></div>
-      </div>
-
-      <div>
-        <h2>Mode</h2>
-        <select id="modeSelect" disabled>
-          <option value="within">
-            Compare metrics <strong>within</strong> an agency
-          </option>
-          <option value="across">
-            Compare <strong>agencies</strong> on a chosen metric
-          </option>
-        </select>
-        <p class="note" id="modeNote">Upload a CSV to enable.</p>
-      </div>
-
-      <div id="withinControls" style="display: none">
-        <h2>Select Agency</h2>
-        <select id="agencySelect">
-          <option value="" disabled selected>Choose agency...</option>
-        </select>
-      </div>
-
-      <div id="acrossControls" style="display: none">
-        <h2>Select Metric</h2>
-        <select id="metricSelect">
-          <option value="" disabled selected>Choose metric...</option>
-        </select>
-      </div>
-
-      <div>
-        <h2>Chart Type</h2>
-        <div class="segmented" role="tablist" aria-label="Chart Type">
-          <button
-            id="btnRadar"
-            class="active"
-            data-type="radar"
-            role="tab"
-            aria-selected="true"
-          >
-            Radial
-          </button>
-          <button id="btnBar" data-type="bar" role="tab" aria-selected="false">
-            Bar
-          </button>
+    <div class="container">
+      <!-- Controls Panel -->
+      <div class="controls-panel">
+        <div class="control-group">
+          <label for="agency-select">Select Agency</label>
+          <select id="agency-select" disabled>
+            <option value="">Load CSV to populate</option>
+          </select>
+          <button id="add-agency-btn" disabled>+ Add to Comparison</button>
         </div>
-        <p class="note" id="typeNote"></p>
-      </div>
-    </div>
 
-    <div class="main">
-      <div id="placeholder" class="placeholder">
-        <div class="placeholder-icon">📊</div>
-        Upload a CSV file to begin<br />visualizing trust metrics
-      </div>
-
-      <div id="chartContainer" class="chart-container" style="display: none">
-        <div id="chart"></div>
+        <h2>Compared Agencies</h2>
+        <ul id="comparison-list">
+          <li id="no-agencies-msg" style="color: #777">
+            Add an agency to begin.
+          </li>
+        </ul>
       </div>
 
-      <div id="description"></div>
+      <!-- Visualization Area -->
+      <div class="viz-area">
+        <div class="viz-card">
+          <h3>Trust Dimensions (Radial)</h3>
+          <div id="radar-chart">
+            <div id="placeholder">Select agencies to see Trust Dimensions</div>
+          </div>
+        </div>
+        <div class="viz-card">
+          <h3>Warmth & Dominance (Bar)</h3>
+          <div id="bar-chart"></div>
+        </div>
+      </div>
     </div>
 
     <script>
-      // Script content remains the same as your original file
-      // (Included here implicitly by not changing the logic below)
+      // --- Globals ---
+      const TRUST_DIMS = [
+        "Competent",
+        "Reliable",
+        "Ethical",
+        "Sincere",
+        "Benevolent",
+      ];
+      const WD_DIMS = ["Warmth", "Dominance"];
+      const AGENCY_COL = "Agency";
 
-      let agencyData = [];
-      let mode = "within"; // 'within' or 'across'
-      let chartType = "radar"; // 'radar' or 'bar'
+      // UI Elements
+      const fileNameDisplay = document.getElementById("file-name");
+      const fileInput = document.getElementById("csv-uploader");
+      const agencySelect = document.getElementById("agency-select");
+      const addBtn = document.getElementById("add-agency-btn");
+      const comparisonList = document.getElementById("comparison-list");
+      const noAgenciesMsg = document.getElementById("no-agencies-msg");
+      const radarChartEl = document.getElementById("radar-chart");
+      const barChartEl = document.getElementById("bar-chart");
+      const placeholder = document.getElementById("placeholder");
 
-      const modeSelect = document.getElementById("modeSelect");
-      const btnRadar = document.getElementById("btnRadar");
-      const btnBar = document.getElementById("btnBar");
-      const typeNote = document.getElementById("typeNote");
+      // State
+      let allAgencyData = [];
+      let comparedAgencies = new Map(); // Map<string, object>
+      const colorPalette = [
+        "#1f77b4",
+        "#ff7f0e",
+        "#2ca02c",
+        "#d62728",
+        "#9467bd",
+        "#8c564b",
+        "#e377c2",
+        "#7f7f7f",
+        "#bcbd22",
+        "#17becf",
+      ];
 
-      function setChartType(type) {
-        chartType = type;
-        btnRadar.className = type === "radar" ? "active" : "";
-        btnBar.className = type === "bar" ? "active" : "";
-        btnRadar.setAttribute("aria-selected", type === "radar");
-        btnBar.setAttribute("aria-selected", type === "bar");
-        rerenderIfPossible();
-      }
+      // --- Core Functions ---
 
-      btnRadar.addEventListener("click", () => setChartType("radar"));
-      btnBar.addEventListener("click", () => setChartType("bar"));
-
-      function setMode(newMode) {
-        mode = newMode;
-        document.getElementById("withinControls").style.display =
-          mode === "within" ? "block" : "none";
-        document.getElementById("acrossControls").style.display =
-          mode === "across" ? "block" : "none";
-
-        if (mode === "across") {
-          setChartType("bar");
-          btnRadar.disabled = true;
-          typeNote.textContent =
-            "Across-agencies mode uses bar charts (radar is disabled).";
-        } else {
-          btnRadar.disabled = false;
-          typeNote.textContent = "";
-        }
-        rerenderIfPossible();
-      }
-
-      modeSelect.addEventListener("change", (e) => setMode(e.target.value));
-
-      // CSV parsing
-      document
-        .getElementById("csvFile")
-        .addEventListener("change", function (event) {
-          const file = event.target.files[0];
-          if (!file) return;
-          document.getElementById("fileName").textContent = file.name;
-          document.getElementById("fileError").style.display = "none";
-
-          Papa.parse(file, {
-            header: true,
-            dynamicTyping: true,
-            skipEmptyLines: true,
-            complete: function (results) {
-              const rawRows = results.data || [];
-              agencyData = rawRows.filter(
-                (row) => row.Agency != null && String(row.Agency).trim() !== ""
-              );
-
-              const numSet = new Set();
-              agencyData = agencyData.map((row) => {
-                const newRow = { ...row };
-                Object.keys(row).forEach((key) => {
-                  if (key !== "Agency" && typeof row[key] === "number") {
-                    numSet.add(key);
-                  }
-                });
-                return newRow;
-              });
-
-              if (agencyData.length === 0) {
-                showFileError("No valid agency rows found.");
-                return;
-              }
-
-              populateAgencySelect();
-              populateMetricSelect(Array.from(numSet));
-
-              modeSelect.disabled = false;
-              document.getElementById("modeNote").style.display = "none";
-
-              // Trigger default
-              if (mode === "within") {
-                const agencySelect = document.getElementById("agencySelect");
-                if (agencySelect.options.length > 1) {
-                  agencySelect.selectedIndex = 1;
-                  renderWithin(agencySelect.value);
-                }
-              }
-            },
-            error: function (err) {
-              showFileError("CSV Parse Error: " + err.message);
-            },
-          });
-        });
-
-      function showFileError(msg) {
-        const el = document.getElementById("fileError");
-        el.textContent = msg;
-        el.style.display = "block";
-      }
-
-      function populateAgencySelect() {
-        const sel = document.getElementById("agencySelect");
-        sel.innerHTML =
-          '<option value="" disabled selected>Choose agency...</option>';
-        const agencies = [...new Set(agencyData.map((d) => d.Agency))].sort();
-        agencies.forEach((a) => {
-          const opt = document.createElement("option");
-          opt.value = a;
-          opt.textContent = a;
-          sel.appendChild(opt);
-        });
-        sel.addEventListener("change", () => renderWithin(sel.value));
-      }
-
-      function populateMetricSelect(metrics) {
-        const sel = document.getElementById("metricSelect");
-        sel.innerHTML =
-          '<option value="" disabled selected>Choose metric...</option>';
-        metrics.sort().forEach((m) => {
-          const opt = document.createElement("option");
-          opt.value = m;
-          opt.textContent = m;
-          sel.appendChild(opt);
-        });
-        sel.addEventListener("change", () => renderAcross(sel.value));
-      }
-
-      function rerenderIfPossible() {
-        if (agencyData.length === 0) return;
-        if (mode === "within") {
-          const agency = document.getElementById("agencySelect").value;
-          if (agency) renderWithin(agency);
-        } else {
-          const metric = document.getElementById("metricSelect").value;
-          if (metric) renderAcross(metric);
-        }
-      }
-
-      // ====== RENDERERS ======
-
-      function renderWithin(agency) {
-        const selected = agencyData.find(
-          (row) => String(row.Agency) === String(agency)
-        );
-        if (!selected) return;
-
-        const dims = Object.keys(selected).filter((k) => k !== "Agency");
-        const numericDims = dims.filter(
-          (k) => typeof selected[k] === "number" && isFinite(selected[k])
-        );
-        const values = numericDims.map((k) => selected[k]);
-
-        if (!values.length) {
-          showFileError('No numeric metrics found for "' + agency + '".');
+      /**
+       * Takes raw CSV data, processes, and stores it.
+       */
+      function processCSV(parsedData) {
+        if (!parsedData || !parsedData.length || !parsedData[0][AGENCY_COL]) {
+          alert(
+            "Error: Invalid CSV file. Make sure it has an 'Agency' column and all metric columns."
+          );
           return;
         }
 
-        document.getElementById("placeholder").style.display = "none";
-        document.getElementById("chartContainer").style.display = "block";
+        try {
+          allAgencyData = parsedData
+            .map((row) => {
+              const data = { Agency: row[AGENCY_COL] };
+              let isValid = true;
 
-        if (chartType === "radar") {
-          renderRadar(numericDims, values);
-        } else {
-          renderBar(numericDims, values, {
-            xIsCategories: true,
-            titleY: "Score",
-          });
-        }
-        renderDescriptionWithin(agency, numericDims, values);
-      }
+              [...TRUST_DIMS, ...WD_DIMS].forEach((col) => {
+                const val = parseFloat(row[col]);
+                if (isNaN(val)) isValid = false;
+                data[col] = val;
+              });
 
-      function renderAcross(metric) {
-        // Gather all agencies and their value for this metric
-        const agencies = [];
-        const values = [];
-        agencyData.forEach((row) => {
-          if (typeof row[metric] === "number" && isFinite(row[metric])) {
-            agencies.push(row.Agency);
-            values.push(row[metric]);
+              return isValid ? data : null;
+            })
+            .filter((d) => d && d.Agency); // Filter out nulls and rows without an agency
+
+          if (allAgencyData.length === 0) {
+            throw new Error("No valid agency data found in CSV.");
           }
-        });
 
-        if (!values.length) return;
-
-        document.getElementById("placeholder").style.display = "none";
-        document.getElementById("chartContainer").style.display = "block";
-
-        // Always Bar for across
-        renderBar(agencies, values, { xIsCategories: true, titleY: metric });
-        renderDescriptionAcross(metric, agencies, values);
+          // Reset state
+          comparedAgencies.clear();
+          populateAgencySelect();
+          updateComparisonList();
+          drawCharts();
+        } catch (error) {
+          alert(`Error processing data: ${error.message}`);
+        }
       }
 
-      // ====== PLOTLY WRAPPERS ======
+      /**
+       * Fills the <select> dropdown with agency names
+       */
+      function populateAgencySelect() {
+        agencySelect.innerHTML = "";
 
-      function renderRadar(categories, values) {
-        // Close the loop
-        const r = [...values, values[0]];
-        const theta = [...categories, categories[0]];
+        allAgencyData
+          .sort((a, b) => a.Agency.localeCompare(b.Agency))
+          .forEach((d) => {
+            const option = document.createElement("option");
+            option.value = d.Agency;
+            option.textContent = d.Agency;
+            agencySelect.appendChild(option);
+          });
 
-        const data = [
-          {
+        agencySelect.disabled = false;
+        addBtn.disabled = false;
+      }
+
+      /**
+       * Re-draws the list of compared agencies
+       */
+      function updateComparisonList() {
+        comparisonList.innerHTML = ""; // Clear list
+        if (comparedAgencies.size === 0) {
+          comparisonList.appendChild(noAgenciesMsg);
+          return;
+        }
+
+        let i = 0;
+        comparedAgencies.forEach((data, name) => {
+          const color = colorPalette[i % colorPalette.length];
+          const item = document.createElement("li");
+          item.className = "comparison-item";
+          item.innerHTML = `
+                    <span class="comparison-item-name">
+                        <span class="color-swatch" style="background-color: ${color};"></span>
+                        ${name}
+                    </span>
+                    <button class="remove-btn" data-agency="${name}" title="Remove">&times;</button>
+                `;
+          comparisonList.appendChild(item);
+          i++;
+        });
+      }
+
+      /**
+       * Main render function
+       */
+      function drawCharts() {
+        const agencies = Array.from(comparedAgencies.values());
+
+        if (agencies.length === 0) {
+          radarChartEl.innerHTML = "";
+          barChartEl.innerHTML = "";
+          // Restore placeholder
+          if (!document.getElementById("placeholder")) {
+            radarChartEl.appendChild(placeholder);
+          }
+          return;
+        }
+
+        drawRadialChart(agencies);
+        drawBarChart(agencies);
+      }
+
+      /**
+       * Draws the Polar/Radar chart for Trust Dimensions
+       */
+      function drawRadialChart(agencies) {
+        if (placeholder) placeholder.remove(); // Remove placeholder
+        const traces = [];
+        const theta = [...TRUST_DIMS, TRUST_DIMS[0]]; // Close the loop
+
+        agencies.forEach((agency, i) => {
+          const color = colorPalette[i % colorPalette.length];
+          const r = TRUST_DIMS.map((dim) => agency[dim]);
+          r.push(r[0]); // Close the loop
+
+          traces.push({
             type: "scatterpolar",
             r: r,
             theta: theta,
             fill: "toself",
-            fillcolor: "rgba(45, 55, 72, 0.2)",
-            line: { color: "#2d3748" },
-          },
-        ];
+            fillcolor: color + "33", // Add alpha transparency
+            line: { color: color, width: 2 },
+            name: agency.Agency,
+          });
+        });
 
         const layout = {
           polar: {
             radialaxis: {
               visible: true,
-              range: [0, Math.max(...values) * 1.2],
+              range: [0, 7], // Assuming a 0-7 scale, adjust as needed
             },
           },
-          showlegend: false,
-          margin: { t: 30, b: 30, l: 40, r: 40 },
+          showlegend: true,
+          legend: { x: 1.05, y: 0.5 },
+          margin: { t: 50, b: 50, l: 50, r: 200 }, // Make room for legend
         };
 
-        Plotly.newPlot("chart", data, layout, { displayModeBar: false });
+        Plotly.newPlot(radarChartEl, traces, layout, {
+          responsive: true,
+          displayModeBar: false,
+        });
       }
 
-      function renderBar(
-        xVals,
-        yVals,
-        { xIsCategories = true, titleY = "Score" } = {}
-      ) {
-        const ymin = Math.min(...yVals);
-        const ymax = Math.max(...yVals);
-        const span = ymax - ymin || 1;
-        const pad = span * 0.1;
+      /**
+       * Draws the Bar chart for Warmth & Dominance
+       */
+      function drawBarChart(agencies) {
+        barChartEl.innerHTML = "";
+        const agencyNames = agencies.map((a) => a.Agency);
 
-        const trace = {
-          type: "bar",
-          x: xVals,
-          y: yVals,
-          marker: {
-            line: { width: 1, color: "#2d3748" },
-          },
-          hovertemplate: xIsCategories
-            ? "%{y:.2f}<extra></extra>"
-            : "%{x}<extra></extra>",
-        };
-
-        // Colorize based on value (just for fun/aesthetics)
-        trace.marker.color = yVals;
-        trace.marker.colorscale = "Blues";
+        const traces = WD_DIMS.map((dim) => {
+          return {
+            type: "bar",
+            x: agencyNames,
+            y: agencies.map((a) => a[dim]),
+            name: dim,
+          };
+        });
 
         const layout = {
-          yaxis: {
-            title: titleY,
-            range: [Math.max(0, ymin - pad), ymax + pad],
-          },
-          margin: { t: 30, b: 60, l: 60, r: 20 },
+          barmode: "group",
+          showlegend: true,
+          yaxis: { title: "Score" },
+          xaxis: { tickangle: -45 },
+          margin: { t: 50, b: 120 }, // Add bottom margin for angled labels
         };
 
-        Plotly.newPlot("chart", [trace], layout, { displayModeBar: false });
-      }
-
-      // ====== TEXT DESCRIPTIONS ======
-
-      function renderDescriptionWithin(agency, dims, values) {
-        const mean = values.reduce((a, b) => a + b, 0) / values.length;
-        // Sort to find top traits
-        const labeled = dims.map((d, i) => ({ d, v: values[i] }));
-        labeled.sort((a, b) => b.v - a.v);
-
-        let scoresHTML = '<div class="scores-grid">';
-        labeled.forEach((item) => {
-          scoresHTML += `
-              <div class="score-item">
-                <div class="score-label">${item.d}</div>
-                <div class="score-value">${item.v.toFixed(2)}</div>
-              </div>`;
+        Plotly.newPlot(barChartEl, traces, layout, {
+          responsive: true,
+          displayModeBar: false,
         });
-        scoresHTML += "</div>";
-
-        document.getElementById("description").innerHTML = `
-            <strong>${agency}</strong>
-            ${scoresHTML}
-            <div class="mean-score">
-              <div class="score-label">Mean Score</div>
-              <div class="score-value">${mean.toFixed(2)}</div>
-            </div>`;
       }
 
-      function renderDescriptionAcross(metric, agencies, values) {
-        const mean = values.reduce((a, b) => a + b, 0) / values.length;
-        const minVal = Math.min(...values),
-          maxVal = Math.max(...values);
-        document.getElementById("description").innerHTML = `
-            <strong>Across Agencies: ${metric}</strong>
-            <div class="scores-grid">
-              <div class="score-item">
-                <div class="score-label">Min</div>
-                <div class="score-value">${minVal.toFixed(2)}</div>
-              </div>
-              <div class="score-item">
-                <div class="score-label">Mean</div>
-                <div class="score-value">${mean.toFixed(2)}</div>
-              </div>
-              <div class="score-item">
-                <div class="score-label">Max</div>
-                <div class="score-value">${maxVal.toFixed(2)}</div>
-              </div>
-              <div class="score-item">
-                <div class="score-label">N Agencies</div>
-                <div class="score-value">${agencies.length}</div>
-              </div>
-            </div>`;
-      }
+      // --- Event Listeners ---
+
+      // 1. Load default data
+      document.addEventListener("DOMContentLoaded", () => {
+        fetch("agency.csv")
+          .then((response) => {
+            if (!response.ok)
+              throw new Error("Could not find default 'agency.csv'.");
+            return response.text();
+          })
+          .then((csvText) => {
+            fileNameDisplay.textContent = "agency.csv (default)";
+            Papa.parse(csvText, {
+              header: true,
+              dynamicTyping: false, // Parse all as strings, convert manually
+              skipEmptyLines: true,
+              complete: (results) => processCSV(results.data),
+              error: (err) =>
+                alert(`Error parsing default CSV: ${err.message}`),
+            });
+          })
+          .catch((err) => {
+            alert(`Error loading default data: ${err.message}`);
+            fileNameDisplay.textContent = "No file loaded.";
+          });
+      });
+
+      // 2. Load user file
+      fileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          fileNameDisplay.textContent = file.name;
+          Papa.parse(file, {
+            header: true,
+            dynamicTyping: false,
+            skipEmptyLines: true,
+            complete: (results) => processCSV(results.data),
+            error: (err) => alert(`Error parsing file: ${err.message}`),
+          });
+        }
+      });
+
+      // 3. Add Agency button
+      addBtn.addEventListener("click", () => {
+        const selectedAgency = agencySelect.value;
+        if (selectedAgency && !comparedAgencies.has(selectedAgency)) {
+          const agencyData = allAgencyData.find(
+            (d) => d.Agency === selectedAgency
+          );
+          if (agencyData) {
+            comparedAgencies.set(selectedAgency, agencyData);
+            updateComparisonList();
+            drawCharts();
+          }
+        }
+      });
+
+      // 4. Remove Agency button (using event delegation)
+      comparisonList.addEventListener("click", (event) => {
+        if (event.target.classList.contains("remove-btn")) {
+          const agencyName = event.target.dataset.agency;
+          if (comparedAgencies.has(agencyName)) {
+            comparedAgencies.delete(agencyName);
+            updateComparisonList();
+            drawCharts();
+          }
+        }
+      });
     </script>
   </body>
 </html>
