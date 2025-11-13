@@ -151,6 +151,66 @@
         cursor: not-allowed;
       }
 
+      /* Info Button & Tooltip (Copied from index.html) */
+      .info-container {
+        position: relative; /* Changed from absolute */
+        margin-top: 20px; /* Added margin */
+        z-index: 10;
+      }
+      .info-icon {
+        width: 28px; /* Slightly smaller */
+        height: 28px;
+        background: #eef2f5; /* Lighter background */
+        color: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-family: serif;
+        font-style: italic;
+        cursor: help;
+        font-size: 16px;
+        border: 1px solid #dbe4eb;
+      }
+      .info-tooltip {
+        visibility: hidden;
+        width: 250px; /* Adjusted width */
+        background-color: #fff;
+        color: #333;
+        text-align: left;
+        border-radius: 8px;
+        padding: 15px;
+        position: absolute;
+        /* Position tooltip to the right */
+        top: -15px;
+        left: 105%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        border: 1px solid #eee;
+        pointer-events: none;
+      }
+      .info-container:hover .info-tooltip {
+        visibility: visible;
+        opacity: 1;
+      }
+      .info-tooltip h4 {
+        margin-top: 0;
+        color: var(--primary-color);
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+      }
+      .info-tooltip strong {
+        color: #444;
+      }
+      .def-item {
+        margin-bottom: 8px;
+      }
+      /* End Info Button */
+
       /* Comparison List */
       #comparison-list {
         list-style: none;
@@ -246,6 +306,38 @@
             <option value="">Load CSV to populate</option>
           </select>
           <button id="add-agency-btn" disabled>+ Add to Comparison</button>
+
+          <!-- Info Button Added Here -->
+          <div class="info-container">
+            <div class="info-icon">i</div>
+            <div class="info-tooltip">
+              <h4>Metric Definitions</h4>
+              <div class="def-item">
+                <strong>Trust Dimensions (Radial):</strong>
+              </div>
+              <ul
+                style="
+                  padding-left: 15px;
+                  margin: -5px 0 10px 0;
+                  font-size: 0.85rem;
+                "
+              >
+                <li><strong>Competence:</strong> Ability to execute.</li>
+                <li><strong>Reliability:</strong> Consistency.</li>
+                <li><strong>Ethics:</strong> Moral principles.</li>
+                <li><strong>Sincerity:</strong> Honesty.</li>
+                <li><strong>Benevolence:</strong> Care for public interest.</li>
+              </ul>
+              <div class="def-item">
+                <strong>Warmth (Bar):</strong> Perceived friendliness & good
+                intentions.
+              </div>
+              <div class="def-item">
+                <strong>Dominance (Bar):</strong> Perceived power & capability.
+              </div>
+            </div>
+          </div>
+          <!-- End Info Button -->
         </div>
 
         <h2>Compared Agencies</h2>
@@ -305,7 +397,7 @@
         "#9467bd",
         "#8c564b",
         "#e377c2",
-        "#7f7f7f",
+        "#7f7f0f",
         "#bcbd22",
         "#17becf",
       ];
@@ -423,7 +515,7 @@
        * Draws the Polar/Radar chart for Trust Dimensions
        */
       function drawRadialChart(agencies) {
-        if (placeholder) placeholder.remove(); // Remove placeholder
+        if (placeholder && placeholder.parentElement) placeholder.remove(); // Remove placeholder
         const traces = [];
         const theta = [...TRUST_DIMS, TRUST_DIMS[0]]; // Close the loop
 
