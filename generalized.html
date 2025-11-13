@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generalized Viewer | Visualizing Public Trust</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      /* Quick override for the new header to match index.html style */
+      .main-nav {
+        background-color: #333;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #444;
+      }
+      .nav-brand {
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 1.2rem;
+      }
+      .nav-links {
+        display: flex;
+        gap: 20px;
+      }
+      .nav-item {
+        color: #ccc;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .nav-item:hover,
+      .nav-item.active {
+        color: #fff;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="main-nav">
+      <a href="index.html" class="nav-brand">Trust in Gov</a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-item">High-Dimensional (UMAP)</a>
+        <a href="generalized.html" class="nav-item active"
+          >Generalized Viewer</a
+        >
+        <a href="radial.html" class="nav-item">Radial/Bar Views</a>
+      </div>
+    </nav>
+
+    <header>
+      <h1>Generalized Data Viewer</h1>
+      <p>
+        Upload a CSV to compare multidimensional data using Radial or UMAP
+        projections.
+      </p>
+    </header>
+
+    <div class="container">
+      <aside class="controls-panel">
+        <h2>Controls</h2>
+
+        <div class="selector">
+          <label for="csv-uploader" class="file-uploader-label">
+            Upload CSV File:
+          </label>
+          <input type="file" id="csv-uploader" accept=".csv" />
+          <span class="file-name-display">No file chosen...</span>
+        </div>
+
+        <div class="selector">
+          <label>Select View:</label>
+          <div class="view-switcher">
+            <input
+              type="radio"
+              id="view-radial"
+              name="view-mode"
+              value="radial"
+              checked
+            />
+            <label for="view-radial">Radial Chart</label>
+            <input
+              type="radio"
+              id="view-umap"
+              name="view-mode"
+              value="umap"
+              disabled
+            />
+            <label for="view-umap">UMAP Plot</label>
+          </div>
+        </div>
+
+        <hr class="control-divider" />
+        <h2 id="selector-title">Selections</h2>
+
+        <div id="selector-container"></div>
+
+        <button id="add-selector-btn" class="add-selector-btn" disabled>
+          + Add Another Selection
+        </button>
+      </aside>
+
+      <main class="chart-panel">
+        <div id="radar-chart-container">
+          <svg id="radar-chart"></svg>
+        </div>
+        <div id="umap-chart-container" class="hidden">
+          <svg id="umap-chart"></svg>
+        </div>
+      </main>
+    </div>
+
+    <div id="umap-tooltip"></div>
+
+    <footer>
+      <p>A project by Shravya Munugala and Gordan Milovac.</p>
+    </footer>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

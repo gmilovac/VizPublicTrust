@@ -3,89 +3,346 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Visualizing Public Trust</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Public Trust in Government | UMAP Explorer</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #2c5f7f;
+        --bg-color: #f8f9fa;
+        --text-color: #333;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      /* Navigation Bar */
+      nav {
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .nav-brand {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+      .nav-links {
+        display: flex;
+        gap: 20px;
+      }
+      .nav-item {
+        text-decoration: none;
+        color: #666;
+        font-weight: 500;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+      .nav-item:hover {
+        background-color: #eef2f5;
+        color: var(--primary-color);
+      }
+      .nav-item.active {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      /* Main Layout */
+      .container {
+        flex: 1;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .header-section {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      h1 {
+        margin: 0 0 10px 0;
+        color: #1a202c;
+      }
+      .subtitle {
+        color: #666;
+        font-size: 1.1rem;
+      }
+
+      /* Visualization Containers */
+      .viz-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        margin-bottom: 30px;
+      }
+      #plot {
+        width: 100%;
+        height: 750px;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .info-box {
+        background: #e8f4f8;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid var(--primary-color);
+      }
+      .info-box h3 {
+        margin-top: 0;
+        color: var(--primary-color);
+      }
+      ul {
+        padding-left: 20px;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+    </style>
   </head>
   <body>
-    <header>
-      <h1>Visualizing Public Trust</h1>
-      <p>A generalized visualization for comparing multidimensional data.</p>
-    
-      <p style="text-align:center;">
-        <a href="umap.html" style="color:#2c5f7f; text-decoration:none; font-weight:600;">
-          ➜ View High-Dimensional Trust Embedding (UMAP)
-        </a>
-      </p>
-    
-      <p style="text-align:center;">
-        <a href="radial.html" style="color:#2c5f7f; text-decoration:none; font-weight:600;">
-          ➜ View Limited 2D Representations
-        </a>
-      </p>
-    </header>
+    <nav>
+      <a href="index.html" class="nav-brand">Trust in Gov</a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-item active">High-Dimensional (UMAP)</a>
+        <a href="generalized.html" class="nav-item">Generalized Viewer</a>
+        <a href="radial.html" class="nav-item">Radial/Bar Views</a>
+      </div>
+    </nav>
 
     <div class="container">
-      <aside class="controls-panel">
-        <h2>Controls</h2>
+      <div class="header-section">
+        <h1>Agency Trust Profile Explorer</h1>
+        <p class="subtitle">
+          A high-dimensional projection of public trust and interpersonal style
+          metrics.
+        </p>
+      </div>
 
-        <div class="selector">
-          <label for="csv-uploader" class="file-uploader-label"
-            >Upload CSV File:</label
-          >
-          <input type="file" id="csv-uploader" accept=".csv" />
-          <span class="file-name-display">No file chosen...</span>
+      <div class="viz-card">
+        <div id="plot"></div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-box">
+          <h3>Visual Encodings</h3>
+          <ul>
+            <li>
+              <strong>Position:</strong> Similarity in trust profiles (5
+              dimensions).
+            </li>
+            <li><strong>Color:</strong> Overall Trust Score (Red → Green).</li>
+            <li>
+              <strong>Shape:</strong> Dominance Level (Circle=Low, Square=Med,
+              Diamond=High).
+            </li>
+            <li><strong>Size:</strong> Warmth Perception (Larger = Warmer).</li>
+          </ul>
         </div>
-
-        <div class="selector">
-          <label>Select View:</label>
-          <div class="view-switcher">
-            <input
-              type="radio"
-              id="view-radial"
-              name="view-mode"
-              value="radial"
-              checked
-            />
-            <label for="view-radial">Radial Chart</label>
-            <input
-              type="radio"
-              id="view-umap"
-              name="view-mode"
-              value="umap"
-              disabled
-            />
-            <label for="view-umap">UMAP Plot</label>
-          </div>
+        <div class="info-box">
+          <h3>Context</h3>
+          <p>
+            This map compresses 5 dimensions of trust (Competence, Reliability,
+            Ethics, Sincerity, Benevolence) into 2D space using UMAP. It reveals
+            clusters of agencies with similar public perception profiles.
+          </p>
         </div>
-
-        <hr class="control-divider" />
-        <h2 id="selector-title">Selections</h2>
-
-        <div id="selector-container"></div>
-
-        <button id="add-selector-btn" class="add-selector-btn" disabled>
-          + Add Another Selection
-        </button>
-      </aside>
-
-      <main class="chart-panel">
-        <div id="radar-chart-container">
-          <svg id="radar-chart"></svg>
-        </div>
-        <div id="umap-chart-container" class="hidden">
-          <svg id="umap-chart"></svg>
-        </div>
-      </main>
+      </div>
     </div>
 
-    <div id="umap-tooltip"></div>
+    <script>
+      // Embedded Data
+      const data = [
+        {
+          agencies: [
+            "Ded",
+            "LaborDept",
+            "CDC",
+            "Lib",
+            "Amtrak",
+            "FairHousing",
+            "EPA",
+            "NEA",
+            "Zoo",
+          ],
+          x: [
+            14.132977, 14.623857, 16.133823, 16.536005, 16.117989, 14.682542,
+            15.492891, 15.694931, 16.68661,
+          ],
+          y: [
+            6.780223, 7.4794054, 9.584203, 11.001816, 10.241018, 9.041379,
+            10.796051, 11.610754, 12.112645,
+          ],
+          trust: [
+            4.084176, 4.298374, 4.753446, 4.946098, 4.858962, 4.473768,
+            4.852278, 5.110834, 5.1182,
+          ],
+          warmth: [-5.4, -6.4, -1.8, 15.7, 16.3, 11.3, 13.9, 32.8, 38.5],
+          dominance: [30.6, 32.8, 36.3, 32.5, 32.3, 24.2, 33.9, 29.4, 34.4],
+          category: "Low",
+          symbol: "circle",
+        },
+        {
+          agencies: [
+            "Treas",
+            "CBP",
+            "SocSecurity",
+            "Census",
+            "FEMA",
+            "NASA",
+            "NSF",
+            "USPS",
+            "Mus",
+          ],
+          x: [
+            11.721766, 13.846016, 14.472711, 16.735006, 15.135976, 16.517946,
+            16.104872, 15.575095, 16.054924,
+          ],
+          y: [
+            7.1034927, 7.292862, 8.076554, 10.232156, 9.891883, 13.019933,
+            12.543167, 12.746656, 13.354097,
+          ],
+          trust: [
+            3.724574, 4.20435, 4.332106, 4.869322, 4.734776, 5.264462, 5.165354,
+            5.341104, 5.636502,
+          ],
+          warmth: [-27.3, -18.6, -12.8, -0.1, 18.7, 10.5, 13.5, 25.3, 32.7],
+          dominance: [42.6, 44.4, 39.0, 36.6, 39.1, 46.8, 43.9, 38.6, 44.4],
+          category: "Medium",
+          symbol: "square",
+        },
+        {
+          agencies: [
+            "IRS",
+            "DOJ",
+            "BPR",
+            "TSA",
+            "DOD",
+            "FBI",
+            "CISA",
+            "FDA",
+            "FAA",
+          ],
+          x: [
+            12.265455, 11.943965, 12.614617, 12.673388, 12.746812, 13.477103,
+            15.490471, 15.8875675, 16.151838,
+          ],
+          y: [
+            7.252337, 6.598156, 6.7214427, 6.126915, 7.981451, 7.9213533,
+            8.452569, 9.050943, 10.638038,
+          ],
+          trust: [
+            3.765636, 3.87127, 3.897838, 4.008492, 4.34847, 4.470532, 4.859802,
+            5.179336, 4.831274,
+          ],
+          warmth: [-28.3, -26.2, -26.4, -17.4, -14.1, -15.8, 1.6, 9.0, 6.5],
+          dominance: [51.8, 58.7, 52.9, 52.6, 62.7, 56.8, 47.5, 49.8, 49.6],
+          category: "High",
+          symbol: "diamond",
+        },
+      ];
 
-    <footer>
-      <p>A project by Shravya Munugala and Gordan Milovac.</p>
-    </footer>
+      // Helper for point sizing based on warmth
+      function sizeFromWarmth(w, minW, maxW) {
+        const minPx = 18,
+          maxPx = 60;
+        return minPx + ((w - minW) / (maxW - minW)) * (maxPx - minPx);
+      }
 
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
-    <script src="script.js"></script>
+      // Flatten data to find min/max warmth for scaling
+      const allWarmth = data.flatMap((g) => g.warmth);
+      const wMin = Math.min(...allWarmth);
+      const wMax = Math.max(...allWarmth);
+
+      // Create Traces
+      const traces = data.map((group) => {
+        return {
+          x: group.x,
+          y: group.y,
+          text: group.agencies.map(
+            (a, i) =>
+              `<b>${a}</b><br>Trust: ${group.trust[i].toFixed(2)}<br>Warmth: ${
+                group.warmth[i]
+              }<br>Dominance: ${group.dominance[i]}`
+          ),
+          mode: "markers+text",
+          textposition: "top center",
+          marker: {
+            size: group.warmth.map((w) => sizeFromWarmth(w, wMin, wMax)),
+            color: group.trust,
+            colorscale: [
+              [0, "#d32f2f"], // Red
+              [0.5, "#a5d6a7"], // Soft green
+              [1, "#1b5e20"], // Dark green
+            ],
+            symbol: group.symbol,
+            line: { width: 1, color: "#444" },
+            showscale: group.category === "High",
+            colorbar:
+              group.category === "High"
+                ? {
+                    title: "Overall<br>Trust",
+                    thickness: 15,
+                    len: 0.5,
+                    y: 0.5,
+                  }
+                : undefined,
+            cmin: 3.72,
+            cmax: 5.64,
+          },
+          type: "scatter",
+          name: `${group.category} Dominance`,
+        };
+      });
+
+      // Layout
+      const layout = {
+        hovermode: "closest",
+        dragmode: "zoom",
+        showlegend: true,
+        legend: { x: 0.02, y: 0.98 },
+        margin: { t: 30, b: 40, l: 50, r: 20 },
+        xaxis: {
+          showgrid: true,
+          gridcolor: "#f0f0f0",
+          zeroline: false,
+          showticklabels: false,
+          title: "Dimension 1",
+        },
+        yaxis: {
+          showgrid: true,
+          gridcolor: "#f0f0f0",
+          zeroline: false,
+          showticklabels: false,
+          title: "Dimension 2",
+        },
+        plot_bgcolor: "#fff",
+        paper_bgcolor: "#fff",
+      };
+
+      Plotly.newPlot("plot", traces, layout, {
+        responsive: true,
+        displayModeBar: false,
+      });
+    </script>
   </body>
 </html>
