@@ -52,7 +52,7 @@ To use the "Load New CSV" feature, your file **must** contain the following colu
 
 - `Competent`
 
-- `ReliABLE`
+- `Reliable`
 
 - `Ethical`
 
