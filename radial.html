@@ -4,9 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Radial/Bar Comparison | Trust in Gov</title>
-    <!-- Plotly.js for charting -->
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-    <!-- PapaParse for CSV loading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <style>
@@ -35,581 +33,377 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        z-index: 100;
-        position: relative;
       }
-      .nav-brand {
-        font-size: 1.25rem;
-        font-weight: 700;
+      nav a {
         color: var(--primary-color);
         text-decoration: none;
+        font-weight: 600;
+        margin-left: 1.5rem;
       }
-      .nav-links {
-        display: flex;
-        gap: 20px;
-        align-items: center;
-      }
-      .nav-item {
-        text-decoration: none;
-        color: #666;
-        font-weight: 500;
-        padding: 8px 16px;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-      }
-      .nav-item:hover {
-        background-color: #eef2f5;
-        color: var(--primary-color);
-      }
-      .nav-item.active {
-        background-color: var(--primary-color);
-        color: white;
+      nav a:hover {
+        text-decoration: underline;
       }
 
-      /* File Uploader */
-      #csv-uploader {
-        display: none;
-      }
-      #upload-label {
-        display: inline-block;
-        background-color: #eef2f5;
-        color: var(--primary-color);
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-      #upload-label:hover {
-        background-color: #dbe4eb;
-      }
-      #file-name {
-        font-size: 0.8rem;
-        color: #777;
-        margin-left: 10px;
-      }
-
-      /* Main Layout */
-      .container {
-        flex: 1;
-        max-width: 1600px;
-        margin: 20px auto;
-        padding: 0 20px;
+      /* Main Content Area */
+      .container-fluid {
+        flex-grow: 1;
+        padding: 2rem;
         width: 100%;
-        box-sizing: border-box;
-        display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
       }
 
-      /* Controls Panel */
-      .controls-panel {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      /* Control Panel */
+      .control-panel {
+        background-color: #fff;
+        border-radius: 8px;
         padding: 20px;
-        align-self: start;
-      }
-      .controls-panel h2 {
-        margin-top: 0;
-        color: #333;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-      }
-      .control-group {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
       }
-      .control-group label {
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
         display: block;
+        margin-bottom: 5px;
         font-weight: 600;
-        font-size: 0.9rem;
-        margin-bottom: 8px;
       }
-      #agency-select {
+      .form-control {
         width: 100%;
-        padding: 10px;
-        border-radius: 6px;
+        padding: 8px;
         border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
       }
-      #add-agency-btn {
-        width: 100%;
-        padding: 10px;
-        background: var(--primary-color);
+      .btn-primary {
+        background-color: var(--primary-color);
         color: white;
+        padding: 10px 15px;
         border: none;
-        border-radius: 6px;
+        border-radius: 4px;
         cursor: pointer;
-        font-weight: 600;
-        margin-top: 10px;
-        transition: background 0.2s;
+        font-size: 1rem;
+        transition: background-color 0.2s;
       }
-      #add-agency-btn:hover {
-        background: #224a64;
-      }
-      #add-agency-btn:disabled {
-        background: #ccc;
-        cursor: not-allowed;
+      .btn-primary:hover {
+        background-color: #1f4258;
       }
 
-      /* Info Button & Tooltip (Copied from index.html) */
-      .info-container {
-        position: relative; /* Changed from absolute */
-        margin-top: 20px; /* Added margin */
-        z-index: 10;
-      }
-      .info-icon {
-        width: 28px; /* Slightly smaller */
-        height: 28px;
-        background: #eef2f5; /* Lighter background */
-        color: var(--primary-color);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
         justify-content: center;
-        font-weight: bold;
-        font-family: serif;
-        font-style: italic;
-        cursor: help;
-        font-size: 16px;
-        border: 1px solid #dbe4eb;
+        align-items: center;
+        z-index: 1000;
       }
-      .info-tooltip {
-        visibility: hidden;
-        width: 250px; /* Adjusted width */
-        background-color: #fff;
-        color: #333;
-        text-align: left;
-        border-radius: 8px;
-        padding: 15px;
-        position: absolute;
-        /* Position tooltip to the right */
-        top: -15px;
-        left: 105%;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        opacity: 0;
-        transition: opacity 0.3s;
-        font-size: 0.9rem;
-        line-height: 1.4;
-        border: 1px solid #eee;
-        pointer-events: none;
+      .loading-overlay.visible {
+        display: flex;
       }
-      .info-container:hover .info-tooltip {
-        visibility: visible;
-        opacity: 1;
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: var(--primary-color);
+        animation: spin 1s ease infinite;
       }
-      .info-tooltip h4 {
-        margin-top: 0;
-        color: var(--primary-color);
-        border-bottom: 1px solid #eee;
-        padding-bottom: 5px;
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
-      .info-tooltip strong {
-        color: #444;
-      }
-      .def-item {
-        margin-bottom: 8px;
-      }
-      /* End Info Button */
 
       /* Comparison List */
-      #comparison-list {
+      .list-group {
         list-style: none;
         padding: 0;
-        margin: 0;
       }
-      .comparison-item {
+      .list-group-item {
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        padding: 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        background: #f8f9fa;
-      }
-      .comparison-item-name {
-        display: flex;
         align-items: center;
-        gap: 8px;
-        font-weight: 500;
-      }
-      .color-swatch {
-        width: 12px;
-        height: 12px;
-        border-radius: 3px;
-        display: inline-block;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
       }
       .remove-btn {
-        background: transparent;
+        background: none;
         border: none;
-        color: #999;
+        color: #dc3545;
         cursor: pointer;
         font-weight: bold;
-        font-size: 1.1rem;
-      }
-      .remove-btn:hover {
-        color: #d9534f;
       }
 
-      /* Visualization Area */
-      .viz-area {
+      .row {
         display: flex;
-        flex-direction: column;
-        gap: 20px;
+        flex-wrap: wrap;
+        margin-left: -15px;
+        margin-right: -15px;
       }
-      .viz-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        padding: 20px;
-        position: relative;
-        flex: 1;
+      .col-md-3,
+      .col-md-9 {
+        padding-left: 15px;
+        padding-right: 15px;
+        box-sizing: border-box;
       }
-      .viz-card h3 {
-        margin-top: 0;
-        color: #333;
+      .col-md-3 {
+        flex: 0 0 25%;
+        max-width: 25%;
       }
-      #radar-chart,
-      #bar-chart {
-        width: 100%;
-        min-height: 450px;
+      .col-md-9 {
+        flex: 0 0 75%;
+        max-width: 75%;
       }
-      #placeholder {
-        min-height: 450px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #999;
-        font-size: 1.2rem;
+      .checkbox-list {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+      .checkbox-item {
+        margin-bottom: 5px;
+      }
+      .checkbox-item label {
+        margin-left: 5px;
+        font-weight: normal;
+        cursor: pointer;
+      }
+      .checkbox-item input[type="checkbox"] {
+        cursor: pointer;
       }
     </style>
   </head>
   <body>
-    <nav>
-      <a href="index.html" class="nav-brand">Trust in Gov</a>
-      <div class="nav-links">
-        <!-- File Uploader -->
-        <input type="file" id="csv-uploader" accept=".csv" />
-        <label for="csv-uploader" id="upload-label">Load New CSV</label>
-        <span id="file-name">Loading default...</span>
+    <div id="loadingOverlay" class="loading-overlay visible">
+      <div class="spinner"></div>
+    </div>
 
-        <a href="index.html" class="nav-item">High-Dimensional (UMAP)</a>
-        <a href="radial.html" class="nav-item active">Radial/Bar Views</a>
+    <nav>
+      <div style="font-size: 1.2rem; font-weight: bold">Radial Comparison</div>
+      <div>
+        <a href="index.html">UMAP</a>
+        <a href="radial.html" style="text-decoration: underline"
+          >Radial Comparison</a
+        >
       </div>
     </nav>
 
-    <div class="container">
-      <!-- Controls Panel -->
-      <div class="controls-panel">
-        <div class="control-group">
-          <label for="agency-select">Select Agency</label>
-          <select id="agency-select" disabled>
-            <option value="">Load CSV to populate</option>
-          </select>
-          <button id="add-agency-btn" disabled>+ Add to Comparison</button>
-
-          <!-- Info Button Added Here -->
-          <div class="info-container">
-            <div class="info-icon">i</div>
-            <div class="info-tooltip">
-              <h4>Metric Definitions</h4>
-              <div class="def-item">
-                <strong>Trust Dimensions (Radial):</strong>
-              </div>
-              <ul
-                style="
-                  padding-left: 15px;
-                  margin: -5px 0 10px 0;
-                  font-size: 0.85rem;
-                "
-              >
-                <li><strong>Competence:</strong> Ability to execute.</li>
-                <li><strong>Reliability:</strong> Consistency.</li>
-                <li><strong>Ethics:</strong> Moral principles.</li>
-                <li><strong>Sincerity:</strong> Honesty.</li>
-                <li><strong>Benevolence:</strong> Care for public interest.</li>
-              </ul>
-              <div class="def-item">
-                <strong>Warmth (Bar):</strong> Perceived friendliness & good
-                intentions.
-              </div>
-              <div class="def-item">
-                <strong>Dominance (Bar):</strong> Perceived power & capability.
-              </div>
-            </div>
+    <div class="container-fluid content-area">
+      <div class="row">
+        <div class="col-md-3 control-panel">
+          <h3>Controls</h3>
+          <div class="form-group">
+            <label>Load Custom CSV:</label>
+            <input type="file" id="fileInput" accept=".csv" />
+            <small id="fileNameDisplay" style="display: block; margin-top: 5px"
+              >agency.csv (default)</small
+            >
           </div>
-          <!-- End Info Button -->
-        </div>
 
-        <h2>Compared Agencies</h2>
-        <ul id="comparison-list">
-          <li id="no-agencies-msg" style="color: #777">
-            Add an agency to begin.
-          </li>
-        </ul>
-      </div>
-
-      <!-- Visualization Area -->
-      <div class="viz-area">
-        <div class="viz-card">
-          <h3>Trust Dimensions (Radial)</h3>
-          <div id="radar-chart">
-            <div id="placeholder">Select agencies to see Trust Dimensions</div>
-          </div>
+          <h4>Select Agencies to Compare:</h4>
+          <div id="agencyCheckboxes" class="checkbox-list"></div>
         </div>
-        <div class="viz-card">
-          <h3>Warmth & Dominance (Bar)</h3>
-          <div id="bar-chart"></div>
-        </div>
+        <div class="col-md-9" id="comparisonCharts"></div>
       </div>
     </div>
 
     <script>
-      // --- Globals ---
-      const TRUST_DIMS = [
+      const comparisonChartsDiv = document.getElementById("comparisonCharts");
+      const fileInput = document.getElementById("fileInput");
+      const fileNameDisplay = document.getElementById("fileNameDisplay");
+      const loadingOverlay = document.getElementById("loadingOverlay");
+      const agencyCheckboxesContainer =
+        document.getElementById("agencyCheckboxes");
+
+      let allAgencyData = [];
+      let comparedAgencies = new Map();
+
+      const FEATURES = [
         "Competent",
         "Reliable",
         "Ethical",
         "Sincere",
         "Benevolent",
       ];
-      const WD_DIMS = ["Warmth", "Dominance"];
-      const AGENCY_COL = "Agency";
+      const MAX_VAL = 6; // Assuming max value is around 6 for these features
 
-      // UI Elements
-      const fileNameDisplay = document.getElementById("file-name");
-      const fileInput = document.getElementById("csv-uploader");
-      const agencySelect = document.getElementById("agency-select");
-      const addBtn = document.getElementById("add-agency-btn");
-      const comparisonList = document.getElementById("comparison-list");
-      const noAgenciesMsg = document.getElementById("no-agencies-msg");
-      const radarChartEl = document.getElementById("radar-chart");
-      const barChartEl = document.getElementById("bar-chart");
-      const placeholder = document.getElementById("placeholder");
+      // --- Plotting Logic ---
 
-      // State
-      let allAgencyData = [];
-      let comparedAgencies = new Map(); // Map<string, object>
-      const colorPalette = [
-        "#1f77b4",
-        "#ff7f0e",
-        "#2ca02c",
-        "#d62728",
-        "#9467bd",
-        "#8c564b",
-        "#e377c2",
-        "#7f7f0f",
-        "#bcbd22",
-        "#17becf",
-      ];
+      const createRadialPlot = (agencyData, plotDiv) => {
+        const values = FEATURES.map((f) => parseFloat(agencyData[f]));
+        const angles = [0, 60, 120, 180, 240, 300].map(
+          (deg) => (deg * Math.PI) / 180
+        );
 
-      // --- Core Functions ---
-
-      /**
-       * Takes raw CSV data, processes, and stores it.
-       */
-      function processCSV(parsedData) {
-        if (!parsedData || !parsedData.length || !parsedData[0][AGENCY_COL]) {
-          alert(
-            "Error: Invalid CSV file. Make sure it has an 'Agency' column and all metric columns."
-          );
-          return;
-        }
-
-        try {
-          allAgencyData = parsedData
-            .map((row) => {
-              const data = { Agency: row[AGENCY_COL] };
-              let isValid = true;
-
-              [...TRUST_DIMS, ...WD_DIMS].forEach((col) => {
-                const val = parseFloat(row[col]);
-                if (isNaN(val)) isValid = false;
-                data[col] = val;
-              });
-
-              return isValid ? data : null;
-            })
-            .filter((d) => d && d.Agency); // Filter out nulls and rows without an agency
-
-          if (allAgencyData.length === 0) {
-            throw new Error("No valid agency data found in CSV.");
-          }
-
-          // Reset state
-          comparedAgencies.clear();
-          populateAgencySelect();
-          updateComparisonList();
-          drawCharts();
-        } catch (error) {
-          alert(`Error processing data: ${error.message}`);
-        }
-      }
-
-      /**
-       * Fills the <select> dropdown with agency names
-       */
-      function populateAgencySelect() {
-        agencySelect.innerHTML = "";
-
-        allAgencyData
-          .sort((a, b) => a.Agency.localeCompare(b.Agency))
-          .forEach((d) => {
-            const option = document.createElement("option");
-            option.value = d.Agency;
-            option.textContent = d.Agency;
-            agencySelect.appendChild(option);
-          });
-
-        agencySelect.disabled = false;
-        addBtn.disabled = false;
-      }
-
-      /**
-       * Re-draws the list of compared agencies
-       */
-      function updateComparisonList() {
-        comparisonList.innerHTML = ""; // Clear list
-        if (comparedAgencies.size === 0) {
-          comparisonList.appendChild(noAgenciesMsg);
-          return;
-        }
-
-        let i = 0;
-        comparedAgencies.forEach((data, name) => {
-          const color = colorPalette[i % colorPalette.length];
-          const item = document.createElement("li");
-          item.className = "comparison-item";
-          item.innerHTML = `
-                    <span class="comparison-item-name">
-                        <span class="color-swatch" style="background-color: ${color};"></span>
-                        ${name}
-                    </span>
-                    <button class="remove-btn" data-agency="${name}" title="Remove">&times;</button>
-                `;
-          comparisonList.appendChild(item);
-          i++;
-        });
-      }
-
-      /**
-       * Main render function
-       */
-      function drawCharts() {
-        const agencies = Array.from(comparedAgencies.values());
-
-        if (agencies.length === 0) {
-          radarChartEl.innerHTML = "";
-          barChartEl.innerHTML = "";
-          // Restore placeholder
-          if (!document.getElementById("placeholder")) {
-            radarChartEl.appendChild(placeholder);
-          }
-          return;
-        }
-
-        drawRadialChart(agencies);
-        drawBarChart(agencies);
-      }
-
-      /**
-       * Draws the Polar/Radar chart for Trust Dimensions
-       */
-      function drawRadialChart(agencies) {
-        if (placeholder && placeholder.parentElement) placeholder.remove(); // Remove placeholder
-        const traces = [];
-        const theta = [...TRUST_DIMS, TRUST_DIMS[0]]; // Close the loop
-
-        agencies.forEach((agency, i) => {
-          const color = colorPalette[i % colorPalette.length];
-          const r = TRUST_DIMS.map((dim) => agency[dim]);
-          r.push(r[0]); // Close the loop
-
-          traces.push({
-            type: "scatterpolar",
-            r: r,
-            theta: theta,
-            fill: "toself",
-            fillcolor: color + "33", // Add alpha transparency
-            line: { color: color, width: 2 },
-            name: agency.Agency,
-          });
-        });
+        // Radial Trace
+        const radialTrace = {
+          type: "scatterpolar",
+          r: values.concat([values[0]]), // Close the loop
+          theta: FEATURES.concat([FEATURES[0]]),
+          fill: "toself",
+          name: agencyData.Agency,
+          fillcolor: "rgba(44, 95, 127, 0.4)", // var(--primary-color) with opacity
+          line: { color: "rgba(44, 95, 127, 1)", width: 2 },
+          hoverinfo: "r+theta",
+        };
 
         const layout = {
           polar: {
             radialaxis: {
               visible: true,
-              range: [0, 7], // Assuming a 0-7 scale, adjust as needed
+              range: [0, MAX_VAL],
+              tickvals: [1, 2, 3, 4, 5],
+              ticktext: ["1", "2", "3", "4", "5"],
+              angle: 0,
+            },
+            angularaxis: {
+              direction: "clockwise",
+              period: 360,
+              rotation: 90,
+              linecolor: "lightgray",
             },
           },
-          showlegend: true,
-          legend: { x: 1.05, y: 0.5 },
-          margin: { t: 50, b: 50, l: 50, r: 200 }, // Make room for legend
+          title: `Trust Profile: ${agencyData.Agency}`,
+          width: 400, // Fixed width for comparison view
+          height: 400, // Fixed height for comparison view
+          margin: { t: 50, r: 50, b: 50, l: 50 },
+          showlegend: false,
         };
 
-        Plotly.newPlot(radarChartEl, traces, layout, {
-          responsive: true,
-          displayModeBar: false,
+        Plotly.newPlot(plotDiv, [radialTrace], layout, {
+          responsive: false,
+          modeBarButtonsToRemove: [
+            "select2d",
+            "lasso2d",
+            "resetViews",
+            "toggleSpikelines",
+            "hoverClosestCartesian",
+            "hoverCompareCartesian",
+          ],
         });
-      }
+      };
 
-      /**
-       * Draws the Bar chart for Warmth & Dominance
-       */
-      function drawBarChart(agencies) {
-        barChartEl.innerHTML = "";
+      const drawCharts = () => {
+        const comparisonArray = Array.from(comparedAgencies.values());
 
-        // New logic: Create one trace PER AGENCY, not per metric
-        const traces = agencies.map((agency, i) => {
-          const color = colorPalette[i % colorPalette.length];
-          return {
-            type: "bar",
-            x: WD_DIMS, // X-axis categories are ['Warmth', 'Dominance']
-            y: WD_DIMS.map((dim) => agency[dim]), // Get the values [agency.Warmth, agency.Dominance]
-            name: agency.Agency,
-            marker: {
-              color: color, // Apply the agency's consistent color
-            },
-          };
+        // SORTING LOGIC: Widest (largest AverageTrustScore) chart goes to the bottom
+        // Sort descending so the largest score is at the start of the array,
+        // which, when plotted, will be the last (bottom) chart in the column layout.
+        comparisonArray.sort(
+          (a, b) => b.AverageTrustScore - a.AverageTrustScore
+        );
+
+        const chartsDiv = document.getElementById("comparisonCharts");
+        chartsDiv.innerHTML = ""; // Clear existing charts
+
+        if (comparisonArray.length === 0) {
+          chartsDiv.innerHTML =
+            "<p>Select agencies using the checkboxes to compare them.</p>";
+          return;
+        }
+
+        comparisonArray.forEach((agencyData) => {
+          const chartContainer = document.createElement("div");
+          chartContainer.style.width = "400px"; // Match plot width
+          chartContainer.style.height = "400px"; // Match plot height
+          chartContainer.style.margin = "20px";
+          chartContainer.style.display = "inline-block"; // Layout charts in a row/wrap
+          chartsDiv.appendChild(chartContainer);
+          createRadialPlot(agencyData, chartContainer);
+        });
+      };
+
+      // --- Data Loading and Selection Logic ---
+
+      const processCSV = (data) => {
+        allAgencyData = data;
+
+        // Calculate average trust score for sorting (Competent through Benevolent)
+        allAgencyData.forEach((d) => {
+          const sum =
+            parseFloat(d.Competent) +
+            parseFloat(d.Reliable) +
+            parseFloat(d.Ethical) +
+            parseFloat(d.Sincere) +
+            parseFloat(d.Benevolent);
+          d.AverageTrustScore = sum / 5;
         });
 
-        const layout = {
-          barmode: "group", // This will group the bars by the X-axis categories (Warmth, Dominance)
-          showlegend: true,
-          yaxis: { title: "Score" },
-          xaxis: { tickangle: 0 }, // No angle needed for short labels
-          margin: { t: 50, b: 50, l: 50, r: 50 }, // Standard margin
-        };
+        // Sort data alphabetically for the checkbox list
+        allAgencyData.sort((a, b) => a.Agency.localeCompare(b.Agency));
 
-        Plotly.newPlot(barChartEl, traces, layout, {
-          responsive: true,
-          displayModeBar: false,
+        agencyCheckboxesContainer.innerHTML = ""; // Clear previous
+        allAgencyData.forEach((agency) => {
+          const checkboxDiv = document.createElement("div");
+          checkboxDiv.className = "checkbox-item";
+
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.id = "agency-" + agency.Agency;
+          input.value = agency.Agency;
+          input.name = "agency";
+
+          const label = document.createElement("label");
+          label.htmlFor = "agency-" + agency.Agency;
+          label.textContent = agency.Agency;
+
+          checkboxDiv.appendChild(input);
+          checkboxDiv.appendChild(label);
+          agencyCheckboxesContainer.appendChild(checkboxDiv);
         });
-      }
+
+        // Initial load: Select two default agencies and set their checkboxes to checked
+        const defaultAgencies = ["IRS", "CISA"];
+        defaultAgencies.forEach((agencyName) => {
+          const agencyData = allAgencyData.find((d) => d.Agency === agencyName);
+          if (agencyData) {
+            comparedAgencies.set(agencyName, agencyData);
+            const checkbox = document.getElementById("agency-" + agencyName);
+            if (checkbox) checkbox.checked = true;
+          }
+        });
+
+        drawCharts();
+        loadingOverlay.classList.remove("visible");
+      };
 
       // --- Event Listeners ---
 
-      // 1. Load default data
+      // 1. Load default CSV on startup
       document.addEventListener("DOMContentLoaded", () => {
-        fetch("data/agency.csv")
+        fetch("data/agency.csv") // UPDATED PATH
           .then((response) => {
-            if (!response.ok)
-              throw new Error("Could not find default 'agency.csv'.");
+            if (!response.ok) {
+              throw new Error("Could not find default 'data/agency.csv' file.");
+            }
             return response.text();
           })
           .then((csvText) => {
-            fileNameDisplay.textContent = "agency.csv (default)";
+            fileNameDisplay.textContent = "data/agency.csv (default)"; // UPDATED PATH DISPLAY
             Papa.parse(csvText, {
               header: true,
-              dynamicTyping: false, // Parse all as strings, convert manually
+              dynamicTyping: false,
               skipEmptyLines: true,
               complete: (results) => processCSV(results.data),
-              error: (err) =>
-                alert(`Error parsing default CSV: ${err.message}`),
+              error: (err) => {
+                alert(`Error parsing default CSV: ${err.message}`);
+                loadingOverlay.classList.remove("visible");
+              },
             });
           })
           .catch((err) => {
             alert(`Error loading default data: ${err.message}`);
+            loadingOverlay.classList.remove("visible");
             fileNameDisplay.textContent = "No file loaded.";
           });
       });
@@ -629,32 +423,29 @@
         }
       });
 
-      // 3. Add Agency button
-      addBtn.addEventListener("click", () => {
-        const selectedAgency = agencySelect.value;
-        if (selectedAgency && !comparedAgencies.has(selectedAgency)) {
-          const agencyData = allAgencyData.find(
-            (d) => d.Agency === selectedAgency
-          );
-          if (agencyData) {
-            comparedAgencies.set(selectedAgency, agencyData);
-            updateComparisonList();
-            drawCharts();
-          }
-        }
-      });
+      // 3. Handle Checkbox Changes (Replaces Add/Remove button logic)
+      agencyCheckboxesContainer.addEventListener("change", (event) => {
+        if (
+          event.target.type === "checkbox" &&
+          event.target.name === "agency"
+        ) {
+          const agencyName = event.target.value;
+          const isChecked = event.target.checked;
 
-      // 4. Remove Agency button (using event delegation)
-      comparisonList.addEventListener("click", (event) => {
-        if (event.target.classList.contains("remove-btn")) {
-          const agencyName = event.target.dataset.agency;
-          if (comparedAgencies.has(agencyName)) {
+          if (isChecked) {
+            const agencyData = allAgencyData.find(
+              (d) => d.Agency === agencyName
+            );
+            if (agencyData) {
+              comparedAgencies.set(agencyName, agencyData);
+            }
+          } else {
             comparedAgencies.delete(agencyName);
-            updateComparisonList();
-            drawCharts();
           }
+          drawCharts(); // Redraw whenever selection changes
         }
       });
+      // 4. Removed the separate comparisonList listener as the checkbox change covers both add and remove.
     </script>
   </body>
 </html>

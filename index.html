@@ -4,11 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Public Trust in Government | UMAP Explorer</title>
-    <!-- Plotly.js for charting -->
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-    <!-- PapaParse for CSV loading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- UMAP-JS for client-side dimensionality reduction -->
     <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
 
     <style>
@@ -37,589 +34,335 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        z-index: 100;
-        position: relative;
       }
-      .nav-brand {
-        font-size: 1.25rem;
-        font-weight: 700;
+      nav a {
         color: var(--primary-color);
         text-decoration: none;
+        font-weight: 600;
+        margin-left: 1.5rem;
       }
-      .nav-links {
-        display: flex;
-        gap: 20px;
-        align-items: center;
-      }
-      .nav-item {
-        text-decoration: none;
-        color: #666;
-        font-weight: 500;
-        padding: 8px 16px;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-      }
-      .nav-item:hover {
-        background-color: #eef2f5;
-        color: var(--primary-color);
-      }
-      .nav-item.active {
-        background-color: var(--primary-color);
-        color: white;
+      nav a:hover {
+        text-decoration: underline;
       }
 
-      /* File Uploader */
-      #csv-uploader {
-        display: none;
-      }
-      #upload-label {
-        display: inline-block;
-        background-color: #eef2f5;
-        color: var(--primary-color);
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-      #upload-label:hover {
-        background-color: #dbe4eb;
-      }
-      #file-name {
-        font-size: 0.8rem;
-        color: #777;
-        margin-left: 10px;
-      }
-
-      /* Main Layout */
-      .container {
-        flex: 1;
-        max-width: 1600px;
-        margin: 0 auto;
-        padding: 20px;
+      /* Main Content Area */
+      .container-fluid {
+        flex-grow: 1;
+        padding: 2rem;
         width: 100%;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
+        max-width: 1400px;
+        margin: 0 auto;
       }
 
-      .header-section {
-        text-align: center;
+      /* Control Panel */
+      .control-panel {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
       }
-      h1 {
-        margin: 0 0 10px 0;
-        color: #1a202c;
+      .form-group {
+        margin-bottom: 15px;
       }
-      .subtitle {
-        color: #666;
-        font-size: 1.1rem;
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
       }
-
-      /* Visualization Card */
-      .viz-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        padding: 20px;
-        position: relative;
-        flex: 1;
-        min-height: 700px;
-      }
-      #plot {
+      input[type="number"],
+      .form-control {
         width: 100%;
-        height: 100%;
-        min-height: 700px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
       }
-
-      /* Loading Overlay */
-      #loading-overlay {
-        position: absolute;
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.2s;
+      }
+      .btn-primary:hover {
+        background-color: #1f4258;
+      }
+      .loading-overlay {
+        position: fixed;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
+        width: 100%;
+        height: 100%;
         background: rgba(255, 255, 255, 0.8);
-        display: flex;
-        align-items: center;
+        display: none;
         justify-content: center;
-        font-size: 1.2rem;
-        font-weight: 500;
-        color: var(--primary-color);
-        z-index: 20;
-        visibility: hidden;
-        opacity: 0;
-        transition: opacity 0.3s;
-      }
-      #loading-overlay.visible {
-        visibility: visible;
-        opacity: 1;
-      }
-
-      /* Info Button & Tooltip */
-      .info-container {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        z-index: 10;
-      }
-      .info-icon {
-        width: 32px;
-        height: 32px;
-        background: var(--primary-color);
-        color: white;
-        border-radius: 50%;
-        display: flex;
         align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-family: serif;
-        font-style: italic;
-        cursor: help;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        font-size: 18px;
+        z-index: 1000;
       }
-      .info-tooltip {
-        visibility: hidden;
-        width: 300px;
-        background-color: #fff;
-        color: #333;
-        text-align: left;
-        border-radius: 8px;
-        padding: 15px;
-        position: absolute;
-        top: 40px;
-        right: 0;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        opacity: 0;
-        transition: opacity 0.3s;
-        font-size: 0.9rem;
-        line-height: 1.4;
-        border: 1px solid #eee;
-        pointer-events: none;
-      }
-      .info-container:hover .info-tooltip {
-        visibility: visible;
-        opacity: 1;
-      }
-      .info-tooltip h4 {
-        margin-top: 0;
-        color: var(--primary-color);
-        border-bottom: 1px solid #eee;
-        padding-bottom: 5px;
-      }
-      .info-tooltip strong {
-        color: #444;
-      }
-      .def-item {
-        margin-bottom: 8px;
-      }
-
-      /* Custom Legend Overlay */
-      .legend-overlay {
-        position: absolute;
-        bottom: 30px;
-        right: 30px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #eee;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        font-size: 0.85rem;
-        pointer-events: none;
-        z-index: 10;
-      }
-      .legend-item {
+      .loading-overlay.visible {
         display: flex;
-        align-items: center;
-        margin-bottom: 8px;
       }
-      .legend-item:last-child {
-        margin-bottom: 0;
-      } /* Remove margin from last item */
-      .legend-border-thin {
-        width: 12px;
-        height: 12px;
+      .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        border: 1px solid #333;
-        margin-right: 8px;
-        background: #ddd;
+        border-left-color: var(--primary-color);
+        animation: spin 1s ease infinite;
       }
-      .legend-border-thick {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 4px solid #333;
-        margin-right: 8px;
-        background: #ddd;
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-left: -15px;
+        margin-right: -15px;
+      }
+      .col-md-3,
+      .col-md-9 {
+        padding-left: 15px;
+        padding-right: 15px;
+        box-sizing: border-box;
+      }
+      .col-md-3 {
+        flex: 0 0 25%;
+        max-width: 25%;
+      }
+      .col-md-9 {
+        flex: 0 0 75%;
+        max-width: 75%;
       }
     </style>
   </head>
   <body>
-    <nav>
-      <a href="index.html" class="nav-brand">Trust in Gov</a>
-      <div class="nav-links">
-        <!-- File Uploader -->
-        <input type="file" id="csv-uploader" accept=".csv" />
-        <label for="csv-uploader" id="upload-label">Load New CSV</label>
-        <span id="file-name">Loading default...</span>
+    <div id="loadingOverlay" class="loading-overlay visible">
+      <div class="spinner"></div>
+    </div>
 
-        <a href="index.html" class="nav-item active">High-Dimensional (UMAP)</a>
-        <a href="radial.html" class="nav-item">Radial/Bar Views</a>
+    <nav>
+      <div style="font-size: 1.2rem; font-weight: bold">UMAP Explorer</div>
+      <div>
+        <a href="index.html" style="text-decoration: underline">UMAP</a>
+        <a href="radial.html">Radial Comparison</a>
       </div>
     </nav>
 
-    <div class="container">
-      <div class="header-section">
-        <h1>Agency Trust Profile Explorer</h1>
-        <p class="subtitle">
-          Agencies positioned by similarity.
-          <strong>Right X-Axis = More Trusted.</strong>
-        </p>
-      </div>
+    <div class="container-fluid content-area">
+      <div class="row">
+        <div class="col-md-3 control-panel">
+          <h3>UMAP Controls</h3>
+          <div class="form-group">
+            <label for="nNeighbors">n_neighbors:</label>
+            <input
+              type="number"
+              id="nNeighbors"
+              class="form-control"
+              value="15"
+              min="2"
+              step="1"
+            />
+          </div>
+          <div class="form-group">
+            <label for="minDist">min_dist:</label>
+            <input
+              type="number"
+              id="minDist"
+              class="form-control"
+              value="0.1"
+              min="0"
+              step="0.05"
+            />
+          </div>
+          <div class="form-group">
+            <label for="nComponents">n_components:</label>
+            <input
+              type="number"
+              id="nComponents"
+              class="form-control"
+              value="2"
+              min="2"
+              max="3"
+              step="1"
+            />
+          </div>
+          <button id="recalculateBtn" class="btn btn-primary">
+            Recalculate UMAP
+          </button>
 
-      <div class="viz-card">
-        <!-- Loading Overlay -->
-        <div id="loading-overlay">
-          <div>Calculating UMAP...</div>
-        </div>
+          <hr />
 
-        <!-- Info Button with Tooltip -->
-        <div class="info-container">
-          <div class="info-icon">i</div>
-          <div class="info-tooltip">
-            <h4>Metric Definitions</h4>
-            <div class="def-item">
-              <strong>Trust:</strong> Overall confidence (X-Axis).
-            </div>
-            <div class="def-item">
-              <strong>Warmth:</strong> Perceived friendliness (Color).
-            </div>
-            <div class="def-item">
-              <strong>Dominance:</strong> Perceived power (Border Thickness).
-            </div>
-            <div
-              style="
-                margin-top: 10px;
-                border-top: 1px solid #eee;
-                padding-top: 5px;
-              "
+          <div class="form-group">
+            <label>Load Custom CSV:</label>
+            <input type="file" id="fileInput" accept=".csv" />
+            <small id="fileNameDisplay" style="display: block; margin-top: 5px"
+              >agency.csv (default)</small
             >
-              <strong>5 Dimensions of Trust:</strong>
-            </div>
-            <ul style="padding-left: 15px; margin: 5px 0">
-              <li><strong>Competence:</strong> Ability to execute.</li>
-              <li><strong>Reliability:</strong> Consistency.</li>
-              <li><strong>Ethics:</strong> Moral principles.</li>
-              <li><strong>Sincerity:</strong> Honesty.</li>
-              <li><strong>Benevolence:</strong> Care for public interest.</li>
-            </ul>
           </div>
         </div>
-
-        <!-- Custom Legend Overlay -->
-        <div class="legend-overlay">
-          <div class="legend-item">
-            <div class="legend-border-thin"></div>
-            <span>Low Dominance</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-border-thick"></div>
-            <span>High Dominance</span>
-          </div>
+        <div class="col-md-9">
+          <div id="umapPlot"></div>
         </div>
-
-        <div id="plot"></div>
       </div>
     </div>
 
     <script>
-      // --- Globals ---
-      const TRUST_DIMS = [
+      const nNeighborsInput = document.getElementById("nNeighbors");
+      const minDistInput = document.getElementById("minDist");
+      const nComponentsInput = document.getElementById("nComponents");
+      const recalculateBtn = document.getElementById("recalculateBtn");
+      const umapPlotDiv = document.getElementById("umapPlot");
+      const fileInput = document.getElementById("fileInput");
+      const fileNameDisplay = document.getElementById("fileNameDisplay");
+      const loadingOverlay = document.getElementById("loadingOverlay");
+
+      let allAgencyData = [];
+      let umapInstance = null;
+
+      const FEATURES = [
         "Competent",
         "Reliable",
         "Ethical",
         "Sincere",
         "Benevolent",
+        "Warmth",
+        "Dominance",
       ];
-      const METRICS = ["Warmth", "Dominance"];
-      const AGENCY_COL = "Agency";
 
-      const loadingOverlay = document.getElementById("loading-overlay");
-      const fileNameDisplay = document.getElementById("file-name");
-      const fileInput = document.getElementById("csv-uploader");
+      // --- UMAP Logic ---
 
-      // --- Core Functions ---
-
-      /**
-       * Takes raw CSV data from PapaParse and processes it completely.
-       * 1. Validates data
-       * 2. Calculates metrics (Trust)
-       * 3. Runs UMAP
-       * 4. Rotates plot
-       * 5. Renders plot
-       */
-      async function processAndPlot(parsedData) {
+      const processAndPlot = (data) => {
+        allAgencyData = data;
         loadingOverlay.classList.add("visible");
 
-        // 1. Validate and Process Data
-        const requiredCols = [...TRUST_DIMS, ...METRICS];
-        let processedData = [];
-
-        if (!parsedData || !parsedData.length || !parsedData[0][AGENCY_COL]) {
-          alert(
-            "Error: Invalid CSV file. Make sure it has an 'Agency' column and all metric columns."
-          );
-          loadingOverlay.classList.remove("visible");
-          return;
-        }
-
-        try {
-          // Filter out bad rows, calculate Trust
-          processedData = parsedData
-            .map((row) => {
-              const data = { Agency: row[AGENCY_COL] };
-              let trustSum = 0;
-              let trustCount = 0;
-              let isValid = true;
-
-              // This loop now only processes numeric columns
-              for (const col of requiredCols) {
-                const val = parseFloat(row[col]);
-                if (isNaN(val)) {
-                  isValid = false; // Mark row as invalid
-                }
-                data[col] = val; // Store value (or NaN)
-              }
-
-              if (!isValid) return null; // Skip invalid rows
-
-              for (const dim of TRUST_DIMS) {
-                trustSum += data[dim];
-                trustCount++;
-              }
-              data.Trust = trustSum / trustCount;
-
-              return data;
-            })
-            .filter((d) => d); // Filter out nulls (invalid rows)
-
-          if (processedData.length === 0) {
-            throw new Error("No valid data rows found.");
-          }
-        } catch (error) {
-          alert(`Error processing data: ${error.message}`);
-          loadingOverlay.classList.remove("visible");
-          return;
-        }
-
-        // 2. Run UMAP
-        // UMAP needs a 2D array of numbers
-        const umapInput = processedData.map((d) =>
-          TRUST_DIMS.map((dim) => d[dim])
+        // 1. Prepare Data for UMAP (Convert to array of arrays of floats)
+        const dataMatrix = allAgencyData.map((d) =>
+          FEATURES.map((feature) => parseFloat(d[feature]))
         );
 
-        // Run UMAP in a timeout to allow UI to update
-        await new Promise((resolve) =>
-          setTimeout(() => {
-            // Check for sufficient data
-            if (umapInput.length < 3) {
-              alert("Not enough data to run UMAP (requires at least 3 rows).");
-              loadingOverlay.classList.remove("visible");
-              return;
-            }
+        // 2. Configure UMAP
+        const nNeighbors = parseInt(nNeighborsInput.value) || 15;
+        const minDist = parseFloat(minDistInput.value) || 0.1;
+        const nComponents = parseInt(nComponentsInput.value) || 2;
 
-            try {
-              const umap = new UMAP({
-                // Ensure nNeighbors is less than the number of samples
-                nNeighbors: Math.min(15, umapInput.length - 1),
-                nComponents: 2,
-                minDist: 0.1,
-                spread: 1.0,
-              });
-              const embedding = umap.fit(umapInput);
+        if (umapInstance) {
+          // If UMAP instance exists, reuse it with new hyperparameters
+          umapInstance.nNeighbors = nNeighbors;
+          umapInstance.minDist = minDist;
+          umapInstance.nComponents = nComponents;
+        } else {
+          // Create new UMAP instance
+          umapInstance = new umap.UMAP({
+            nNeighbors: nNeighbors,
+            minDist: minDist,
+            nComponents: nComponents,
+            random: Math.random, // Ensure a stable, but initialized, random state
+          });
+        }
 
-              // Add UMAP coords to our data
-              processedData.forEach((d, i) => {
-                d.x_umap = embedding[i][0];
-                d.y_umap = embedding[i][1];
-              });
-              resolve();
-            } catch (err) {
-              alert(`Error during UMAP calculation: ${err.message}`);
-              loadingOverlay.classList.remove("visible");
-            }
-          }, 50)
-        ); // 50ms delay to show "Loading..."
+        // 3. Run UMAP
+        const embedding = umapInstance.fit(dataMatrix);
 
-        // Stop if UMAP failed
-        if (!processedData[0].hasOwnProperty("x_umap")) return;
+        // 4. Extract UMAP coordinates
+        const x_coords = embedding.map((d) => d[0]);
+        const y_coords = embedding.map((d) => d[1]);
+        const z_coords = nComponents === 3 ? embedding.map((d) => d[2]) : [];
 
-        // 3. Find Optimal Rotation for X-Axis = Trust
-        const { rotatedData, angle } = rotateToMaximizeCorrelation(
-          processedData,
-          "x_umap",
-          "y_umap",
-          "Trust"
+        // 5. Prepare Plotly Trace
+        const hoverText = allAgencyData.map(
+          (d) =>
+            `<b>${d.Agency}</b><br>` +
+            FEATURES.map((f) => `${f}: ${d[f]}`).join("<br>")
         );
-
-        // 4. Render Plot
-        renderPlot(rotatedData);
-        loadingOverlay.classList.remove("visible");
-      }
-
-      /**
-       * Renders the Plotly chart
-       */
-      function renderPlot(dataset) {
-        // Find min/max for scaling
-        const domMin = Math.min(...dataset.map((d) => d.Dominance));
-        const domMax = Math.max(...dataset.map((d) => d.Dominance));
-
-        // Handle case where all dominance values are the same
-        const getLineWidth = (d) => {
-          if (domMin === domMax) return 2; // Default width
-          return 1 + ((d - domMin) / (domMax - domMin)) * 7;
-        };
 
         const trace = {
-          x: dataset.map((d) => d.x_rot),
-          y: dataset.map((d) => d.y_rot),
-          text: dataset.map((d) => d.Agency),
-          hovertemplate: dataset.map((d) => {
-            let hover =
-              `<b>${d.Agency}</b><br>` +
-              `Trust: ${d.Trust.toFixed(2)}<br>` +
-              `Warmth: ${d.Warmth.toFixed(1)}<br>` +
-              `Dominance: ${d.Dominance.toFixed(1)}<br>` +
-              `<i>Dimensions:</i><br>`;
-            TRUST_DIMS.forEach((dim) => {
-              hover += `${dim}: ${d[dim].toFixed(2)}<br>`;
-            });
-            return hover + "<extra></extra>";
-          }),
-          mode: "markers+text",
-          textposition: "top center",
+          x: x_coords,
+          y: y_coords,
+          mode: "markers",
+          type: nComponents === 3 ? "scatter3d" : "scatter",
+          text: hoverText,
+          hoverinfo: "text",
           marker: {
-            size: 25,
-            color: dataset.map((d) => d.Warmth),
-            colorscale: "RdBu",
-            reversescale: true, // Blue=Cold(Low) to Red=Warm(High)
-            cmin: -45,
-            cmax: 45,
-            colorbar: {
-              title: "Warmth",
-              thickness: 15,
-              len: 0.5,
-              y: 0.5,
-              x: 1.05,
-            },
+            size: 8,
+            // Color based on Warmth
+            color: data.map((d) => parseFloat(d.Warmth)),
+            colorscale: [
+              ["0", "rgb(31, 119, 180)"],
+              ["1", "rgb(214, 39, 40)"],
+            ], // Flipped Warmth: Blue (Low) to Red (High)
+            cmin: -50, // Assuming a range from -50 to 70 for warmth
+            cmax: 70,
+            showscale: true,
+            colorbar: { title: "Warmth" },
             line: {
-              width: dataset.map((d) => getLineWidth(d.Dominance)),
-              color: "#333",
+              // Size of border based on Dominance
+              color: data.map((d) =>
+                parseFloat(d.Dominance) > 50 ? "black" : "darkgray"
+              ),
+              width: data.map((d) => (parseFloat(d.Dominance) > 50 ? 2 : 1)),
             },
-            symbol: "circle",
           },
-          type: "scatter",
+          name: "Agencies",
         };
 
+        if (nComponents === 3) {
+          trace.z = z_coords;
+        }
+
+        // 6. Prepare Plotly Layout
         const layout = {
-          hovermode: "closest",
-          dragmode: "zoom",
-          showlegend: false,
-          margin: { t: 40, b: 40, l: 40, r: 80 },
-          xaxis: {
-            visible: true,
-            showgrid: false,
-            zeroline: false,
-            showticklabels: false,
-            title: "Trust Score (Low → High)",
-            titlefont: { size: 14, color: "#888" },
-          },
-          yaxis: {
-            visible: false,
-            showgrid: false,
-            zeroline: false,
-          },
-          plot_bgcolor: "#fff",
-          paper_bgcolor: "#fff",
+          title: `UMAP Projection of Public Trust in Government (${nComponents}D)`,
+          xaxis: { title: "UMAP Component 1" },
+          yaxis: { title: "UMAP Component 2" },
+          height: 800,
+          margin: { t: 50, r: 20, b: 50, l: 20 },
         };
 
-        Plotly.newPlot("plot", [trace], layout, {
+        // 7. Plot
+        Plotly.newPlot(umapPlotDiv, [trace], layout, {
           responsive: true,
-          displayModeBar: false,
+          modeBarButtonsToRemove: [
+            "select2d",
+            "lasso2d",
+            "resetViews",
+            "toggleSpikelines",
+          ],
         });
-      }
 
-      // --- Rotation & Correlation Helpers ---
+        loadingOverlay.classList.remove("visible");
+      };
 
-      function rotateToMaximizeCorrelation(data, xCol, yCol, targetCol) {
-        // Find optimal angle by checking a range
-        let bestAngle = 0;
-        let maxCorr = -1;
+      // --- Event Listeners and Initialization ---
 
-        for (let i = -180; i <= 180; i += 2) {
-          const angle = i * (Math.PI / 180); // to radians
-          const rotatedX = data.map(
-            (d) => d[xCol] * Math.cos(angle) + d[yCol] * Math.sin(angle)
-          );
-          const corr = correlation(
-            rotatedX,
-            data.map((d) => d[targetCol])
-          );
-
-          if (corr > maxCorr) {
-            maxCorr = corr;
-            bestAngle = angle;
-          }
+      // 1. Recalculate button
+      recalculateBtn.addEventListener("click", () => {
+        if (allAgencyData.length > 0) {
+          processAndPlot(allAgencyData);
+        } else {
+          alert("Please load data first.");
         }
+      });
 
-        // Apply the best rotation
-        const rotatedData = data.map((d) => ({
-          ...d,
-          x_rot: d[xCol] * Math.cos(bestAngle) + d[yCol] * Math.sin(bestAngle),
-          y_rot: -d[xCol] * Math.sin(bestAngle) + d[yCol] * Math.cos(bestAngle),
-        }));
-
-        return { rotatedData, angle: bestAngle };
-      }
-
-      // Standard Pearson correlation
-      function correlation(x, y) {
-        const n = x.length;
-        if (n === 0) return 0;
-
-        const meanX = x.reduce((a, b) => a + b) / n;
-        const meanY = y.reduce((a, b) => a + b) / n;
-
-        let num = 0,
-          denX = 0,
-          denY = 0;
-
-        for (let i = 0; i < n; i++) {
-          num += (x[i] - meanX) * (y[i] - meanY);
-          denX += Math.pow(x[i] - meanX, 2);
-          denY += Math.pow(y[i] - meanY, 2);
-        }
-
-        if (denX === 0 || denY === 0) return 0;
-        return num / Math.sqrt(denX * denY);
-      }
-
-      // --- Event Listeners ---
-
-      // 1. Load default data on page load
+      // 2. Load default CSV on startup
       document.addEventListener("DOMContentLoaded", () => {
-        loadingOverlay.classList.add("visible");
-        fetch("data/agency.csv")
+        fetch("data/agency.csv") // UPDATED PATH
           .then((response) => {
             if (!response.ok) {
-              throw new Error("Could not find default 'agency.csv' file.");
+              throw new Error("Could not find default 'data/agency.csv' file.");
             }
             return response.text();
           })
           .then((csvText) => {
-            fileNameDisplay.textContent = "agency.csv (default)";
+            fileNameDisplay.textContent = "data/agency.csv (default)"; // UPDATED PATH DISPLAY
             Papa.parse(csvText, {
               header: true,
               dynamicTyping: false, // Parse as strings, convert manually
@@ -638,7 +381,7 @@
           });
       });
 
-      // 2. Listen for user-uploaded file
+      // 3. Listen for user-uploaded file
       fileInput.addEventListener("change", (event) => {
         const file = event.target.files[0];
         if (file) {
