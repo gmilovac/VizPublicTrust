@@ -156,8 +156,7 @@
         flex-direction: column;
         gap: 20px;
         margin-bottom: 20px;
-        padding-top: 10px;
-        border-top: 1px solid #eee;
+        /* Removed padding-top and border-top to place them at the very top */
       }
       .info-container {
         position: relative;
@@ -333,13 +332,6 @@
 
     <div class="container">
       <div class="controls-panel">
-        <div class="control-group">
-          <label>Select Agencies to Compare</label>
-          <div id="agency-checkbox-list">
-            <p style="color: #777; margin: 0">Load CSV to populate list.</p>
-          </div>
-        </div>
-
         <div class="info-wrapper">
           <div class="info-container metric-info">
             <div class="info-icon">i</div>
@@ -512,6 +504,13 @@
             </div>
           </div>
         </div>
+        <div class="control-group">
+          <label>Select Agencies to Compare</label>
+          <div id="agency-checkbox-list">
+            <p style="color: #777; margin: 0">Load CSV to populate list.</p>
+          </div>
+        </div>
+
         <h2>Currently Comparing</h2>
         <ul id="comparison-list">
           <li id="no-agencies-msg" style="color: #777">
