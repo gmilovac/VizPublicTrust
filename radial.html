@@ -14,6 +14,10 @@
         --primary-color: #2c5f7f;
         --bg-color: #f8f9fa;
         --text-color: #333;
+        --warmth-low: #ca0020; /* Red for low Warmth (e.g., -45) */
+        --warmth-mid: #f7f7f7; /* White/Gray for neutral Warmth (0) */
+        --warmth-high: #0571b0; /* Blue for high Warmth (e.g., +45) */
+        --dominance-color: #31a354; /* Green for Dominance */
       }
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -150,7 +154,7 @@
       /* Charts Area */
       #chart-container {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
         gap: 20px;
         padding-top: 20px;
       }
@@ -163,17 +167,48 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-      }
-      .chart-placeholder {
-        color: #999;
-        text-align: center;
+        justify-content: flex-start; /* Align title/content to the top */
       }
       .chart-title {
         font-size: 1.2rem;
         font-weight: 600;
         color: var(--primary-color);
         margin-bottom: 10px;
+        text-align: center;
+      }
+
+      /* Flex container for the two charts inside the card */
+      .chart-row-flex {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        gap: 10px;
+        flex-wrap: wrap; /* Wrap on smaller screens */
+      }
+
+      .chart-plot {
+        flex: 1 1 45%; /* Flex to take up half space, but can shrink/grow */
+        max-width: 350px;
+        height: 300px; /* Fixed height for consistency */
+      }
+
+      .chart-placeholder {
+        color: #999;
+        text-align: center;
+      }
+
+      /* Media query for smaller screens to ensure charts stack */
+      @media (max-width: 768px) {
+        #chart-container {
+          grid-template-columns: 1fr;
+        }
+        .chart-row-flex {
+          flex-direction: column;
+        }
+        .chart-plot {
+          max-width: 100%;
+        }
       }
     </style>
   </head>
@@ -227,6 +262,8 @@
       const METRICS = ["Warmth", "Dominance"];
       const AGENCY_COL = "Agency";
       const MAX_RATING = 7; // Max scale for radial/bar charts
+      const MIN_WARMTH_SCALE = -45; // Min value for Warmth coloring
+      const MAX_WARMTH_SCALE = 45; // Max value for Warmth coloring
 
       let allAgencyData = []; // Stores all parsed data (Agency Name -> Data Object)
       const comparedAgencies = new Map(); // Stores currently compared agency data {name: {data}}
@@ -237,6 +274,38 @@
       const chartContainer = document.getElementById("chart-container");
 
       // --- Core Functions ---
+
+      /**
+       * Converts a value within a range to a color on the RdBu scale.
+       */
+      function getWarmthColor(value) {
+        // Normalize value to a 0-1 range
+        const normalized =
+          (value - MIN_WARMTH_SCALE) / (MAX_WARMTH_SCALE - MIN_WARMTH_SCALE);
+
+        // Use Plotly's built-in colorscale logic (RdBu in this case)
+        // Plotly uses a 0-1 range internally for colorscale mapping.
+        // Since we can't directly call Plotly's mapping function,
+        // we approximate the RdBu transition: Red (low) -> White (mid) -> Blue (high)
+
+        if (normalized <= 0) return "var(--warmth-low)";
+        if (normalized >= 1) return "var(--warmth-high)";
+
+        // Simple interpolation:
+        if (normalized < 0.5) {
+          // Interpolate between Red (0) and Mid (0.5)
+          const ratio = normalized / 0.5;
+          return `rgb(${Math.round(202 + (247 - 202) * ratio)}, ${Math.round(
+            0 + (247 - 0) * ratio
+          )}, ${Math.round(32 + (247 - 32) * ratio)})`;
+        } else {
+          // Interpolate between Mid (0.5) and Blue (1.0)
+          const ratio = (normalized - 0.5) / 0.5;
+          return `rgb(${Math.round(247 - (247 - 5) * ratio)}, ${Math.round(
+            247 - (247 - 113) * ratio
+          )}, ${Math.round(247 - (247 - 176) * ratio)})`;
+        }
+      }
 
       /**
        * Calculates Trust and prepares data structure.
@@ -336,7 +405,8 @@
       }
 
       /**
-       * Draws the radial charts for the selected agencies, sorted by Trust.
+       * Draws the radial chart (5 Trust Dims) and the bar chart (Warmth/Dominance)
+       * for the selected agencies, sorted by Trust.
        */
       function drawCharts() {
         chartContainer.innerHTML = ""; // Clear existing charts
@@ -357,38 +427,48 @@
         // *** END SORTING LOGIC ***
 
         agenciesToRender.forEach((data, index) => {
-          // Create a container for each agency's charts
           const agencyName = data.Agency;
+          const chartIdRadial = `chart-radial-${index}`;
+          const chartIdBar = `chart-bar-${index}`;
 
+          // 1. Create wrapper card and structure
           const wrapper = document.createElement("div");
           wrapper.className = "chart-card";
           wrapper.innerHTML = `<div class="chart-title">${agencyName} (Avg. Trust: ${data.Trust.toFixed(
             2
           )})</div>`;
 
-          const chartDiv = document.createElement("div");
-          chartDiv.id = `chart-${index}`;
-          chartDiv.style.width = "100%";
-          chartDiv.style.height = "350px";
-          wrapper.appendChild(chartDiv);
+          const chartRow = document.createElement("div");
+          chartRow.className = "chart-row-flex";
+
+          const radialDiv = document.createElement("div");
+          radialDiv.id = chartIdRadial;
+          radialDiv.className = "chart-plot";
+          chartRow.appendChild(radialDiv);
+
+          const barDiv = document.createElement("div");
+          barDiv.id = chartIdBar;
+          barDiv.className = "chart-plot";
+          chartRow.appendChild(barDiv);
+
+          wrapper.appendChild(chartRow);
           chartContainer.appendChild(wrapper);
 
-          // 1. Prepare data for plotting
-          const values = TRUST_DIMS.map((dim) => data[dim]);
+          // 2. Plot Radial Chart (5 Trust Dimensions)
+          const radialValues = TRUST_DIMS.map((dim) => data[dim]);
 
-          // 2. Radial Chart Trace
           const radialTrace = {
             type: "scatterpolar",
-            r: values,
+            r: radialValues,
             theta: TRUST_DIMS,
             fill: "toself",
             name: agencyName,
+            // Use the primary color for a consistent look
             marker: { color: "rgba(44, 95, 127, 0.6)" },
             line: { color: "rgba(44, 95, 127, 1)", width: 2 },
             hovertemplate: "<b>%{theta}</b><br>Score: %{r:.2f}<extra></extra>",
           };
 
-          // 3. Radial Chart Layout
           const radialLayout = {
             polar: {
               radialaxis: {
@@ -407,13 +487,60 @@
               },
             },
             showlegend: false,
-            title: false,
+            title: "5 Dimensions of Trust",
+            titlefont: { size: 12 },
             margin: { t: 30, b: 30, l: 30, r: 30 },
             plot_bgcolor: "#fff",
             paper_bgcolor: "#fff",
           };
 
-          Plotly.newPlot(chartDiv.id, [radialTrace], radialLayout, {
+          Plotly.newPlot(chartIdRadial, [radialTrace], radialLayout, {
+            responsive: true,
+            displayModeBar: false,
+          });
+
+          // 3. Plot Warmth/Dominance Bar Chart
+          const warmthValue = data.Warmth;
+          const dominanceValue = data.Dominance;
+
+          // Determine the color for the Warmth bar based on its score
+          const warmthColor = getWarmthColor(warmthValue);
+
+          const barTrace = {
+            x: [warmthValue, dominanceValue],
+            y: METRICS,
+            type: "bar",
+            orientation: "h",
+            marker: {
+              color: [warmthColor, "var(--dominance-color)"],
+            },
+            hovertemplate: "<b>%{y}</b><br>Score: %{x:.2f}<extra></extra>",
+          };
+
+          const barLayout = {
+            title: "Warmth & Dominance",
+            titlefont: { size: 12 },
+            xaxis: {
+              // Warmth ranges from -45 to +45, Dominance is positive (e.g., 60)
+              // We need to accommodate the max range for both.
+              range: [
+                MIN_WARMTH_SCALE,
+                Math.max(MAX_WARMTH_SCALE, dominanceValue * 1.1),
+              ],
+              zeroline: true,
+              gridcolor: "#e0e0e0",
+            },
+            yaxis: {
+              automargin: true,
+              tickfont: { size: 10 },
+            },
+            showlegend: false,
+            margin: { t: 30, b: 30, l: 100, r: 30 }, // Left margin for y-axis labels
+            plot_bgcolor: "#fff",
+            paper_bgcolor: "#fff",
+          };
+
+          Plotly.newPlot(chartIdBar, [barTrace], barLayout, {
             responsive: true,
             displayModeBar: false,
           });
