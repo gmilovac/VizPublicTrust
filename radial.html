@@ -123,7 +123,6 @@
         font-size: 0.9rem;
         margin-bottom: 8px;
       }
-      /* Removed select/button styles */
 
       /* Agency Checkbox List Styles */
       #agency-checkbox-list {
@@ -150,17 +149,27 @@
         user-select: none;
       }
 
-      /* Info Button & Tooltip (Copied from index.html) */
+      /* --- NEW/UPDATED Info Button & Tooltip Styles for Radial Page --- */
+      /* Wrapper to hold both info buttons vertically in the controls panel */
+      .info-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-bottom: 20px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+      }
       .info-container {
-        position: relative; /* Changed from absolute */
-        margin-top: 20px; /* Added margin */
+        position: relative;
         z-index: 10;
+        display: flex;
+        align-items: center;
       }
       .info-icon {
-        width: 28px; /* Slightly smaller */
+        width: 28px;
         height: 28px;
-        background: #eef2f5; /* Lighter background */
-        color: var(--primary-color);
+        background: var(--primary-color);
+        color: white;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -169,19 +178,25 @@
         font-family: serif;
         font-style: italic;
         cursor: help;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         font-size: 16px;
-        border: 1px solid #dbe4eb;
       }
+      .info-text {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--primary-color);
+        margin-left: 10px;
+      }
+
       .info-tooltip {
         visibility: hidden;
-        width: 250px; /* Adjusted width */
         background-color: #fff;
         color: #333;
         text-align: left;
         border-radius: 8px;
         padding: 15px;
         position: absolute;
-        /* Position tooltip to the right */
+        /* Position tooltip to the right of the entire panel */
         top: -15px;
         left: 105%;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -192,6 +207,12 @@
         border: 1px solid #eee;
         pointer-events: none;
       }
+      /* Agency specific styles */
+      .info-container.agency-info .info-tooltip {
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+
       .info-container:hover .info-tooltip {
         visibility: visible;
         opacity: 1;
@@ -208,7 +229,28 @@
       .def-item {
         margin-bottom: 8px;
       }
-      /* End Info Button */
+      .agency-list-wrapper {
+        display: flex;
+        gap: 15px; /* Space between columns */
+        margin-top: 10px;
+      }
+      .agency-tooltip-table {
+        flex: 1; /* Distribute space evenly among the tables */
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      .agency-tooltip-table th,
+      .agency-tooltip-table td {
+        border-bottom: 1px solid #eee;
+        padding: 6px 0;
+        text-align: left;
+      }
+      .agency-tooltip-table th {
+        font-weight: bold;
+        color: var(--primary-color);
+        padding-bottom: 8px;
+      }
+      /* END Info Button Styles */
 
       /* Comparison List - Used to show selected agencies with color */
       #comparison-list {
@@ -236,17 +278,7 @@
         height: 12px;
         border-radius: 3px;
         display: inline-block;
-      }
-      .remove-btn {
-        background: transparent;
-        border: none;
-        color: #999;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 1.1rem;
-      }
-      .remove-btn:hover {
-        color: #d9534f;
+        border: 1px solid #33333366; /* Added border for white/yellow colors */
       }
 
       /* Visualization Area */
@@ -267,13 +299,17 @@
         margin-top: 0;
         color: #333;
       }
+      /* --- INCREASED RADAR CHART HEIGHT --- */
       #radar-chart,
       #bar-chart {
         width: 100%;
-        min-height: 450px;
+        min-height: 600px; /* Increased height */
+      }
+      #bar-chart {
+        min-height: 450px; /* Keep bar chart a normal size */
       }
       #placeholder {
-        min-height: 450px;
+        min-height: 600px; /* Increased height */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -304,32 +340,175 @@
           </div>
         </div>
 
-        <div class="info-container">
-          <div class="info-icon">i</div>
-          <div class="info-tooltip">
-            <h4>Metric Definitions</h4>
-            <div class="def-item">
-              <strong>Trust Dimensions (Radial):</strong>
+        <div class="info-wrapper">
+          <div class="info-container metric-info">
+            <div class="info-icon">i</div>
+            <span class="info-text">View Metric Definitions</span>
+            <div class="info-tooltip" style="width: 300px">
+              <h4>Metric Definitions</h4>
+              <div class="def-item">
+                <strong>Trust Dimensions (Radial):</strong>
+              </div>
+              <ul
+                style="
+                  padding-left: 15px;
+                  margin: -5px 0 10px 0;
+                  font-size: 0.85rem;
+                "
+              >
+                <li><strong>Competence:</strong> Ability to execute.</li>
+                <li><strong>Reliability:</strong> Consistency.</li>
+                <li><strong>Ethics:</strong> Moral principles.</li>
+                <li><strong>Sincerity:</strong> Honesty.</li>
+                <li><strong>Benevolence:</strong> Care for public interest.</li>
+              </ul>
+              <div class="def-item">
+                <strong>Warmth (Bar):</strong> Perceived friendliness & good
+                intentions.
+              </div>
+              <div class="def-item">
+                <strong>Dominance (Bar):</strong> Perceived power & capability.
+              </div>
             </div>
-            <ul
-              style="
-                padding-left: 15px;
-                margin: -5px 0 10px 0;
-                font-size: 0.85rem;
-              "
-            >
-              <li><strong>Competence:</strong> Ability to execute.</li>
-              <li><strong>Reliability:</strong> Consistency.</li>
-              <li><strong>Ethics:</strong> Moral principles.</li>
-              <li><strong>Sincerity:</strong> Honesty.</li>
-              <li><strong>Benevolence:</strong> Care for public interest.</li>
-            </ul>
-            <div class="def-item">
-              <strong>Warmth (Bar):</strong> Perceived friendliness & good
-              intentions.
-            </div>
-            <div class="def-item">
-              <strong>Dominance (Bar):</strong> Perceived power & capability.
+          </div>
+
+          <div class="info-container agency-info">
+            <div class="info-icon">?</div>
+            <span class="info-text">View Agency Full Names</span>
+            <div class="info-tooltip" style="width: 760px">
+              <h4>Agency Full Names</h4>
+              <div class="agency-list-wrapper">
+                <table class="agency-tooltip-table">
+                  <tr>
+                    <th>Short Name</th>
+                    <th>Full Name</th>
+                  </tr>
+                  <tr>
+                    <td>Amtrak</td>
+                    <td>Amtrak</td>
+                  </tr>
+                  <tr>
+                    <td>BPR</td>
+                    <td>Bureau of Prisons (BPR)</td>
+                  </tr>
+                  <tr>
+                    <td>CBP</td>
+                    <td>Customs & Border Protection (CBP)</td>
+                  </tr>
+                  <tr>
+                    <td>CDC</td>
+                    <td>Center for Disease Control (CDC)</td>
+                  </tr>
+                  <tr>
+                    <td>Census</td>
+                    <td>Census Bureau</td>
+                  </tr>
+                  <tr>
+                    <td>CISA</td>
+                    <td>
+                      Cybersecurity and Infrastructure Security Agency (CISA)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>DEd</td>
+                    <td>Department of Education</td>
+                  </tr>
+                  <tr>
+                    <td>DOD</td>
+                    <td>Department of Defense (DoD)</td>
+                  </tr>
+                  <tr>
+                    <td>DOJ</td>
+                    <td>Department of Justice (DOJ)</td>
+                  </tr>
+                </table>
+
+                <table class="agency-tooltip-table">
+                  <tr>
+                    <th>Short Name</th>
+                    <th>Full Name</th>
+                  </tr>
+                  <tr>
+                    <td>EPA</td>
+                    <td>Environmental Protection Agency (EPA)</td>
+                  </tr>
+                  <tr>
+                    <td>FAA</td>
+                    <td>Federal Aviation Administration (FAA)</td>
+                  </tr>
+                  <tr>
+                    <td>FairHousing</td>
+                    <td>Office of Fair Housing and Equal Opportunity</td>
+                  </tr>
+                  <tr>
+                    <td>FBI</td>
+                    <td>Federal Bureau of Investigation (FBI)</td>
+                  </tr>
+                  <tr>
+                    <td>FDA</td>
+                    <td>Food & Drug Administration (FDA)</td>
+                  </tr>
+                  <tr>
+                    <td>FEMA</td>
+                    <td>Federal Emergency Management Agency (FEMA)</td>
+                  </tr>
+                  <tr>
+                    <td>IRS</td>
+                    <td>Internal Revenue Services (IRS)</td>
+                  </tr>
+                  <tr>
+                    <td>LaborDept</td>
+                    <td>Labor Department</td>
+                  </tr>
+                  <tr>
+                    <td>Lib</td>
+                    <td>Library of Congress</td>
+                  </tr>
+                </table>
+
+                <table class="agency-tooltip-table">
+                  <tr>
+                    <th>Short Name</th>
+                    <th>Full Name</th>
+                  </tr>
+                  <tr>
+                    <td>Mus</td>
+                    <td>Smithsonian Museums</td>
+                  </tr>
+                  <tr>
+                    <td>NASA</td>
+                    <td>National Aeronautics & Space Administration (NASA)</td>
+                  </tr>
+                  <tr>
+                    <td>NEA</td>
+                    <td>National Endowment for the Arts (NEA)</td>
+                  </tr>
+                  <tr>
+                    <td>NSF</td>
+                    <td>National Science Foundation (NSF)</td>
+                  </tr>
+                  <tr>
+                    <td>SocSecurity</td>
+                    <td>Social Security Administration</td>
+                  </tr>
+                  <tr>
+                    <td>Treas</td>
+                    <td>Treasury</td>
+                  </tr>
+                  <tr>
+                    <td>TSA</td>
+                    <td>Transportation Security Administration (TSA)</td>
+                  </tr>
+                  <tr>
+                    <td>USPS</td>
+                    <td>U.S. Postal Service (USPS)</td>
+                  </tr>
+                  <tr>
+                    <td>Zoo</td>
+                    <td>National Zoo</td>
+                  </tr>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -370,7 +549,6 @@
       // UI Elements
       const fileNameDisplay = document.getElementById("file-name");
       const fileInput = document.getElementById("csv-uploader");
-      // *** Removed agencySelect and addBtn ***
       const agencyChecklist = document.getElementById("agency-checkbox-list");
       const comparisonList = document.getElementById("comparison-list");
       const noAgenciesMsg = document.getElementById("no-agencies-msg");
@@ -381,17 +559,18 @@
       // State
       let allAgencyData = [];
       let comparedAgencies = new Map(); // Map<string, object>
+      // --- NEW HIGH-CONTRAST COLOR PALETTE ---
       const colorPalette = [
-        "#1f77b4",
-        "#ff7f0e",
-        "#2ca02c",
-        "#d62728",
-        "#9467bd",
-        "#8c564b",
-        "#e377c2",
-        "#7f7f0f",
-        "#bcbd22",
-        "#17becf",
+        "#0072B2", // Blue
+        "#D55E00", // Reddish Orange
+        "#009E73", // Green
+        "#CC79A7", // Pink
+        "#E69F00", // Orange
+        "#56B4E9", // Sky Blue
+        "#F0E442", // Yellow
+        "#999999", // Gray
+        "#8C564B", // Brown
+        "#C4A484", // Tan
       ];
 
       // --- Core Functions ---
@@ -412,23 +591,44 @@
             .map((row) => {
               const data = { Agency: row[AGENCY_COL] };
               let isValid = true;
+              let trustSum = 0;
+              let trustCount = 0; // Added for robustness
 
               [...TRUST_DIMS, ...WD_DIMS].forEach((col) => {
                 const val = parseFloat(row[col]);
                 if (isNaN(val)) isValid = false;
                 data[col] = val;
+
+                // --- NEW: Calculate Trust Sum for sorting ---
+                if (TRUST_DIMS.includes(col)) {
+                  trustSum += val;
+                  trustCount++;
+                }
               });
+
+              if (trustCount > 0) {
+                data.Trust = trustSum / trustCount; // Add Trust score (Average)
+              } else {
+                isValid = false;
+              }
 
               return isValid ? data : null;
             })
-            .filter((d) => d && d.Agency); // Filter out nulls and rows without an agency
+            .filter((d) => d && d.Agency);
 
           if (allAgencyData.length === 0) {
             throw new Error("No valid agency data found in CSV.");
           }
 
           // Reset state and populate new checklist
+          // Re-establish compared agencies from the new data based on names
+          const existingComparedNames = Array.from(comparedAgencies.keys());
           comparedAgencies.clear();
+          existingComparedNames.forEach((name) => {
+            const found = allAgencyData.find((d) => d.Agency === name);
+            if (found) comparedAgencies.set(name, found);
+          });
+
           populateAgencyChecklist();
           updateComparisonList();
           drawCharts();
@@ -454,6 +654,7 @@
             input.type = "checkbox";
             input.id = `check-${agencyName}`;
             input.value = agencyName;
+            input.checked = comparedAgencies.has(agencyName); // Retain checked state
             input.addEventListener("change", handleCheckboxChange);
 
             const label = document.createElement("label");
@@ -496,7 +697,9 @@
         }
 
         let i = 0;
-        comparedAgencies.forEach((data, name) => {
+        // Use the map keys for ordering consistency
+        Array.from(comparedAgencies.keys()).forEach((name) => {
+          const data = comparedAgencies.get(name);
           const color = colorPalette[i % colorPalette.length];
           const item = document.createElement("li");
           item.className = "comparison-item";
@@ -515,7 +718,7 @@
        * Main render function
        */
       function drawCharts() {
-        const agencies = Array.from(comparedAgencies.values());
+        let agencies = Array.from(comparedAgencies.values());
 
         if (agencies.length === 0) {
           radarChartEl.innerHTML = "";
@@ -526,6 +729,10 @@
           }
           return;
         }
+
+        // --- NEW: Automatic Ordering by Trust Score (Lowest to Highest) ---
+        // This ensures smaller polygons are drawn first, preventing occlusion.
+        agencies.sort((a, b) => a.Trust - b.Trust);
 
         drawRadialChart(agencies);
         drawBarChart(agencies);
@@ -540,6 +747,7 @@
         const theta = [...TRUST_DIMS, TRUST_DIMS[0]]; // Close the loop
 
         agencies.forEach((agency, i) => {
+          // Use the index *after* sorting for color
           const color = colorPalette[i % colorPalette.length];
           const r = TRUST_DIMS.map((dim) => agency[dim]);
           r.push(r[0]); // Close the loop
@@ -552,6 +760,8 @@
             fillcolor: color + "33", // Add alpha transparency
             line: { color: color, width: 2 },
             name: agency.Agency,
+            // Ensure hover info is detailed
+            hovertemplate: `<b>${agency.Agency}</b><br>%{theta}: %{r:.2f}<extra></extra>`,
           });
         });
 
@@ -559,12 +769,27 @@
           polar: {
             radialaxis: {
               visible: true,
-              range: [0, 7], // Assuming a 0-7 scale, adjust as needed
+              range: [0, 7], // Assuming a 0-7 scale
+              tickvals: [0, 1, 2, 3, 4, 5, 6, 7],
+              ticklen: 8,
+              linecolor: "#ddd",
+            },
+            angularaxis: {
+              // Ensure labels are centered under the dimension name
+              rotation: 90,
+              direction: "clockwise",
+              linecolor: "#ddd",
             },
           },
           showlegend: true,
-          legend: { x: 1.05, y: 0.5 },
-          margin: { t: 50, b: 50, l: 50, r: 200 }, // Make room for legend
+          legend: {
+            x: 1.05,
+            y: 0.5,
+            xanchor: "left",
+            yanchor: "middle",
+          },
+          // Margin updated for the larger graph size
+          margin: { t: 50, b: 50, l: 50, r: 200 },
         };
 
         Plotly.newPlot(radarChartEl, traces, layout, {
@@ -579,7 +804,13 @@
       function drawBarChart(agencies) {
         barChartEl.innerHTML = "";
 
-        const traces = agencies.map((agency, i) => {
+        // Reset index for colors to match the order in comparison list
+        const agenciesByName = agencies.map((a) => a.Agency);
+        const agenciesInListOrder = Array.from(comparedAgencies.keys())
+          .map((name) => agencies.find((a) => a.Agency === name))
+          .filter((a) => a); // Filter out any undefined
+
+        const traces = agenciesInListOrder.map((agency, i) => {
           const color = colorPalette[i % colorPalette.length];
           return {
             type: "bar",
@@ -593,11 +824,11 @@
         });
 
         const layout = {
-          barmode: "group", // This will group the bars by the X-axis categories (Warmth, Dominance)
+          barmode: "group",
           showlegend: true,
           yaxis: { title: "Score" },
-          xaxis: { tickangle: 0 }, // No angle needed for short labels
-          margin: { t: 50, b: 50, l: 50, r: 50 }, // Standard margin
+          xaxis: { tickangle: 0 },
+          margin: { t: 50, b: 50, l: 50, r: 50 },
         };
 
         Plotly.newPlot(barChartEl, traces, layout, {
@@ -620,7 +851,7 @@
             fileNameDisplay.textContent = "agency.csv (default)";
             Papa.parse(csvText, {
               header: true,
-              dynamicTyping: false, // Parse all as strings, convert manually
+              dynamicTyping: false,
               skipEmptyLines: true,
               complete: (results) => processCSV(results.data),
               error: (err) =>
@@ -633,10 +864,22 @@
           });
       });
 
-      // *** Removed the Add Agency button listener as it's replaced by handleCheckboxChange ***
-      // *** Removed the Remove Agency button listener as it's replaced by handleCheckboxChange ***
-
-      // *** NOTE: The handleCheckboxChange function is attached when the list is populated. ***
+      // 2. Listen for user-uploaded file
+      fileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          fileNameDisplay.textContent = file.name;
+          Papa.parse(file, {
+            header: true,
+            dynamicTyping: false,
+            skipEmptyLines: true,
+            complete: (results) => processCSV(results.data),
+            error: (err) => {
+              alert(`Error parsing file: ${err.message}`);
+            },
+          });
+        }
+      });
     </script>
   </body>
 </html>
