@@ -218,7 +218,7 @@
         position: absolute;
         top: 20px;
         right: 20px;
-        z-index: 20; /* Z-index increased to ensure tooltips appear above legend-overlay (10) */
+        z-index: 20;
         display: flex;
         gap: 10px; /* Space between info buttons */
       }
@@ -266,7 +266,7 @@
         right: -10px;
         left: auto;
 
-        /* FIX: Limit height and enable scrolling */
+        /* Limit height and enable scrolling for long content */
         max-height: 70vh;
         overflow-y: auto;
       }
@@ -288,11 +288,16 @@
         margin-bottom: 8px;
       }
       /* Agency Table Styles */
+      .agency-list-wrapper {
+        display: flex;
+        gap: 20px; /* Space between the two columns */
+        margin-top: 10px;
+      }
       .agency-tooltip-table {
-        width: 100%;
+        flex: 1;
+        width: 50%; /* Ensure both tables take roughly half the space */
         border-collapse: collapse;
         font-size: 0.85rem;
-        margin-top: 10px;
       }
       .agency-tooltip-table th,
       .agency-tooltip-table td {
@@ -464,124 +469,133 @@
 
           <div class="info-container agency-info">
             <div class="info-icon">?</div>
-            <div class="info-tooltip" style="width: 450px">
+            <div class="info-tooltip" style="width: 550px">
               <h4>Agency Full Names</h4>
-              <table class="agency-tooltip-table">
-                <tr>
-                  <th>Short Name</th>
-                  <th>Full Name</th>
-                </tr>
-                <tr>
-                  <td>Amtrak</td>
-                  <td>Amtrak</td>
-                </tr>
-                <tr>
-                  <td>BPR</td>
-                  <td>Bureau of Prisons (BPR)</td>
-                </tr>
-                <tr>
-                  <td>CBP</td>
-                  <td>Customs & Border Protection (CBP)</td>
-                </tr>
-                <tr>
-                  <td>CDC</td>
-                  <td>Center for Disease Control (CDC)</td>
-                </tr>
-                <tr>
-                  <td>Census</td>
-                  <td>Census Bureau</td>
-                </tr>
-                <tr>
-                  <td>CISA</td>
-                  <td>
-                    Cybersecurity and Infrastructure Security Agency (CISA)
-                  </td>
-                </tr>
-                <tr>
-                  <td>DEd</td>
-                  <td>Department of Education</td>
-                </tr>
-                <tr>
-                  <td>DOD</td>
-                  <td>Department of Defense (DoD)</td>
-                </tr>
-                <tr>
-                  <td>DOJ</td>
-                  <td>Department of Justice (DOJ)</td>
-                </tr>
-                <tr>
-                  <td>EPA</td>
-                  <td>Environmental Protection Agency (EPA)</td>
-                </tr>
-                <tr>
-                  <td>FAA</td>
-                  <td>Federal Aviation Administration (FAA)</td>
-                </tr>
-                <tr>
-                  <td>FairHousing</td>
-                  <td>Office of Fair Housing and Equal Opportunity</td>
-                </tr>
-                <tr>
-                  <td>FBI</td>
-                  <td>Federal Bureau of Investigation (FBI)</td>
-                </tr>
-                <tr>
-                  <td>FDA</td>
-                  <td>Food & Drug Administration (FDA)</td>
-                </tr>
-                <tr>
-                  <td>FEMA</td>
-                  <td>Federal Emergency Management Agency (FEMA)</td>
-                </tr>
-                <tr>
-                  <td>IRS</td>
-                  <td>Internal Revenue Services (IRS)</td>
-                </tr>
-                <tr>
-                  <td>LaborDept</td>
-                  <td>Labor Department</td>
-                </tr>
-                <tr>
-                  <td>Lib</td>
-                  <td>Library of Congress</td>
-                </tr>
-                <tr>
-                  <td>Mus</td>
-                  <td>Smithsonian Museums</td>
-                </tr>
-                <tr>
-                  <td>NASA</td>
-                  <td>National Aeronautics & Space Administration (NASA)</td>
-                </tr>
-                <tr>
-                  <td>NEA</td>
-                  <td>National Endowment for the Arts (NEA)</td>
-                </tr>
-                <tr>
-                  <td>NSF</td>
-                  <td>National Science Foundation (NSF)</td>
-                </tr>
-                <tr>
-                  <td>SocSecurity</td>
-                  <td>Social Security Administration</td>
-                </tr>
-                <tr>
-                  <td>Treas</td>
-                  <td>Treasury</td>
-                </tr>
-                <tr>
-                  <td>TSA</td>
-                  <td>Transportation Security Administration (TSA)</td>
-                </tr>
-                <tr>
-                  <td>USPS</td>
-                  <td>U.S. Postal Service (USPS)</td>
-                </tr>
-                <tr>
-                  <td>Zoo</td>
-                  <td>National Zoo</td>
-                </tr>
-              </table>
+              <div class="agency-list-wrapper">
+                <table class="agency-tooltip-table">
+                  <tr>
+                    <th>Short Name</th>
+                    <th>Full Name</th>
+                  </tr>
+                  <tr>
+                    <td>Amtrak</td>
+                    <td>Amtrak</td>
+                  </tr>
+                  <tr>
+                    <td>BPR</td>
+                    <td>Bureau of Prisons (BPR)</td>
+                  </tr>
+                  <tr>
+                    <td>CBP</td>
+                    <td>Customs & Border Protection (CBP)</td>
+                  </tr>
+                  <tr>
+                    <td>CDC</td>
+                    <td>Center for Disease Control (CDC)</td>
+                  </tr>
+                  <tr>
+                    <td>Census</td>
+                    <td>Census Bureau</td>
+                  </tr>
+                  <tr>
+                    <td>CISA</td>
+                    <td>
+                      Cybersecurity and Infrastructure Security Agency (CISA)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>DEd</td>
+                    <td>Department of Education</td>
+                  </tr>
+                  <tr>
+                    <td>DOD</td>
+                    <td>Department of Defense (DoD)</td>
+                  </tr>
+                  <tr>
+                    <td>DOJ</td>
+                    <td>Department of Justice (DOJ)</td>
+                  </tr>
+                  <tr>
+                    <td>EPA</td>
+                    <td>Environmental Protection Agency (EPA)</td>
+                  </tr>
+                  <tr>
+                    <td>FAA</td>
+                    <td>Federal Aviation Administration (FAA)</td>
+                  </tr>
+                  <tr>
+                    <td>FairHousing</td>
+                    <td>Office of Fair Housing and Equal Opportunity</td>
+                  </tr>
+                  <tr>
+                    <td>FBI</td>
+                    <td>Federal Bureau of Investigation (FBI)</td>
+                  </tr>
+                  <tr>
+                    <td>FDA</td>
+                    <td>Food & Drug Administration (FDA)</td>
+                  </tr>
+                </table>
+
+                <table class="agency-tooltip-table">
+                  <tr>
+                    <th>Short Name</th>
+                    <th>Full Name</th>
+                  </tr>
+                  <tr>
+                    <td>FEMA</td>
+                    <td>Federal Emergency Management Agency (FEMA)</td>
+                  </tr>
+                  <tr>
+                    <td>IRS</td>
+                    <td>Internal Revenue Services (IRS)</td>
+                  </tr>
+                  <tr>
+                    <td>LaborDept</td>
+                    <td>Labor Department</td>
+                  </tr>
+                  <tr>
+                    <td>Lib</td>
+                    <td>Library of Congress</td>
+                  </tr>
+                  <tr>
+                    <td>Mus</td>
+                    <td>Smithsonian Museums</td>
+                  </tr>
+                  <tr>
+                    <td>NASA</td>
+                    <td>National Aeronautics & Space Administration (NASA)</td>
+                  </tr>
+                  <tr>
+                    <td>NEA</td>
+                    <td>National Endowment for the Arts (NEA)</td>
+                  </tr>
+                  <tr>
+                    <td>NSF</td>
+                    <td>National Science Foundation (NSF)</td>
+                  </tr>
+                  <tr>
+                    <td>SocSecurity</td>
+                    <td>Social Security Administration</td>
+                  </tr>
+                  <tr>
+                    <td>Treas</td>
+                    <td>Treasury</td>
+                  </tr>
+                  <tr>
+                    <td>TSA</td>
+                    <td>Transportation Security Administration (TSA)</td>
+                  </tr>
+                  <tr>
+                    <td>USPS</td>
+                    <td>U.S. Postal Service (USPS)</td>
+                  </tr>
+                  <tr>
+                    <td>Zoo</td>
+                    <td>National Zoo</td>
+                  </tr>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -934,23 +948,22 @@
             fileNameDisplay.textContent = "No file loaded.";
           });
 
-        // 2. NEW: Modal Logic
-        // The localStorage check is commented out to ensure the modal appears every time for easy testing/review.
-        // if (localStorage.getItem("trustExplorerModalShown") !== "true") {
-        // Show the modal after the plot has finished rendering (triggered by custom event)
-        document.addEventListener("plotRendered", () => {
-          // Wait for the loading overlay to be removed before showing modal
-          setTimeout(() => {
-            welcomeModal.classList.add("visible");
-          }, 500);
-        });
-        // }
+        // 2. Modal Logic (Restored to only show on first visit to the domain)
+        if (localStorage.getItem("trustExplorerModalShown") !== "true") {
+          // Show the modal after the plot has finished rendering (triggered by custom event)
+          document.addEventListener("plotRendered", () => {
+            // Wait for the loading overlay to be removed before showing modal
+            setTimeout(() => {
+              welcomeModal.classList.add("visible");
+            }, 500);
+          });
+        }
 
         // Close button event listener
         modalCloseBtn.addEventListener("click", () => {
           welcomeModal.classList.remove("visible");
-          // Set flag in localStorage so it doesn't show again (currently disabled for testing)
-          // localStorage.setItem("trustExplorerModalShown", "true");
+          // Set flag in localStorage so it doesn't show again
+          localStorage.setItem("trustExplorerModalShown", "true");
         });
       });
 
