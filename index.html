@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Public Trust in Government | UMAP Explorer</title>
+    <title>Radial/Bar Comparison | Trust in Gov</title>
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
 
     <style>
       :root {
@@ -92,151 +91,83 @@
       .container {
         flex: 1;
         max-width: 1600px;
-        margin: 0 auto;
-        padding: 20px;
+        margin: 20px auto;
+        padding: 0 20px;
         width: 100%;
         box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 20px;
       }
 
-      .header-section {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      h1 {
-        margin: 0 0 10px 0;
-        color: #1a202c;
-      }
-      .subtitle {
-        color: #666;
-        font-size: 1.1rem;
-      }
-
-      /* Visualization Card */
-      .viz-card {
+      /* Controls Panel */
+      .controls-panel {
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         padding: 20px;
-        position: relative;
-        flex: 1;
-        min-height: 700px;
+        align-self: start;
       }
-      #plot {
-        width: 100%;
-        height: 100%;
-        min-height: 700px;
-      }
-
-      /* Loading Overlay */
-      #loading-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        font-weight: 500;
-        color: var(--primary-color);
-        z-index: 20;
-        visibility: hidden;
-        opacity: 0;
-        transition: opacity 0.3s;
-      }
-      #loading-overlay.visible {
-        visibility: visible;
-        opacity: 1;
-      }
-
-      /* --- NEW: Modal Overlay Styles --- */
-      .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s;
-      }
-      .modal-overlay.visible {
-        opacity: 1;
-        visibility: visible;
-      }
-      .modal-content {
-        background: white;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        width: 90%;
-        max-width: 600px;
-        max-height: 80vh;
-        overflow-y: auto;
-        position: relative;
-      }
-      .modal-content h2 {
-        color: var(--primary-color);
+      .controls-panel h2 {
         margin-top: 0;
-        border-bottom: 2px solid #eee;
+        color: #333;
+        border-bottom: 1px solid #eee;
         padding-bottom: 10px;
-        margin-bottom: 15px;
       }
-      .modal-content ul {
-        padding-left: 20px;
+      .control-group {
+        margin-bottom: 20px;
       }
-      .modal-close-btn {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 500;
-        margin-top: 20px;
+      .control-group label {
         display: block;
-        margin-left: auto;
-        transition: background-color 0.2s;
-      }
-      .modal-close-btn:hover {
-        background-color: #1a435a;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
       }
 
-      /* Info Button & Tooltip */
-      /* NEW: Wrapper for multiple info buttons */
-      .info-wrapper {
-        position: absolute;
-        top: 30px; /* Adjusted position */
-        right: 30px; /* Adjusted position */
-        z-index: 10;
+      /* Agency Checkbox List Styles */
+      #agency-checkbox-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        padding: 10px;
+        background: #fcfcfc;
+      }
+      .checkbox-item {
         display: flex;
-        gap: 10px; /* Space between info buttons */
+        align-items: center;
+        margin-bottom: 5px;
+      }
+      .checkbox-item input {
+        margin-right: 8px;
+        cursor: pointer;
+      }
+      .checkbox-item label {
+        font-weight: 400; /* Normal weight for label text */
+        margin-bottom: 0;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      /* --- NEW/UPDATED Info Button & Tooltip Styles for Radial Page --- */
+      /* Wrapper to hold both info buttons vertically in the controls panel */
+      .info-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-bottom: 20px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
       }
       .info-container {
-        /* NEW STYLES for labels */
-        position: relative; 
-        display: flex; 
+        position: relative;
+        z-index: 10;
+        display: flex;
         align-items: center;
-        background: #fff; 
-        padding: 5px 10px 5px 5px; 
-        border-radius: 20px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid #eee;
-        cursor: help; /* Ensure the whole pill is a help cursor */
       }
       .info-icon {
-        width: 24px; /* Smaller icon inside pill */
-        height: 24px;
+        width: 28px;
+        height: 28px;
         background: var(--primary-color);
         color: white;
         border-radius: 50%;
@@ -246,28 +177,28 @@
         font-weight: bold;
         font-family: serif;
         font-style: italic;
-        box-shadow: none; /* Remove shadow */
-        font-size: 14px;
+        cursor: help;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        font-size: 16px;
       }
       .info-text {
-        /* NEW: Text label style */
-        font-weight: 500;
-        font-size: 0.85rem;
+        font-weight: 600;
+        font-size: 0.9rem;
         color: var(--primary-color);
-        margin-left: 8px;
-        padding-right: 5px; /* Padding inside the pill */
+        margin-left: 10px;
       }
+
       .info-tooltip {
         visibility: hidden;
-        width: 250px; /* Adjusted width */
         background-color: #fff;
         color: #333;
         text-align: left;
         border-radius: 8px;
         padding: 15px;
         position: absolute;
-        top: 40px; /* Position below the button */
-        right: 0;
+        /* Position tooltip to the right of the entire panel */
+        top: -15px;
+        left: 105%;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         opacity: 0;
         transition: opacity 0.3s;
@@ -275,12 +206,11 @@
         line-height: 1.4;
         border: 1px solid #eee;
         pointer-events: none;
-        z-index: 100; /* Ensure tooltip is on top of everything */
       }
-      /* Position agency info to the left of the metric info */
+      /* Agency specific styles */
       .info-container.agency-info .info-tooltip {
-        right: auto;
-        left: 0;
+        max-height: 70vh;
+        overflow-y: auto;
       }
 
       .info-container:hover .info-tooltip {
@@ -299,12 +229,15 @@
       .def-item {
         margin-bottom: 8px;
       }
-      /* NEW: Agency Table Styles */
+      .agency-list-wrapper {
+        display: flex;
+        gap: 15px; /* Space between columns */
+        margin-top: 10px;
+      }
       .agency-tooltip-table {
-        width: 100%;
+        flex: 1; /* Distribute space evenly among the tables */
         border-collapse: collapse;
         font-size: 0.85rem;
-        margin-top: 10px;
       }
       .agency-tooltip-table th,
       .agency-tooltip-table td {
@@ -317,44 +250,71 @@
         color: var(--primary-color);
         padding-bottom: 8px;
       }
+      /* END Info Button Styles */
 
-      /* Custom Legend Overlay */
-      .legend-overlay {
-        position: absolute;
-        bottom: 30px;
-        right: 30px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #eee;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        font-size: 0.85rem;
-        pointer-events: none;
-        z-index: 10;
+      /* Comparison List - Used to show selected agencies with color */
+      #comparison-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
       }
-      .legend-item {
+      .comparison-item {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        padding: 10px;
+        border-radius: 6px;
         margin-bottom: 8px;
+        background: #f8f9fa;
       }
-      .legend-item:last-child {
-        margin-bottom: 0;
-      } /* Remove margin from last item */
-      .legend-border-thin {
+      .comparison-item-name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+      }
+      .color-swatch {
         width: 12px;
         height: 12px;
-        border-radius: 50%;
-        border: 1px solid #333;
-        margin-right: 8px;
-        background: #ddd;
+        border-radius: 3px;
+        display: inline-block;
+        border: 1px solid #33333366; /* Added border for white/yellow colors */
       }
-      .legend-border-thick {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 4px solid #333;
-        margin-right: 8px;
-        background: #ddd;
+
+      /* Visualization Area */
+      .viz-area {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .viz-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        position: relative;
+        flex: 1;
+      }
+      .viz-card h3 {
+        margin-top: 0;
+        color: #333;
+      }
+      /* --- INCREASED RADAR CHART HEIGHT --- */
+      #radar-chart,
+      #bar-chart {
+        width: 100%;
+        min-height: 600px; /* Increased height */
+      }
+      #bar-chart {
+        min-height: 450px; /* Keep bar chart a normal size */
+      }
+      #placeholder {
+        min-height: 600px; /* Increased height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 1.2rem;
       }
     </style>
   </head>
@@ -366,69 +326,18 @@
         <label for="csv-uploader" id="upload-label">Load New CSV</label>
         <span id="file-name">Loading default...</span>
 
-        <a href="index.html" class="nav-item active">High-Dimensional (UMAP)</a>
-        <a href="radial.html" class="nav-item">Radial/Bar Views</a>
+        <a href="index.html" class="nav-item">High-Dimensional (UMAP)</a>
+        <a href="radial.html" class="nav-item active">Radial/Bar Views</a>
       </div>
     </nav>
 
-    <div id="welcome-modal" class="modal-overlay">
-      <div class="modal-content">
-        <h2>Welcome to the Trust Profile Explorer</h2>
-        <p>
-          This visualization uses a UMAP (Uniform Manifold Approximation and
-          Projection) algorithm to plot U.S. government agencies based on the
-          similarity of their trust dimension profiles.
-        </p>
-        <ul>
-          <li>
-            <b>Similarity:</b> Agencies positioned closer together have more
-            similar scores across the five core trust dimensions (Competence,
-            Reliability, Ethics, Sincerity, Benevolence).
-          </li>
-          <li>
-            <b>X-Axis (Overall Trust):</b> Agencies further to the <b>right</b> have a
-            higher overall average trust score across the five dimensions. Note
-            that while the X-axis correlates highly with overall trust,
-            individual trust dimensions may still vary significantly.
-          </li>
-          <li>
-            <b>Color (Warmth):</b> The dot color represents the agency's perceived
-            warmth. The scale goes from bright red (High Warmth) to
-            icy aqua blue (Low Warmth/Cold).
-          </li>
-          <li>
-            <b>Border Thickness (Dominance):</b> The black outline thickness
-            represents the agency's perceived Dominance. Thicker lines mean
-            higher Dominance.
-          </li>
-        </ul>
-        <p>
-          To explore the raw data and compare specific agencies directly, switch
-          to the <b>Radial/Bar Views</b> tab at the top.
-          <br />
-          <br />
-          You can also use the <b>info buttons</b> next to the plot for metric
-          definitions and a list of all agency full names.
-        </p>
-        <button id="modal-close" class="modal-close-btn">
-          Start Exploring
-        </button>
-      </div>
-    </div>
-
     <div class="container">
-      <div class="header-section">
-        <h1>Agency Trust Profile Explorer</h1>
-        <p class="subtitle">
-          Agencies are positioned by similarity on a UMAP plot. The <b>X-Axis
-          represents Overall Trust</b>, with higher trust to the right, while the
-          </b>color and border</b> represent Warmth and Dominance metrics.
-        </p>
-      </div>
-
-      <div class="viz-card">
-        <div id="loading-overlay">
-          <div>Calculating UMAP...</div>
+      <div class="controls-panel">
+        <div class="control-group">
+          <label>Select Agencies to Compare</label>
+          <div id="agency-checkbox-list">
+            <p style="color: #777; margin: 0">Load CSV to populate list.</p>
+          </div>
         </div>
 
         <div class="info-wrapper">
@@ -438,170 +347,190 @@
             <div class="info-tooltip" style="width: 300px">
               <h4>Metric Definitions</h4>
               <div class="def-item">
-                <strong>Trust:</strong> Overall confidence (X-Axis).
+                <strong>Trust Dimensions (Radial):</strong>
               </div>
-              <div class="def-item">
-                <strong>Warmth:</strong> Perceived friendliness (Color).
-              </div>
-              <div class="def-item">
-                <strong>Dominance:</strong> Perceived power (Border Thickness).
-              </div>
-              <div
+              <ul
                 style="
-                  margin-top: 10px;
-                  border-top: 1px solid #eee;
-                  padding-top: 5px;
+                  padding-left: 15px;
+                  margin: -5px 0 10px 0;
+                  font-size: 0.85rem;
                 "
               >
-                <strong>5 Dimensions of Trust:</strong>
-              </div>
-              <ul style="padding-left: 15px; margin: 5px 0">
                 <li><strong>Competence:</strong> Ability to execute.</li>
                 <li><strong>Reliability:</strong> Consistency.</li>
                 <li><strong>Ethics:</strong> Moral principles.</li>
                 <li><strong>Sincerity:</strong> Honesty.</li>
                 <li><strong>Benevolence:</strong> Care for public interest.</li>
               </ul>
+              <div class="def-item">
+                <strong>Warmth (Bar):</strong> Perceived friendliness & good
+                intentions.
+              </div>
+              <div class="def-item">
+                <strong>Dominance (Bar):</strong> Perceived power & capability.
+              </div>
             </div>
           </div>
 
           <div class="info-container agency-info">
             <div class="info-icon">?</div>
             <span class="info-text">View Agency Full Names</span>
-            <div class="info-tooltip" style="width: 450px">
+            <div class="info-tooltip" style="width: 760px">
               <h4>Agency Full Names</h4>
-              <table class="agency-tooltip-table">
-                <tr>
-                  <th>Short Name</th>
-                  <th>Full Name</th>
-                </tr>
-                <tr>
-                  <td>Amtrak</td>
-                  <td>Amtrak</td>
-                </tr>
-                <tr>
-                  <td>BPR</td>
-                  <td>Bureau of Prisons (BPR)</td>
-                </tr>
-                <tr>
-                  <td>CBP</td>
-                  <td>Customs & Border Protection (CBP)</td>
-                </tr>
-                <tr>
-                  <td>CDC</td>
-                  <td>Center for Disease Control (CDC)</td>
-                </tr>
-                <tr>
-                  <td>Census</td>
-                  <td>Census Bureau</td>
-                </tr>
-                <tr>
-                  <td>CISA</td>
-                  <td>
-                    Cybersecurity and Infrastructure Security Agency (CISA)
-                  </td>
-                </tr>
-                <tr>
-                  <td>DEd</td>
-                  <td>Department of Education</td>
-                </tr>
-                <tr>
-                  <td>DOD</td>
-                  <td>Department of Defense (DoD)</td>
-                </tr>
-                <tr>
-                  <td>DOJ</td>
-                  <td>Department of Justice (DOJ)</td>
-                </tr>
-                <tr>
-                  <td>EPA</td>
-                  <td>Environmental Protection Agency (EPA)</td>
-                </tr>
-                <tr>
-                  <td>FAA</td>
-                  <td>Federal Aviation Administration (FAA)</td>
-                </tr>
-                <tr>
-                  <td>FairHousing</td>
-                  <td>Office of Fair Housing and Equal Opportunity</td>
-                </tr>
-                <tr>
-                  <td>FBI</td>
-                  <td>Federal Bureau of Investigation (FBI)</td>
-                </tr>
-                <tr>
-                  <td>FDA</td>
-                  <td>Food & Drug Administration (FDA)</td>
-                </tr>
-                <tr>
-                  <td>FEMA</td>
-                  <td>Federal Emergency Management Agency (FEMA)</td>
-                </tr>
-                <tr>
-                  <td>IRS</td>
-                  <td>Internal Revenue Services (IRS)</td>
-                </tr>
-                <tr>
-                  <td>LaborDept</td>
-                  <td>Labor Department</td>
-                </tr>
-                <tr>
-                  <td>Lib</td>
-                  <td>Library of Congress</td>
-                </tr>
-                <tr>
-                  <td>Mus</td>
-                  <td>Smithsonian Museums</td>
-                </tr>
-                <tr>
-                  <td>NASA</td>
-                  <td>National Aeronautics & Space Administration (NASA)</td>
-                </tr>
-                <tr>
-                  <td>NEA</td>
-                  <td>National Endowment for the Arts (NEA)</td>
-                </tr>
-                <tr>
-                  <td>NSF</td>
-                  <td>National Science Foundation (NSF)</td>
-                </tr>
-                <tr>
-                  <td>SocSecurity</td>
-                  <td>Social Security Administration</td>
-                </tr>
-                <tr>
-                  <td>Treas</td>
-                  <td>Treasury</td>
-                </tr>
-                <tr>
-                  <td>TSA</td>
-                  <td>Transportation Security Administration (TSA)</td>
-                </tr>
-                <tr>
-                  <td>USPS</td>
-                  <td>U.S. Postal Service (USPS)</td>
-                </tr>
-                <tr>
-                  <td>Zoo</td>
-                  <td>National Zoo</td>
-                </tr>
-              </table>
+              <div class="agency-list-wrapper">
+                <table class="agency-tooltip-table">
+                  <tr>
+                    <th>Short Name</th>
+                    <th>Full Name</th>
+                  </tr>
+                  <tr>
+                    <td>Amtrak</td>
+                    <td>Amtrak</td>
+                  </tr>
+                  <tr>
+                    <td>BPR</td>
+                    <td>Bureau of Prisons (BPR)</td>
+                  </tr>
+                  <tr>
+                    <td>CBP</td>
+                    <td>Customs & Border Protection (CBP)</td>
+                  </tr>
+                  <tr>
+                    <td>CDC</td>
+                    <td>Center for Disease Control (CDC)</td>
+                  </tr>
+                  <tr>
+                    <td>Census</td>
+                    <td>Census Bureau</td>
+                  </tr>
+                  <tr>
+                    <td>CISA</td>
+                    <td>
+                      Cybersecurity and Infrastructure Security Agency (CISA)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>DEd</td>
+                    <td>Department of Education</td>
+                  </tr>
+                  <tr>
+                    <td>DOD</td>
+                    <td>Department of Defense (DoD)</td>
+                  </tr>
+                  <tr>
+                    <td>DOJ</td>
+                    <td>Department of Justice (DOJ)</td>
+                  </tr>
+                </table>
+
+                <table class="agency-tooltip-table">
+                  <tr>
+                    <th>Short Name</th>
+                    <th>Full Name</th>
+                  </tr>
+                  <tr>
+                    <td>EPA</td>
+                    <td>Environmental Protection Agency (EPA)</td>
+                  </tr>
+                  <tr>
+                    <td>FAA</td>
+                    <td>Federal Aviation Administration (FAA)</td>
+                  </tr>
+                  <tr>
+                    <td>FairHousing</td>
+                    <td>Office of Fair Housing and Equal Opportunity</td>
+                  </tr>
+                  <tr>
+                    <td>FBI</td>
+                    <td>Federal Bureau of Investigation (FBI)</td>
+                  </tr>
+                  <tr>
+                    <td>FDA</td>
+                    <td>Food & Drug Administration (FDA)</td>
+                  </tr>
+                  <tr>
+                    <td>FEMA</td>
+                    <td>Federal Emergency Management Agency (FEMA)</td>
+                  </tr>
+                  <tr>
+                    <td>IRS</td>
+                    <td>Internal Revenue Services (IRS)</td>
+                  </tr>
+                  <tr>
+                    <td>LaborDept</td>
+                    <td>Labor Department</td>
+                  </tr>
+                  <tr>
+                    <td>Lib</td>
+                    <td>Library of Congress</td>
+                  </tr>
+                </table>
+
+                <table class="agency-tooltip-table">
+                  <tr>
+                    <th>Short Name</th>
+                    <th>Full Name</th>
+                  </tr>
+                  <tr>
+                    <td>Mus</td>
+                    <td>Smithsonian Museums</td>
+                  </tr>
+                  <tr>
+                    <td>NASA</td>
+                    <td>National Aeronautics & Space Administration (NASA)</td>
+                  </tr>
+                  <tr>
+                    <td>NEA</td>
+                    <td>National Endowment for the Arts (NEA)</td>
+                  </tr>
+                  <tr>
+                    <td>NSF</td>
+                    <td>National Science Foundation (NSF)</td>
+                  </tr>
+                  <tr>
+                    <td>SocSecurity</td>
+                    <td>Social Security Administration</td>
+                  </tr>
+                  <tr>
+                    <td>Treas</td>
+                    <td>Treasury</td>
+                  </tr>
+                  <tr>
+                    <td>TSA</td>
+                    <td>Transportation Security Administration (TSA)</td>
+                  </tr>
+                  <tr>
+                    <td>USPS</td>
+                    <td>U.S. Postal Service (USPS)</td>
+                  </tr>
+                  <tr>
+                    <td>Zoo</td>
+                    <td>National Zoo</td>
+                  </tr>
+                </table>
+              </div>
             </div>
           </div>
         </div>
+        <h2>Currently Comparing</h2>
+        <ul id="comparison-list">
+          <li id="no-agencies-msg" style="color: #777">
+            No agencies selected.
+          </li>
+        </ul>
+      </div>
 
-        <div class="legend-overlay">
-          <div class="legend-item">
-            <div class="legend-border-thin"></div>
-            <span>Low Dominance</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-border-thick"></div>
-            <span>High Dominance</span>
+      <div class="viz-area">
+        <div class="viz-card">
+          <h3>Trust Dimensions (Radial)</h3>
+          <div id="radar-chart">
+            <div id="placeholder">Select agencies to see Trust Dimensions</div>
           </div>
         </div>
-
-        <div id="plot"></div>
+        <div class="viz-card">
+          <h3>Warmth & Dominance (Bar)</h3>
+          <div id="bar-chart"></div>
+        </div>
       </div>
     </div>
 
@@ -614,351 +543,337 @@
         "Sincere",
         "Benevolent",
       ];
-      const METRICS = ["Warmth", "Dominance"];
+      const WD_DIMS = ["Warmth", "Dominance"];
       const AGENCY_COL = "Agency";
 
-      const loadingOverlay = document.getElementById("loading-overlay");
+      // UI Elements
       const fileNameDisplay = document.getElementById("file-name");
       const fileInput = document.getElementById("csv-uploader");
-      const welcomeModal = document.getElementById("welcome-modal");
-      const modalCloseBtn = document.getElementById("modal-close");
+      const agencyChecklist = document.getElementById("agency-checkbox-list");
+      const comparisonList = document.getElementById("comparison-list");
+      const noAgenciesMsg = document.getElementById("no-agencies-msg");
+      const radarChartEl = document.getElementById("radar-chart");
+      const barChartEl = document.getElementById("bar-chart");
+      const placeholder = document.getElementById("placeholder");
+
+      // State
+      let allAgencyData = [];
+      let comparedAgencies = new Map(); // Map<string, object>
+      // --- NEW HIGH-CONTRAST COLOR PALETTE ---
+      const colorPalette = [
+        "#0072B2", // Blue
+        "#D55E00", // Reddish Orange
+        "#009E73", // Green
+        "#CC79A7", // Pink
+        "#E69F00", // Orange
+        "#56B4E9", // Sky Blue
+        "#F0E442", // Yellow
+        "#999999", // Gray
+        "#8C564B", // Brown
+        "#C4A484", // Tan
+      ];
 
       // --- Core Functions ---
 
       /**
-       * Takes raw CSV data from PapaParse and processes it completely.
-       * 1. Validates data
-       * 2. Calculates metrics (Trust)
-       * 3. Runs UMAP
-       * 4. Rotates plot
-       * 5. Renders plot
+       * Takes raw CSV data, processes, and stores it.
        */
-      async function processAndPlot(parsedData) {
-        loadingOverlay.classList.add("visible");
-
-        // 1. Validate and Process Data
-        const requiredCols = [...TRUST_DIMS, ...METRICS];
-        let processedData = [];
-
+      function processCSV(parsedData) {
         if (!parsedData || !parsedData.length || !parsedData[0][AGENCY_COL]) {
           alert(
             "Error: Invalid CSV file. Make sure it has an 'Agency' column and all metric columns."
           );
-          loadingOverlay.classList.remove("visible");
           return;
         }
 
         try {
-          // Filter out bad rows, calculate Trust
-          processedData = parsedData
+          allAgencyData = parsedData
             .map((row) => {
               const data = { Agency: row[AGENCY_COL] };
-              let trustSum = 0;
-              let trustCount = 0;
               let isValid = true;
+              let trustSum = 0;
+              let trustCount = 0; // Added for robustness
 
-              // This loop now only processes numeric columns
-              for (const col of requiredCols) {
+              [...TRUST_DIMS, ...WD_DIMS].forEach((col) => {
                 const val = parseFloat(row[col]);
-                if (isNaN(val)) {
-                  isValid = false; // Mark row as invalid
+                if (isNaN(val)) isValid = false;
+                data[col] = val;
+
+                // --- NEW: Calculate Trust Sum for sorting ---
+                if (TRUST_DIMS.includes(col)) {
+                  trustSum += val;
+                  trustCount++;
                 }
-                data[col] = val; // Store value (or NaN)
+              });
+
+              if (trustCount > 0) {
+                data.Trust = trustSum / trustCount; // Add Trust score (Average)
+              } else {
+                isValid = false;
               }
 
-              if (!isValid) return null; // Skip invalid rows
-
-              for (const dim of TRUST_DIMS) {
-                trustSum += data[dim];
-                trustCount++;
-              }
-              data.Trust = trustSum / trustCount;
-
-              return data;
+              return isValid ? data : null;
             })
-            .filter((d) => d); // Filter out nulls (invalid rows)
+            .filter((d) => d && d.Agency);
 
-          if (processedData.length === 0) {
-            throw new Error("No valid data rows found.");
+          if (allAgencyData.length === 0) {
+            throw new Error("No valid agency data found in CSV.");
           }
+
+          // Reset state and populate new checklist
+          // Re-establish compared agencies from the new data based on names
+          const existingComparedNames = Array.from(comparedAgencies.keys());
+          comparedAgencies.clear();
+          existingComparedNames.forEach((name) => {
+            const found = allAgencyData.find((d) => d.Agency === name);
+            if (found) comparedAgencies.set(name, found);
+          });
+
+          populateAgencyChecklist();
+          updateComparisonList();
+          drawCharts();
         } catch (error) {
           alert(`Error processing data: ${error.message}`);
-          loadingOverlay.classList.remove("visible");
-          return;
         }
-
-        // 2. Run UMAP
-        // UMAP needs a 2D array of numbers
-        const umapInput = processedData.map((d) =>
-          TRUST_DIMS.map((dim) => d[dim])
-        );
-
-        // Run UMAP in a timeout to allow UI to update
-        await new Promise((resolve) =>
-          setTimeout(() => {
-            // Check for sufficient data
-            if (umapInput.length < 3) {
-              alert("Not enough data to run UMAP (requires at least 3 rows).");
-              loadingOverlay.classList.remove("visible");
-              return;
-            }
-
-            try {
-              const umap = new UMAP({
-                // Ensure nNeighbors is less than the number of samples
-                nNeighbors: Math.min(15, umapInput.length - 1),
-                nComponents: 2,
-                minDist: 0.1,
-                spread: 1.0,
-              });
-              const embedding = umap.fit(umapInput);
-
-              // Add UMAP coords to our data
-              processedData.forEach((d, i) => {
-                d.x_umap = embedding[i][0];
-                d.y_umap = embedding[i][1];
-              });
-              resolve();
-            } catch (err) {
-              alert(`Error during UMAP calculation: ${err.message}`);
-              loadingOverlay.classList.remove("visible");
-            }
-          }, 50)
-        ); // 50ms delay to show "Loading..."
-
-        // Stop if UMAP failed
-        if (!processedData[0].hasOwnProperty("x_umap")) return;
-
-        // 3. Find Optimal Rotation for X-Axis = Trust
-        const { rotatedData, angle } = rotateToMaximizeCorrelation(
-          processedData,
-          "x_umap",
-          "y_umap",
-          "Trust"
-        );
-
-        // 4. Render Plot
-        renderPlot(rotatedData);
-        loadingOverlay.classList.remove("visible");
       }
 
       /**
-       * Renders the Plotly chart
+       * Fills the Checkbox list with agency names and sets up the listener.
        */
-      function renderPlot(dataset) {
-        // Find min/max for scaling
-        const domMin = Math.min(...dataset.map((d) => d.Dominance));
-        const domMax = Math.max(...dataset.map((d) => d.Dominance));
+      function populateAgencyChecklist() {
+        agencyChecklist.innerHTML = ""; // Clear previous list
 
-        // Find min/max for Warmth to define the colorbar range
-        const warmthMin = Math.min(...dataset.map((d) => d.Warmth));
-        const warmthMax = Math.max(...dataset.map((d) => d.Warmth));
+        allAgencyData
+          .sort((a, b) => a.Agency.localeCompare(b.Agency))
+          .forEach((d) => {
+            const agencyName = d.Agency;
+            const item = document.createElement("div");
+            item.className = "checkbox-item";
 
-        // Use a symmetric range around zero for Warmth for a balanced colorscale
-        const c_abs_max = Math.max(Math.abs(warmthMin), Math.abs(warmthMax));
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.id = `check-${agencyName}`;
+            input.value = agencyName;
+            input.checked = comparedAgencies.has(agencyName); // Retain checked state
+            input.addEventListener("change", handleCheckboxChange);
 
-        // Handle case where all dominance values are the same
-        const getLineWidth = (d) => {
-          if (domMin === domMax) return 2; // Default width
-          return 1 + ((d - domMin) / (domMax - domMin)) * 7;
-        };
+            const label = document.createElement("label");
+            label.htmlFor = `check-${agencyName}`;
+            label.textContent = agencyName;
 
-        // Custom colorscale for bright aqua blue to bright red
-        // Format: [[scale_position, color_hex], ...]
-        const custom_colorscale = [
-          [0.0, "#40e0d0"], // Bright Aqua (Low Warmth)
-          [0.5, "#ffffff"], // White (Midpoint - Zero Warmth)
-          [1.0, "#ff0000"], // Bright Red (High Warmth)
-        ];
+            item.appendChild(input);
+            item.appendChild(label);
+            agencyChecklist.appendChild(item);
+          });
+      }
 
-        const trace = {
-          x: dataset.map((d) => d.x_rot),
-          y: dataset.map((d) => d.y_rot),
-          text: dataset.map((d) => d.Agency),
-          hovertemplate: dataset.map((d) => {
-            let hover =
-              `<b>${d.Agency}</b><br>` +
-              `Trust: ${d.Trust.toFixed(2)}<br>` +
-              `Warmth: ${d.Warmth.toFixed(1)}<br>` +
-              `Dominance: ${d.Dominance.toFixed(1)}<br>` +
-              `<i>Dimensions:</i><br>`;
-            TRUST_DIMS.forEach((dim) => {
-              hover += `${dim}: ${d[dim].toFixed(2)}<br>`;
-            });
-            return hover + "<extra></extra>";
-          }),
-          mode: "markers+text",
-          textposition: "top center",
-          marker: {
-            size: 25,
-            color: dataset.map((d) => d.Warmth),
-            // *** UPDATED: Use custom_colorscale for brighter blue/red ***
-            colorscale: custom_colorscale,
-            cmin: -c_abs_max, // Set cmin to the negative of the max absolute value
-            cmax: c_abs_max, // Set cmax to the max absolute value
-            colorbar: {
-              title: "Warmth",
-              thickness: 15,
-              len: 0.5,
-              y: 0.5,
-              x: 1.05,
-            },
-            line: {
-              width: dataset.map((d) => getLineWidth(d.Dominance)),
-              color: "#333",
-            },
-            symbol: "circle",
-          },
-          type: "scatter",
-        };
+      /**
+       * Handles adding/removing agencies when a checkbox is toggled.
+       */
+      function handleCheckboxChange(event) {
+        const agencyName = event.target.value;
+        if (event.target.checked) {
+          // Add agency
+          const agencyData = allAgencyData.find((d) => d.Agency === agencyName);
+          if (agencyData) {
+            comparedAgencies.set(agencyName, agencyData);
+          }
+        } else {
+          // Remove agency
+          comparedAgencies.delete(agencyName);
+        }
+        updateComparisonList();
+        drawCharts();
+      }
+
+      /**
+       * Re-draws the list of compared agencies
+       */
+      function updateComparisonList() {
+        comparisonList.innerHTML = ""; // Clear list
+        if (comparedAgencies.size === 0) {
+          comparisonList.appendChild(noAgenciesMsg);
+          return;
+        }
+
+        let i = 0;
+        // Use the map keys for ordering consistency
+        Array.from(comparedAgencies.keys()).forEach((name) => {
+          const data = comparedAgencies.get(name);
+          const color = colorPalette[i % colorPalette.length];
+          const item = document.createElement("li");
+          item.className = "comparison-item";
+          item.innerHTML = `
+                    <span class="comparison-item-name">
+                        <span class="color-swatch" style="background-color: ${color};"></span>
+                        ${name}
+                    </span>
+                    `;
+          comparisonList.appendChild(item);
+          i++;
+        });
+      }
+
+      /**
+       * Main render function
+       */
+      function drawCharts() {
+        let agencies = Array.from(comparedAgencies.values());
+
+        if (agencies.length === 0) {
+          radarChartEl.innerHTML = "";
+          barChartEl.innerHTML = "";
+          // Restore placeholder
+          if (!document.getElementById("placeholder")) {
+            radarChartEl.appendChild(placeholder);
+          }
+          return;
+        }
+
+        // --- NEW: Automatic Ordering by Trust Score (Lowest to Highest) ---
+        // This ensures smaller polygons are drawn first, preventing occlusion.
+        agencies.sort((a, b) => a.Trust - b.Trust);
+
+        drawRadialChart(agencies);
+        drawBarChart(agencies);
+      }
+
+      /**
+       * Draws the Polar/Radar chart for Trust Dimensions
+       */
+      function drawRadialChart(agencies) {
+        if (placeholder && placeholder.parentElement) placeholder.remove(); // Remove placeholder
+        const traces = [];
+        const theta = [...TRUST_DIMS, TRUST_DIMS[0]]; // Close the loop
+
+        agencies.forEach((agency, i) => {
+          // Use the index *after* sorting for color
+          const color = colorPalette[i % colorPalette.length];
+          const r = TRUST_DIMS.map((dim) => agency[dim]);
+          r.push(r[0]); // Close the loop
+
+          traces.push({
+            type: "scatterpolar",
+            r: r,
+            theta: theta,
+            fill: "toself",
+            fillcolor: color + "33", // Add alpha transparency
+            line: { color: color, width: 2 },
+            name: agency.Agency,
+            // Ensure hover info is detailed
+            hovertemplate: `<b>${agency.Agency}</b><br>%{theta}: %{r:.2f}<extra></extra>`,
+          });
+        });
 
         const layout = {
-          hovermode: "closest",
-          dragmode: "zoom",
-          showlegend: false,
-          margin: { t: 40, b: 40, l: 40, r: 80 },
-          xaxis: {
-            visible: true,
-            showgrid: false,
-            zeroline: false,
-            showticklabels: false,
-            title: "Trust Score (Low → High)",
-            titlefont: { size: 14, color: "#888" },
+          polar: {
+            radialaxis: {
+              visible: true,
+              range: [0, 7], // Assuming a 0-7 scale
+              tickvals: [0, 1, 2, 3, 4, 5, 6, 7],
+              ticklen: 8,
+              linecolor: "#ddd",
+            },
+            angularaxis: {
+              // Ensure labels are centered under the dimension name
+              rotation: 90,
+              direction: "clockwise",
+              linecolor: "#ddd",
+            },
           },
-          yaxis: {
-            visible: false,
-            showgrid: false,
-            zeroline: false,
+          showlegend: true,
+          legend: {
+            x: 1.05,
+            y: 0.5,
+            xanchor: "left",
+            yanchor: "middle",
           },
-          plot_bgcolor: "#fff",
-          paper_bgcolor: "#fff",
+          // Margin updated for the larger graph size
+          margin: { t: 50, b: 50, l: 50, r: 200 },
         };
 
-        Plotly.newPlot("plot", [trace], layout, {
+        Plotly.newPlot(radarChartEl, traces, layout, {
           responsive: true,
           displayModeBar: false,
         });
-
-        // NEW: Emit event after plot rendering to trigger modal
-        document.dispatchEvent(new Event("plotRendered"));
       }
 
-      // --- Rotation & Correlation Helpers ---
+      /**
+       * Draws the Bar chart for Warmth & Dominance
+       */
+      function drawBarChart(agencies) {
+        barChartEl.innerHTML = "";
 
-      function rotateToMaximizeCorrelation(data, xCol, yCol, targetCol) {
-        // Find optimal angle by checking a range
-        let bestAngle = 0;
-        let maxCorr = -1;
+        // Reset index for colors to match the order in comparison list
+        const agenciesByName = agencies.map((a) => a.Agency);
+        const agenciesInListOrder = Array.from(comparedAgencies.keys())
+          .map((name) => agencies.find((a) => a.Agency === name))
+          .filter((a) => a); // Filter out any undefined
 
-        for (let i = -180; i <= 180; i += 2) {
-          const angle = i * (Math.PI / 180); // to radians
-          const rotatedX = data.map(
-            (d) => d[xCol] * Math.cos(angle) + d[yCol] * Math.sin(angle)
-          );
-          const corr = correlation(
-            rotatedX,
-            data.map((d) => d[targetCol])
-          );
+        const traces = agenciesInListOrder.map((agency, i) => {
+          const color = colorPalette[i % colorPalette.length];
+          return {
+            type: "bar",
+            x: WD_DIMS, // X-axis categories are ['Warmth', 'Dominance']
+            y: WD_DIMS.map((dim) => agency[dim]), // Get the values [agency.Warmth, agency.Dominance]
+            name: agency.Agency,
+            marker: {
+              color: color, // Apply the agency's consistent color
+            },
+          };
+        });
 
-          if (corr > maxCorr) {
-            maxCorr = corr;
-            bestAngle = angle;
-          }
-        }
+        const layout = {
+          barmode: "group",
+          showlegend: true,
+          yaxis: { title: "Score" },
+          xaxis: { tickangle: 0 },
+          margin: { t: 50, b: 50, l: 50, r: 50 },
+        };
 
-        // Apply the best rotation
-        const rotatedData = data.map((d) => ({
-          ...d,
-          x_rot: d[xCol] * Math.cos(bestAngle) + d[yCol] * Math.sin(bestAngle),
-          y_rot: -d[xCol] * Math.sin(bestAngle) + d[yCol] * Math.cos(bestAngle),
-        }));
-
-        return { rotatedData, angle: bestAngle };
-      }
-
-      // Standard Pearson correlation
-      function correlation(x, y) {
-        const n = x.length;
-        if (n === 0) return 0;
-
-        const meanX = x.reduce((a, b) => a + b) / n;
-        const meanY = y.reduce((a, b) => a + b) / n;
-
-        let num = 0,
-          denX = 0,
-          denY = 0;
-
-        for (let i = 0; i < n; i++) {
-          num += (x[i] - meanX) * (y[i] - meanY);
-          denX += Math.pow(x[i] - meanX, 2);
-          denY += Math.pow(y[i] - meanY, 2);
-        }
-
-        if (denX === 0 || denY === 0) return 0;
-        return num / Math.sqrt(denX * denY);
+        Plotly.newPlot(barChartEl, traces, layout, {
+          responsive: true,
+          displayModeBar: false,
+        });
       }
 
       // --- Event Listeners ---
 
-      // 1. Load default data on page load
+      // 1. Load default data
       document.addEventListener("DOMContentLoaded", () => {
-        loadingOverlay.classList.add("visible");
         fetch("data/agency.csv")
           .then((response) => {
-            if (!response.ok) {
-              throw new Error("Could not find default 'agency.csv' file.");
-            }
+            if (!response.ok)
+              throw new Error("Could not find default 'agency.csv'.");
             return response.text();
           })
           .then((csvText) => {
             fileNameDisplay.textContent = "agency.csv (default)";
             Papa.parse(csvText, {
               header: true,
-              dynamicTyping: false, // Parse as strings, convert manually
+              dynamicTyping: false,
               skipEmptyLines: true,
-              complete: (results) => processAndPlot(results.data),
-              error: (err) => {
-                alert(`Error parsing default CSV: ${err.message}`);
-                loadingOverlay.classList.remove("visible");
-              },
+              complete: (results) => processCSV(results.data),
+              error: (err) =>
+                alert(`Error parsing default CSV: ${err.message}`),
             });
           })
           .catch((err) => {
             alert(`Error loading default data: ${err.message}`);
-            loadingOverlay.classList.remove("visible");
             fileNameDisplay.textContent = "No file loaded.";
           });
-
-        // 2. NEW: Modal Logic
-        // Check if the modal has been shown before
-        if (localStorage.getItem("trustExplorerModalShown") !== "true") {
-          // Show the modal after the plot has finished rendering (triggered by custom event)
-          document.addEventListener("plotRendered", () => {
-            // Wait for the loading overlay to be removed before showing modal
-            setTimeout(() => {
-              welcomeModal.classList.add("visible");
-            }, 500);
-          });
-        }
-
-        // Close button event listener
-        modalCloseBtn.addEventListener("click", () => {
-          welcomeModal.classList.remove("visible");
-          // Set flag in localStorage so it doesn't show again
-          localStorage.setItem("trustExplorerModalShown", "true");
-        });
       });
 
-      // 3. Listen for user-uploaded file
+      // 2. Listen for user-uploaded file
       fileInput.addEventListener("change", (event) => {
         const file = event.target.files[0];
         if (file) {
           fileNameDisplay.textContent = file.name;
           Papa.parse(file, {
             header: true,
-            dynamicTyping: false, // Parse as strings, convert manually
+            dynamicTyping: false,
             skipEmptyLines: true,
-            complete: (results) => processAndPlot(results.data),
+            complete: (results) => processCSV(results.data),
             error: (err) => {
               alert(`Error parsing file: ${err.message}`);
             },
