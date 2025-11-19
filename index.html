@@ -510,7 +510,7 @@
           mode: "markers",
           hoverinfo: "none", // Shadow should not show hover text
           marker: {
-            size: 16, // Fixed slightly larger size for the aura/shadow
+            size: 24, // Increased shadow size (Original size was likely around 12-16 for the primary marker)
             color: "black", // Black shadow color
             opacity: 1, // Opacity is handled by the marker fill color rgba()
             symbol: "circle",
@@ -541,7 +541,7 @@
           mode: "markers+text",
           textposition: "top center",
           marker: {
-            size: 8, // Fixed small size for the primary marker as requested
+            size: 14, // Reverted to a larger size as requested (was 8)
             color: dataset.map((d) => d.Warmth),
             colorscale: "RdBu",
             cmin: -45,

@@ -61,6 +61,10 @@
         background-color: #eef2f5;
         color: var(--primary-color);
       }
+      .nav-item.active {
+        background-color: var(--primary-color);
+        color: white;
+      }
 
       /* File Uploader */
       #csv-uploader {
@@ -110,7 +114,7 @@
         font-size: 1.1rem;
       }
 
-      /* Control Panel */
+      /* Control Panel (Restored Checkbox Layout) */
       .control-panel {
         background: white;
         border-radius: 12px;
@@ -118,61 +122,29 @@
         padding: 15px 20px;
         margin-bottom: 20px;
         display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .control-group {
-        display: flex;
+        flex-direction: column;
         gap: 10px;
-        align-items: center;
       }
-      select,
-      button {
-        padding: 8px 12px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        font-size: 1rem;
+      .control-panel label {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+        display: block;
       }
-      button {
-        background-color: var(--primary-color);
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        border: none;
-      }
-      button:hover {
-        background-color: #1f4761;
-      }
-      #comparison-list {
+      .checklist-container {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
+        gap: 10px 20px;
       }
-      .agency-tag {
-        background-color: #eef2f5;
-        color: var(--primary-color);
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 0.9rem;
+      .agency-checkbox-item {
         display: flex;
         align-items: center;
-      }
-      .remove-btn {
-        margin-left: 5px;
-        background: none;
-        color: #666;
-        padding: 0;
-        line-height: 1;
-        font-weight: bold;
         cursor: pointer;
-        border: none;
-        transition: color 0.2s;
+        user-select: none;
       }
-      .remove-btn:hover {
-        color: red;
+      .agency-checkbox-item input[type="checkbox"] {
+        margin-right: 8px;
+        accent-color: var(--primary-color);
       }
 
       /* Charts Area */
@@ -223,26 +195,18 @@
       <div class="header-section">
         <h1>Agency Profile Comparison</h1>
         <p class="subtitle">
-          Compare agencies across the 5 dimensions of trust using radial and bar
-          charts.
+          Select agencies below to compare them across the 5 dimensions of
+          trust. Charts are sorted by average trust score (widest chart first).
         </p>
       </div>
 
       <div class="control-panel">
-        <div class="control-group">
-          <label for="agency-select" style="font-weight: 500"
-            >Select Agency:</label
-          >
-          <select id="agency-select"></select>
-          <button id="add-btn">Add for Comparison</button>
-        </div>
-        <div class="control-group">
-          <label style="font-weight: 500">Comparing:</label>
-          <div id="comparison-list">
-            <span class="chart-placeholder" style="margin-left: 0; color: #777">
-              Add agencies to view their profiles.
-            </span>
-          </div>
+        <label for="agency-checklist">Select Agencies to Compare:</label>
+        <div id="agency-checklist" class="checklist-container">
+          <!-- Checkboxes will be dynamically inserted here -->
+          <span class="chart-placeholder" style="margin-left: 0; color: #777">
+            Loading agencies...
+          </span>
         </div>
       </div>
 
@@ -260,18 +224,16 @@
         "Sincere",
         "Benevolent",
       ];
-      const METRICS = ["Warmth", "Dominance"]; // Still included for data processing
+      const METRICS = ["Warmth", "Dominance"];
       const AGENCY_COL = "Agency";
       const MAX_RATING = 7; // Max scale for radial/bar charts
 
-      let allAgencyData = []; // Stores all parsed data
+      let allAgencyData = []; // Stores all parsed data (Agency Name -> Data Object)
       const comparedAgencies = new Map(); // Stores currently compared agency data {name: {data}}
 
       const fileNameDisplay = document.getElementById("file-name");
       const fileInput = document.getElementById("csv-uploader");
-      const agencySelect = document.getElementById("agency-select");
-      const addBtn = document.getElementById("add-btn");
-      const comparisonList = document.getElementById("comparison-list");
+      const agencyChecklist = document.getElementById("agency-checklist");
       const chartContainer = document.getElementById("chart-container");
 
       // --- Core Functions ---
@@ -282,8 +244,8 @@
       function processCSV(parsedData) {
         // Clear previous data
         allAgencyData = [];
-        agencySelect.innerHTML =
-          '<option value="">-- Select an Agency --</option>';
+        comparedAgencies.clear();
+        agencyChecklist.innerHTML = "";
 
         try {
           // Filter out bad rows, calculate Trust
@@ -294,18 +256,17 @@
               let trustCount = 0;
               let isValid = true;
 
-              // Check and process numeric columns (Trust Dims and Metrics)
               const requiredCols = [...TRUST_DIMS, ...METRICS];
               for (const col of requiredCols) {
                 const val = parseFloat(row[col]);
                 if (isNaN(val)) {
-                  isValid = false; // Mark row as invalid
+                  isValid = false;
                   break;
                 }
                 data[col] = val;
               }
 
-              if (!isValid) return null; // Skip invalid rows
+              if (!isValid) return null;
 
               // Calculate Trust (average of 5 dimensions)
               for (const dim of TRUST_DIMS) {
@@ -316,7 +277,7 @@
 
               return data;
             })
-            .filter((d) => d); // Filter out nulls (invalid rows)
+            .filter((d) => d);
 
           if (processedData.length === 0) {
             throw new Error(
@@ -325,34 +286,57 @@
           }
 
           allAgencyData = processedData;
-
-          // Populate dropdown
-          allAgencyData.forEach((d) => {
-            const option = document.createElement("option");
-            option.value = d.Agency;
-            option.textContent = d.Agency;
-            agencySelect.appendChild(option);
-          });
-
-          // If agencies are already selected, re-add their data to the map
-          const currentAgencies = Array.from(comparedAgencies.keys());
-          comparedAgencies.clear();
-          currentAgencies.forEach((name) => {
-            const agencyData = allAgencyData.find((d) => d.Agency === name);
-            if (agencyData) {
-              comparedAgencies.set(name, agencyData);
-            }
-          });
-
-          updateComparisonList();
-          drawCharts();
+          populateChecklist();
+          drawCharts(); // Draw initially empty/placeholder view
         } catch (error) {
           alert(`Error processing data: ${error.message}`);
         }
       }
 
       /**
-       * Draws the radial and bar charts for the selected agencies.
+       * Populates the checklist area with agency names and sets up the listener.
+       */
+      function populateChecklist() {
+        agencyChecklist.innerHTML = ""; // Clear placeholder
+
+        allAgencyData.forEach((data) => {
+          const label = document.createElement("label");
+          label.className = "agency-checkbox-item";
+
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.value = data.Agency;
+          input.name = "agency";
+          input.dataset.agencyName = data.Agency;
+
+          input.addEventListener("change", handleChecklistChange);
+
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(data.Agency));
+          agencyChecklist.appendChild(label);
+        });
+      }
+
+      /**
+       * Handles checkbox changes and updates the comparedAgencies map and charts.
+       */
+      function handleChecklistChange(event) {
+        const agencyName = event.target.dataset.agencyName;
+        const isChecked = event.target.checked;
+
+        if (isChecked) {
+          const agencyData = allAgencyData.find((d) => d.Agency === agencyName);
+          if (agencyData) {
+            comparedAgencies.set(agencyName, agencyData);
+          }
+        } else {
+          comparedAgencies.delete(agencyName);
+        }
+        drawCharts();
+      }
+
+      /**
+       * Draws the radial charts for the selected agencies, sorted by Trust.
        */
       function drawCharts() {
         chartContainer.innerHTML = ""; // Clear existing charts
@@ -368,12 +352,9 @@
           return;
         }
 
-        // *** IMPLEMENTATION OF NEW SORTING LOGIC ***
-        // Sort agencies by Trust score (highest to lowest).
-        // The highest trust (widest chart) will be rendered first,
-        // which corresponds to the "bottom" chart in the display order.
+        // *** SORTING LOGIC: Highest Trust Score (widest chart) first ***
         agenciesToRender.sort((a, b) => b.Trust - a.Trust);
-        // *** END NEW SORTING LOGIC ***
+        // *** END SORTING LOGIC ***
 
         agenciesToRender.forEach((data, index) => {
           // Create a container for each agency's charts
@@ -381,7 +362,9 @@
 
           const wrapper = document.createElement("div");
           wrapper.className = "chart-card";
-          wrapper.innerHTML = `<div class="chart-title">${agencyName}</div>`;
+          wrapper.innerHTML = `<div class="chart-title">${agencyName} (Avg. Trust: ${data.Trust.toFixed(
+            2
+          )})</div>`;
 
           const chartDiv = document.createElement("div");
           chartDiv.id = `chart-${index}`;
@@ -437,25 +420,6 @@
         });
       }
 
-      /**
-       * Updates the list of currently compared agencies.
-       */
-      function updateComparisonList() {
-        comparisonList.innerHTML = "";
-        if (comparedAgencies.size === 0) {
-          comparisonList.innerHTML =
-            '<span class="chart-placeholder" style="margin-left: 0; color: #777;">Add agencies to view their profiles.</span>';
-          return;
-        }
-
-        comparedAgencies.forEach((data, name) => {
-          const tag = document.createElement("span");
-          tag.className = "agency-tag";
-          tag.innerHTML = `${name}<button class="remove-btn" data-agency="${name}">&times;</button>`;
-          comparisonList.appendChild(tag);
-        });
-      }
-
       // --- Event Listeners ---
 
       // 1. Load default data on page load
@@ -496,34 +460,6 @@
             complete: (results) => processCSV(results.data),
             error: (err) => alert(`Error parsing file: ${err.message}`),
           });
-        }
-      });
-
-      // 3. Add Agency button
-      addBtn.addEventListener("click", () => {
-        const selectedAgency = agencySelect.value;
-        if (selectedAgency && !comparedAgencies.has(selectedAgency)) {
-          const agencyData = allAgencyData.find(
-            (d) => d.Agency === selectedAgency
-          );
-          if (agencyData) {
-            // Check if the Trust score is calculated and add it to the map
-            comparedAgencies.set(selectedAgency, agencyData);
-            updateComparisonList();
-            drawCharts();
-          }
-        }
-      });
-
-      // 4. Remove Agency button (using event delegation)
-      comparisonList.addEventListener("click", (event) => {
-        if (event.target.classList.contains("remove-btn")) {
-          const agencyName = event.target.dataset.agency;
-          if (comparedAgencies.has(agencyName)) {
-            comparedAgencies.delete(agencyName);
-            updateComparisonList();
-            drawCharts();
-          }
         }
       });
     </script>
