@@ -14,10 +14,12 @@
         --primary-color: #2c5f7f;
         --bg-color: #f8f9fa;
         --text-color: #333;
-        --warmth-low: #ca0020; /* Red for low Warmth (e.g., -45) */
-        --warmth-mid: #f7f7f7; /* White/Gray for neutral Warmth (0) */
-        --warmth-high: #0571b0; /* Blue for high Warmth (e.g., +45) */
-        --dominance-color: #31a354; /* Green for Dominance */
+        /* Defined colors for multiple traces */
+        --color-1: rgba(5, 113, 176, 0.7);
+        --color-2: rgba(202, 0, 32, 0.7);
+        --color-3: rgba(49, 163, 84, 0.7);
+        --color-4: rgba(255, 127, 0, 0.7);
+        --color-5: rgba(140, 86, 75, 0.7);
       }
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -118,7 +120,7 @@
         font-size: 1.1rem;
       }
 
-      /* Control Panel (Restored Checkbox Layout) */
+      /* Control Panel */
       .control-panel {
         background: white;
         border-radius: 12px;
@@ -145,70 +147,55 @@
         align-items: center;
         cursor: pointer;
         user-select: none;
+        font-size: 0.95rem;
       }
       .agency-checkbox-item input[type="checkbox"] {
         margin-right: 8px;
         accent-color: var(--primary-color);
       }
 
-      /* Charts Area */
-      #chart-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-        gap: 20px;
-        padding-top: 20px;
-      }
-      .chart-card {
+      /* Charts Area (Single Comparison View) */
+      .viz-card {
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         padding: 20px;
-        min-height: 400px;
+        position: relative;
+        flex: 1;
+        min-height: 600px;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: flex-start; /* Align title/content to the top */
-      }
-      .chart-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--primary-color);
-        margin-bottom: 10px;
-        text-align: center;
       }
 
-      /* Flex container for the two charts inside the card */
-      .chart-row-flex {
+      .comparison-flex-container {
         display: flex;
+        flex-wrap: wrap;
         justify-content: center;
-        align-items: center;
-        width: 100%;
-        gap: 10px;
-        flex-wrap: wrap; /* Wrap on smaller screens */
+        gap: 20px;
+        flex: 1;
       }
 
-      .chart-plot {
-        flex: 1 1 45%; /* Flex to take up half space, but can shrink/grow */
-        max-width: 350px;
-        height: 300px; /* Fixed height for consistency */
+      #radial-plot-container {
+        flex: 1 1 550px; /* Radial Chart takes more space */
+        min-height: 550px;
+        max-width: 650px;
+        margin: auto;
       }
 
+      #bar-plot-container {
+        flex: 1 1 300px; /* Bar Chart */
+        min-height: 550px;
+        max-width: 400px;
+        margin: auto;
+      }
+
+      /* Placeholder for empty state */
       .chart-placeholder {
         color: #999;
         text-align: center;
-      }
-
-      /* Media query for smaller screens to ensure charts stack */
-      @media (max-width: 768px) {
-        #chart-container {
-          grid-template-columns: 1fr;
-        }
-        .chart-row-flex {
-          flex-direction: column;
-        }
-        .chart-plot {
-          max-width: 100%;
-        }
+        font-size: 1.2rem;
+        padding: 50px;
+        width: 100%;
       }
     </style>
   </head>
@@ -230,8 +217,8 @@
       <div class="header-section">
         <h1>Agency Profile Comparison</h1>
         <p class="subtitle">
-          Select agencies below to compare them across the 5 dimensions of
-          trust. Charts are sorted by average trust score (widest chart first).
+          Select agencies below to compare their 5 Trust Dimensions (overlaid)
+          and their Warmth & Dominance scores.
         </p>
       </div>
 
@@ -239,14 +226,22 @@
         <label for="agency-checklist">Select Agencies to Compare:</label>
         <div id="agency-checklist" class="checklist-container">
           <!-- Checkboxes will be dynamically inserted here -->
-          <span class="chart-placeholder" style="margin-left: 0; color: #777">
+          <span
+            class="chart-placeholder"
+            style="margin-left: 0; color: #777; padding: 0"
+          >
             Loading agencies...
           </span>
         </div>
       </div>
 
-      <div id="chart-container">
-        <!-- Charts will be generated here -->
+      <div class="viz-card">
+        <div id="chart-container" class="comparison-flex-container">
+          <!-- Charts will be generated here -->
+          <div class="chart-placeholder">
+            Check one or more agencies above to see the comparison profiles.
+          </div>
+        </div>
       </div>
     </div>
 
@@ -262,11 +257,21 @@
       const METRICS = ["Warmth", "Dominance"];
       const AGENCY_COL = "Agency";
       const MAX_RATING = 7; // Max scale for radial/bar charts
-      const MIN_WARMTH_SCALE = -45; // Min value for Warmth coloring
-      const MAX_WARMTH_SCALE = 45; // Max value for Warmth coloring
+      const MIN_WARMTH_SCALE = -45;
+      const MAX_WARMTH_SCALE = 45;
+      const COLOR_PALETTE = [
+        "var(--color-1)",
+        "var(--color-2)",
+        "var(--color-3)",
+        "var(--color-4)",
+        "var(--color-5)",
+        "#4d4d4d",
+        "#969696",
+        "#d9d9d9",
+      ];
 
-      let allAgencyData = []; // Stores all parsed data (Agency Name -> Data Object)
-      const comparedAgencies = new Map(); // Stores currently compared agency data {name: {data}}
+      let allAgencyData = [];
+      const comparedAgencies = new Map();
 
       const fileNameDisplay = document.getElementById("file-name");
       const fileInput = document.getElementById("csv-uploader");
@@ -276,48 +281,14 @@
       // --- Core Functions ---
 
       /**
-       * Converts a value within a range to a color on the RdBu scale.
-       */
-      function getWarmthColor(value) {
-        // Normalize value to a 0-1 range
-        const normalized =
-          (value - MIN_WARMTH_SCALE) / (MAX_WARMTH_SCALE - MIN_WARMTH_SCALE);
-
-        // Use Plotly's built-in colorscale logic (RdBu in this case)
-        // Plotly uses a 0-1 range internally for colorscale mapping.
-        // Since we can't directly call Plotly's mapping function,
-        // we approximate the RdBu transition: Red (low) -> White (mid) -> Blue (high)
-
-        if (normalized <= 0) return "var(--warmth-low)";
-        if (normalized >= 1) return "var(--warmth-high)";
-
-        // Simple interpolation:
-        if (normalized < 0.5) {
-          // Interpolate between Red (0) and Mid (0.5)
-          const ratio = normalized / 0.5;
-          return `rgb(${Math.round(202 + (247 - 202) * ratio)}, ${Math.round(
-            0 + (247 - 0) * ratio
-          )}, ${Math.round(32 + (247 - 32) * ratio)})`;
-        } else {
-          // Interpolate between Mid (0.5) and Blue (1.0)
-          const ratio = (normalized - 0.5) / 0.5;
-          return `rgb(${Math.round(247 - (247 - 5) * ratio)}, ${Math.round(
-            247 - (247 - 113) * ratio
-          )}, ${Math.round(247 - (247 - 176) * ratio)})`;
-        }
-      }
-
-      /**
        * Calculates Trust and prepares data structure.
        */
       function processCSV(parsedData) {
-        // Clear previous data
         allAgencyData = [];
         comparedAgencies.clear();
         agencyChecklist.innerHTML = "";
 
         try {
-          // Filter out bad rows, calculate Trust
           const processedData = parsedData
             .map((row) => {
               const data = { Agency: row[AGENCY_COL] };
@@ -342,7 +313,7 @@
                 trustSum += data[dim];
                 trustCount++;
               }
-              data.Trust = trustSum / trustCount; // Store average trust score
+              data.Trust = trustSum / trustCount;
 
               return data;
             })
@@ -356,9 +327,10 @@
 
           allAgencyData = processedData;
           populateChecklist();
-          drawCharts(); // Draw initially empty/placeholder view
+          drawCharts();
         } catch (error) {
-          alert(`Error processing data: ${error.message}`);
+          console.error(`Error processing data: ${error.message}`);
+          chartContainer.innerHTML = `<div class="chart-placeholder">Error: Could not process data. Check console for details.</div>`;
         }
       }
 
@@ -366,9 +338,9 @@
        * Populates the checklist area with agency names and sets up the listener.
        */
       function populateChecklist() {
-        agencyChecklist.innerHTML = ""; // Clear placeholder
+        agencyChecklist.innerHTML = "";
 
-        allAgencyData.forEach((data) => {
+        allAgencyData.forEach((data, index) => {
           const label = document.createElement("label");
           label.className = "agency-checkbox-item";
 
@@ -377,10 +349,24 @@
           input.value = data.Agency;
           input.name = "agency";
           input.dataset.agencyName = data.Agency;
+          input.dataset.colorIndex = index % COLOR_PALETTE.length; // Assign color index
 
           input.addEventListener("change", handleChecklistChange);
 
           label.appendChild(input);
+
+          // Add a colored circle next to the label for legend
+          const colorDot = document.createElement("span");
+          colorDot.style.width = "10px";
+          colorDot.style.height = "10px";
+          colorDot.style.borderRadius = "50%";
+          colorDot.style.backgroundColor = COLOR_PALETTE[
+            index % COLOR_PALETTE.length
+          ].replace(/, 0.7\)/, ", 1)"); // Use solid color for dot
+          colorDot.style.marginRight = "5px";
+          colorDot.style.marginLeft = "5px";
+
+          label.appendChild(colorDot);
           label.appendChild(document.createTextNode(data.Agency));
           agencyChecklist.appendChild(label);
         });
@@ -391,12 +377,17 @@
        */
       function handleChecklistChange(event) {
         const agencyName = event.target.dataset.agencyName;
+        const colorIndex = event.target.dataset.colorIndex;
         const isChecked = event.target.checked;
 
         if (isChecked) {
           const agencyData = allAgencyData.find((d) => d.Agency === agencyName);
           if (agencyData) {
-            comparedAgencies.set(agencyName, agencyData);
+            // Store data and the assigned color index
+            comparedAgencies.set(agencyName, {
+              ...agencyData,
+              colorIndex: parseInt(colorIndex),
+            });
           }
         } else {
           comparedAgencies.delete(agencyName);
@@ -405,145 +396,157 @@
       }
 
       /**
-       * Draws the radial chart (5 Trust Dims) and the bar chart (Warmth/Dominance)
-       * for the selected agencies, sorted by Trust.
+       * Draws the single overlaid radial chart and the combined bar chart.
        */
       function drawCharts() {
-        chartContainer.innerHTML = ""; // Clear existing charts
+        chartContainer.innerHTML = ""; // Clear existing content
 
-        const agenciesToRender = Array.from(comparedAgencies.values());
+        let agenciesToRender = Array.from(comparedAgencies.values());
 
         if (agenciesToRender.length === 0) {
-          chartContainer.innerHTML = `
-            <div class="chart-placeholder">
-              Select one or more agencies to start the comparison.
-            </div>
-          `;
+          chartContainer.innerHTML = `<div class="chart-placeholder">
+            Check one or more agencies above to see the comparison profiles.
+          </div>`;
           return;
         }
 
-        // *** SORTING LOGIC: Highest Trust Score (widest chart) first ***
+        // Add chart divs to the container
+        chartContainer.innerHTML = `
+            <div id="radial-plot-container"></div>
+            <div id="bar-plot-container"></div>
+        `;
+
+        // *** CRITICAL STACKING ORDER LOGIC ***
+        // Sort agencies in DESCENDING order of Trust. Plotly renders traces sequentially.
+        // Highest Trust (largest shape) is plotted first (at the bottom).
+        // Lowest Trust (smallest shape) is plotted last (on top, visible).
         agenciesToRender.sort((a, b) => b.Trust - a.Trust);
-        // *** END SORTING LOGIC ***
+        // *** END STACKING ORDER LOGIC ***
 
-        agenciesToRender.forEach((data, index) => {
-          const agencyName = data.Agency;
-          const chartIdRadial = `chart-radial-${index}`;
-          const chartIdBar = `chart-bar-${index}`;
-
-          // 1. Create wrapper card and structure
-          const wrapper = document.createElement("div");
-          wrapper.className = "chart-card";
-          wrapper.innerHTML = `<div class="chart-title">${agencyName} (Avg. Trust: ${data.Trust.toFixed(
-            2
-          )})</div>`;
-
-          const chartRow = document.createElement("div");
-          chartRow.className = "chart-row-flex";
-
-          const radialDiv = document.createElement("div");
-          radialDiv.id = chartIdRadial;
-          radialDiv.className = "chart-plot";
-          chartRow.appendChild(radialDiv);
-
-          const barDiv = document.createElement("div");
-          barDiv.id = chartIdBar;
-          barDiv.className = "chart-plot";
-          chartRow.appendChild(barDiv);
-
-          wrapper.appendChild(chartRow);
-          chartContainer.appendChild(wrapper);
-
-          // 2. Plot Radial Chart (5 Trust Dimensions)
+        // --- 1. Radial Chart (Overlaid 5 Trust Dimensions) ---
+        const radialTraces = agenciesToRender.map((data) => {
           const radialValues = TRUST_DIMS.map((dim) => data[dim]);
+          const color = COLOR_PALETTE[data.colorIndex];
 
-          const radialTrace = {
+          return {
             type: "scatterpolar",
-            r: radialValues,
-            theta: TRUST_DIMS,
+            r: radialValues.concat([radialValues[0]]), // close the loop
+            theta: TRUST_DIMS.concat([TRUST_DIMS[0]]),
             fill: "toself",
-            name: agencyName,
-            // Use the primary color for a consistent look
-            marker: { color: "rgba(44, 95, 127, 0.6)" },
-            line: { color: "rgba(44, 95, 127, 1)", width: 2 },
-            hovertemplate: "<b>%{theta}</b><br>Score: %{r:.2f}<extra></extra>",
+            name: data.Agency,
+            marker: { color: color },
+            line: { color: color.replace(/, 0.7\)/, ", 1)"), width: 2 }, // Solid line for border
+            fillcolor: color,
+            hovertemplate: `<b>${data.Agency}</b><br>%{theta}: %{r:.2f}<extra></extra>`,
+            // Setting opacity on marker/fillcolor achieves the overlay look
           };
+        });
 
-          const radialLayout = {
-            polar: {
-              radialaxis: {
-                visible: true,
-                range: [0, MAX_RATING],
-                tickvals: [1, 2, 3, 4, 5, 6, 7],
-                ticklen: 0,
-                showline: false,
-                gridcolor: "#e0e0e0",
-                linecolor: "transparent",
-              },
-              angularaxis: {
-                linecolor: "#999",
-                linewidth: 1,
-                tickfont: { size: 10 },
-              },
-            },
-            showlegend: false,
-            title: "5 Dimensions of Trust",
-            titlefont: { size: 12 },
-            margin: { t: 30, b: 30, l: 30, r: 30 },
-            plot_bgcolor: "#fff",
-            paper_bgcolor: "#fff",
-          };
-
-          Plotly.newPlot(chartIdRadial, [radialTrace], radialLayout, {
-            responsive: true,
-            displayModeBar: false,
-          });
-
-          // 3. Plot Warmth/Dominance Bar Chart
-          const warmthValue = data.Warmth;
-          const dominanceValue = data.Dominance;
-
-          // Determine the color for the Warmth bar based on its score
-          const warmthColor = getWarmthColor(warmthValue);
-
-          const barTrace = {
-            x: [warmthValue, dominanceValue],
-            y: METRICS,
-            type: "bar",
-            orientation: "h",
-            marker: {
-              color: [warmthColor, "var(--dominance-color)"],
-            },
-            hovertemplate: "<b>%{y}</b><br>Score: %{x:.2f}<extra></extra>",
-          };
-
-          const barLayout = {
-            title: "Warmth & Dominance",
-            titlefont: { size: 12 },
-            xaxis: {
-              // Warmth ranges from -45 to +45, Dominance is positive (e.g., 60)
-              // We need to accommodate the max range for both.
-              range: [
-                MIN_WARMTH_SCALE,
-                Math.max(MAX_WARMTH_SCALE, dominanceValue * 1.1),
-              ],
-              zeroline: true,
+        const radialLayout = {
+          polar: {
+            radialaxis: {
+              visible: true,
+              range: [0, MAX_RATING],
+              tickvals: [1, 2, 3, 4, 5, 6, 7],
+              ticklen: 0,
+              showline: false,
               gridcolor: "#e0e0e0",
+              linecolor: "transparent",
             },
-            yaxis: {
-              automargin: true,
+            angularaxis: {
+              linecolor: "#999",
+              linewidth: 1,
               tickfont: { size: 10 },
             },
-            showlegend: false,
-            margin: { t: 30, b: 30, l: 100, r: 30 }, // Left margin for y-axis labels
-            plot_bgcolor: "#fff",
-            paper_bgcolor: "#fff",
-          };
+          },
+          showlegend: true,
+          title: "5 Dimensions of Trust Comparison",
+          titlefont: { size: 16, color: "#444" },
+          legend: { x: 1.05, y: 0.5, font: { size: 12 } },
+          margin: { t: 50, b: 50, l: 50, r: 50 },
+          plot_bgcolor: "#fff",
+          paper_bgcolor: "#fff",
+        };
 
-          Plotly.newPlot(chartIdBar, [barTrace], barLayout, {
-            responsive: true,
-            displayModeBar: false,
-          });
+        Plotly.newPlot("radial-plot-container", radialTraces, radialLayout, {
+          responsive: true,
+          displayModeBar: false,
+        });
+
+        // --- 2. Bar Chart (Warmth & Dominance Comparison) ---
+
+        // Calculate average Warmth and Dominance for comparison bar chart
+        const warmthScores = agenciesToRender.map((d) => d.Warmth);
+        const dominanceScores = agenciesToRender.map((d) => d.Dominance);
+
+        const barTraces = [
+          {
+            type: "bar",
+            name: "Warmth",
+            orientation: "h",
+            x: warmthScores,
+            y: agenciesToRender.map((d) => d.Agency),
+            marker: {
+              // Color the bars by the agency's assigned color for consistency
+              color: agenciesToRender.map((d) =>
+                COLOR_PALETTE[d.colorIndex].replace(/, 0.7\)/, ", 1)")
+              ),
+            },
+            text: warmthScores.map((score) => `Warmth: ${score.toFixed(1)}`),
+            hovertemplate: "<b>%{y}</b><br>Warmth: %{x:.1f}<extra></extra>",
+          },
+          {
+            type: "bar",
+            name: "Dominance",
+            orientation: "h",
+            x: dominanceScores,
+            y: agenciesToRender.map((d) => d.Agency),
+            marker: {
+              // Use a pattern/opacity to distinguish Warmth vs Dominance, but same core color
+              color: agenciesToRender.map((d) =>
+                COLOR_PALETTE[d.colorIndex].replace(/, 0.7\)/, ", 0.4)")
+              ),
+              line: {
+                width: 1,
+                color: agenciesToRender.map((d) =>
+                  COLOR_PALETTE[d.colorIndex].replace(/, 0.7\)/, ", 0.7)")
+                ),
+              },
+            },
+            text: dominanceScores.map(
+              (score) => `Dominance: ${score.toFixed(1)}`
+            ),
+            hovertemplate: "<b>%{y}</b><br>Dominance: %{x:.1f}<extra></extra>",
+          },
+        ];
+
+        const barLayout = {
+          title: "Warmth & Dominance Comparison",
+          titlefont: { size: 16, color: "#444" },
+          barmode: "group", // Group the Warmth and Dominance bars for each agency
+          xaxis: {
+            title: "Score",
+            zeroline: true,
+            gridcolor: "#e0e0e0",
+            automargin: true,
+            // Ensure x-axis range is wide enough for both positive/negative warmth and dominance
+            range: [
+              Math.min(...warmthScores, 0) * 1.1,
+              Math.max(...warmthScores, ...dominanceScores) * 1.1,
+            ],
+          },
+          yaxis: {
+            automargin: true,
+          },
+          legend: { x: 0, y: 1.1, orientation: "h" },
+          margin: { t: 50, b: 50, l: 150, r: 20 },
+          plot_bgcolor: "#fff",
+          paper_bgcolor: "#fff",
+        };
+
+        Plotly.newPlot("bar-plot-container", barTraces, barLayout, {
+          responsive: true,
+          displayModeBar: false,
         });
       }
 
@@ -566,11 +569,11 @@
               skipEmptyLines: true,
               complete: (results) => processCSV(results.data),
               error: (err) =>
-                alert(`Error parsing default CSV: ${err.message}`),
+                console.error(`Error parsing default CSV: ${err.message}`),
             });
           })
           .catch((err) => {
-            alert(`Error loading default data: ${err.message}`);
+            console.error(`Error loading default data: ${err.message}`);
             fileNameDisplay.textContent = "No file loaded.";
           });
       });
@@ -585,7 +588,7 @@
             dynamicTyping: false,
             skipEmptyLines: true,
             complete: (results) => processCSV(results.data),
-            error: (err) => alert(`Error parsing file: ${err.message}`),
+            error: (err) => console.error(`Error parsing file: ${err.message}`),
           });
         }
       });
