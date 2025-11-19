@@ -153,7 +153,7 @@
         opacity: 1;
       }
 
-      /* --- Modal Overlay Styles --- */
+      /* --- NEW: Modal Overlay Styles --- */
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -213,16 +213,18 @@
       }
 
       /* Info Button & Tooltip */
-      /* --- UPDATED POSITION FOR INFO BUTTONS --- */
+      /* NEW: Wrapper for multiple info buttons */
       .info-wrapper {
         position: absolute;
-        top: 30px; 
-        left: 30px; /* Moved to the left */
+        top: 30px; /* Adjusted position */
+        right: 30px; /* Adjusted position */
         z-index: 10;
         display: flex;
-        gap: 10px; 
+        gap: 10px; /* Space between info buttons */
       }
       .info-container {
+        /* NEW STYLES for labels */
+        position: relative; 
         display: flex; 
         align-items: center;
         background: #fff; 
@@ -230,10 +232,10 @@
         border-radius: 20px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         border: 1px solid #eee;
-        cursor: help; 
+        cursor: help; /* Ensure the whole pill is a help cursor */
       }
       .info-icon {
-        width: 24px; 
+        width: 24px; /* Smaller icon inside pill */
         height: 24px;
         background: var(--primary-color);
         color: white;
@@ -244,28 +246,28 @@
         font-weight: bold;
         font-family: serif;
         font-style: italic;
-        box-shadow: none; 
+        box-shadow: none; /* Remove shadow */
         font-size: 14px;
       }
       .info-text {
+        /* NEW: Text label style */
         font-weight: 500;
         font-size: 0.85rem;
         color: var(--primary-color);
         margin-left: 8px;
-        padding-right: 5px; 
+        padding-right: 5px; /* Padding inside the pill */
       }
       .info-tooltip {
         visibility: hidden;
-        width: 250px; 
+        width: 250px; /* Adjusted width */
         background-color: #fff;
         color: #333;
         text-align: left;
         border-radius: 8px;
         padding: 15px;
         position: absolute;
-        top: 40px; 
-        left: 0; /* Positioned below the button, on the left */
-        right: auto;
+        top: 40px; /* Position below the button */
+        right: 0;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         opacity: 0;
         transition: opacity 0.3s;
@@ -273,12 +275,12 @@
         line-height: 1.4;
         border: 1px solid #eee;
         pointer-events: none;
-        z-index: 100; 
+        z-index: 100; /* Ensure tooltip is on top of everything */
       }
-      /* Ensure agency info tooltip doesn't get messed up */
+      /* Position agency info to the left of the metric info */
       .info-container.agency-info .info-tooltip {
-        left: 0;
         right: auto;
+        left: 0;
       }
 
       .info-container:hover .info-tooltip {
@@ -297,7 +299,7 @@
       .def-item {
         margin-bottom: 8px;
       }
-      /* Agency Table Styles */
+      /* NEW: Agency Table Styles */
       .agency-tooltip-table {
         width: 100%;
         border-collapse: collapse;
@@ -337,7 +339,7 @@
       }
       .legend-item:last-child {
         margin-bottom: 0;
-      } 
+      } /* Remove margin from last item */
       .legend-border-thin {
         width: 12px;
         height: 12px;
