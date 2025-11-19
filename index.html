@@ -882,10 +882,9 @@
       // 1. Load default data on page load
       document.addEventListener("DOMContentLoaded", () => {
         loadingOverlay.classList.add("visible");
-        fetch("agency.csv")
+        fetch("data/agency.csv")
           .then((response) => {
             if (!response.ok) {
-              // Assuming 'data/agency.csv' was an internal path, and using the uploaded 'agency.csv' instead
               throw new Error("Could not find default 'agency.csv' file.");
             }
             return response.text();
