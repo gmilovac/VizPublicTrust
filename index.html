@@ -469,11 +469,26 @@
         const domMin = Math.min(...dataset.map((d) => d.Dominance));
         const domMax = Math.max(...dataset.map((d) => d.Dominance));
 
+        // Find min/max for Warmth to define the colorbar range
+        const warmthMin = Math.min(...dataset.map((d) => d.Warmth));
+        const warmthMax = Math.max(...dataset.map((d) => d.Warmth));
+
+        // Use a symmetric range around zero for Warmth for a balanced colorscale
+        const c_abs_max = Math.max(Math.abs(warmthMin), Math.abs(warmthMax));
+
         // Handle case where all dominance values are the same
         const getLineWidth = (d) => {
           if (domMin === domMax) return 2; // Default width
           return 1 + ((d - domMin) / (domMax - domMin)) * 7;
         };
+
+        // Custom colorscale for bright aqua blue to bright red
+        // Format: [[scale_position, color_hex], ...]
+        const custom_colorscale = [
+          [0.0, "#40e0d0"], // Bright Aqua (Low Warmth)
+          [0.5, "#ffffff"], // White (Midpoint - Zero Warmth)
+          [1.0, "#ff0000"], // Bright Red (High Warmth)
+        ];
 
         const trace = {
           x: dataset.map((d) => d.x_rot),
@@ -496,11 +511,10 @@
           marker: {
             size: 25,
             color: dataset.map((d) => d.Warmth),
-            // *** THE ONLY CHANGE: Removed reversescale: true to flip the RdBu scale ***
-            colorscale: "RdBu",
-            // Blue=Cold(Low) to Red=Warm(High) is the default for RdBu, so removing reverse fixes the issue.
-            cmin: -45,
-            cmax: 45,
+            // *** UPDATED: Use custom_colorscale for brighter blue/red ***
+            colorscale: custom_colorscale,
+            cmin: -c_abs_max, // Set cmin to the negative of the max absolute value
+            cmax: c_abs_max, // Set cmax to the max absolute value
             colorbar: {
               title: "Warmth",
               thickness: 15,
