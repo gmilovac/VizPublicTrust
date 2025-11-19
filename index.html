@@ -153,7 +153,7 @@
         opacity: 1;
       }
 
-      /* --- NEW: Modal Overlay Styles --- */
+      /* --- Modal Overlay Styles --- */
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -213,7 +213,7 @@
       }
 
       /* Info Button & Tooltip */
-      /* NEW: Wrapper for multiple info buttons */
+      /* Wrapper for multiple info buttons */
       .info-wrapper {
         position: absolute;
         top: 20px;
@@ -250,7 +250,7 @@
         padding: 15px;
         position: absolute;
         top: 40px;
-        right: 0; /* Default position relative to the button */
+        right: 0; /* Default position relative to the right-most button */
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         opacity: 0;
         transition: opacity 0.3s;
@@ -259,10 +259,11 @@
         border: 1px solid #eee;
         pointer-events: none;
       }
-      /* Position agency info to the left of the metric info */
+      /* Position agency info to the left of the metric info - Adjusted to prevent spilling off screen */
       .info-container.agency-info .info-tooltip {
-        right: auto;
-        left: 0;
+        /* Set the right edge of the tooltip to be 10px past the button's right edge */
+        right: -10px;
+        left: auto;
       }
 
       .info-container:hover .info-tooltip {
@@ -281,7 +282,7 @@
       .def-item {
         margin-bottom: 8px;
       }
-      /* NEW: Agency Table Styles */
+      /* Agency Table Styles */
       .agency-tooltip-table {
         width: 100%;
         border-collapse: collapse;
@@ -357,9 +358,9 @@
       <div class="modal-content">
         <h2>Welcome to the Trust Profile Explorer</h2>
         <p>
-          This visualization uses a UMAP (Uniform Manifold Approximation and
-          Projection) algorithm to plot U.S. government agencies based on the
-          similarity of their trust dimension profiles.
+          This visualization uses a <b>UMAP</b> (Uniform Manifold Approximation
+          and Projection) algorithm to plot U.S. government agencies based on
+          the similarity of their trust dimension profiles.
         </p>
         <ul>
           <li>
@@ -368,19 +369,21 @@
             Reliability, Ethics, Sincerity, Benevolence).
           </li>
           <li>
-            <b>X-Axis (Overall Trust):</b> Agencies further to the <b>right</b> have a
-            higher overall average trust score across the five dimensions. Note
-            that while the X-axis correlates highly with overall trust,
-            individual trust dimensions may still vary significantly.
+            <b>X-Axis (Overall Trust):</b> Agencies further to the
+            <b>right</b> have a higher overall average trust score across the
+            five dimensions. Note that while the X-axis correlates highly with
+            overall trust, individual trust dimensions may still vary
+            significantly.
           </li>
           <li>
-            <b>Color (Warmth):</b> The dot color represents the agency's perceived
-            warmth. The scale goes from bright red (High Warmth) to
-            icy aqua blue (Low Warmth/Cold).
+            <b>Color (Warmth):</b> The dot color represents the agency's
+            perceived warmth. The scale goes from
+            <b>bright red (High Warmth)</b> to
+            <b>icy aqua blue (Low Warmth/Cold)</b>.
           </li>
           <li>
             <b>Border Thickness (Dominance):</b> The black outline thickness
-            represents the agency's perceived Dominance<. Thicker lines mean
+            represents the agency's perceived Dominance. Thicker lines mean
             higher Dominance.
           </li>
         </ul>
@@ -388,6 +391,13 @@
           To explore the raw data and compare specific agencies directly, switch
           to the <b>Radial/Bar Views</b> tab at the top.
           <br />
+          <br />
+          <b
+            >Hovering over any agency dot on the UMAP plot will show a detailed
+            popup</b
+          >
+          with the scores for all five individual trust dimensions and the
+          Warmth/Dominance metrics.
           <br />
           You can also use the <b>info buttons</b> next to the plot for metric
           definitions and a list of all agency full names.
@@ -402,9 +412,10 @@
       <div class="header-section">
         <h1>Agency Trust Profile Explorer</h1>
         <p class="subtitle">
-          Agencies are positioned by similarity on a UMAP plot. The <b>X-Axis
-          represents Overall Trust</b>, with higher trust to the right, while the
-          </b>color and border</b> represent Warmth and Dominance metrics.
+          Agencies are positioned by similarity on a UMAP plot. The
+          <b>X-Axis represents Overall Trust</b>, with higher trust to the
+          right, while the <b>color and border</b> represent Warmth and
+          Dominance metrics.
         </p>
       </div>
 
@@ -883,10 +894,19 @@
       // 1. Load default data on page load
       document.addEventListener("DOMContentLoaded", () => {
         loadingOverlay.classList.add("visible");
-        fetch("data/agency.csv")
+        // NOTE: Changed default fetch path to look for 'agency.csv' in the same directory as 'index.html'
+        // based on the file list, as 'data/agency.csv' might not exist.
+        fetch("agency.csv")
           .then((response) => {
             if (!response.ok) {
-              throw new Error("Could not find default 'agency.csv' file.");
+              // Fallback to previous path if the simple path fails (in case the hosting environment is different)
+              return fetch("data/agency.csv").then((r) => {
+                if (!r.ok)
+                  throw new Error(
+                    "Could not find default 'agency.csv' file in expected locations."
+                  );
+                return r.text();
+              });
             }
             return response.text();
           })
