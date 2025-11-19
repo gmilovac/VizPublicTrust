@@ -4,11 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Public Trust in Government | UMAP Explorer</title>
-    <!-- Plotly.js for charting -->
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-    <!-- PapaParse for CSV loading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- UMAP-JS for client-side dimensionality reduction -->
     <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
 
     <style>
@@ -215,7 +212,7 @@
         margin-bottom: 8px;
       }
 
-      /* Custom Legend Overlay for Shadow */
+      /* Custom Legend Overlay */
       .legend-overlay {
         position: absolute;
         bottom: 30px;
@@ -236,20 +233,22 @@
       }
       .legend-item:last-child {
         margin-bottom: 0;
-      }
-      .legend-box {
-        width: 15px;
-        height: 15px;
-        margin-right: 8px;
-        background: #000;
+      } /* Remove margin from last item */
+      .legend-border-thin {
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
-        position: relative;
+        border: 1px solid #333;
+        margin-right: 8px;
+        background: #ddd;
       }
-      .legend-box-high {
-        box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.7); /* Stronger shadow for High Dominance */
-      }
-      .legend-box-low {
-        box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.1); /* Fainter shadow for Low Dominance */
+      .legend-border-thick {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 4px solid #333;
+        margin-right: 8px;
+        background: #ddd;
       }
     </style>
   </head>
@@ -257,7 +256,6 @@
     <nav>
       <a href="index.html" class="nav-brand">Trust in Gov</a>
       <div class="nav-links">
-        <!-- File Uploader -->
         <input type="file" id="csv-uploader" accept=".csv" />
         <label for="csv-uploader" id="upload-label">Load New CSV</label>
         <span id="file-name">Loading default...</span>
@@ -277,12 +275,10 @@
       </div>
 
       <div class="viz-card">
-        <!-- Loading Overlay -->
         <div id="loading-overlay">
           <div>Calculating UMAP...</div>
         </div>
 
-        <!-- Info Button with Tooltip -->
         <div class="info-container">
           <div class="info-icon">i</div>
           <div class="info-tooltip">
@@ -294,7 +290,7 @@
               <strong>Warmth:</strong> Perceived friendliness (Color).
             </div>
             <div class="def-item">
-              <strong>Dominance:</strong> Perceived power (Shadow/Aura effect).
+              <strong>Dominance:</strong> Perceived power (Border Thickness).
             </div>
             <div
               style="
@@ -315,22 +311,14 @@
           </div>
         </div>
 
-        <!-- Custom Legend Overlay for Shadow -->
         <div class="legend-overlay">
-          <div style="font-weight: bold; margin-bottom: 10px">Dominance</div>
           <div class="legend-item">
-            <div
-              class="legend-box legend-box-high"
-              style="background: var(--primary-color)"
-            ></div>
-            <span>High Dominance (Strong Aura)</span>
+            <div class="legend-border-thin"></div>
+            <span>Low Dominance</span>
           </div>
           <div class="legend-item">
-            <div
-              class="legend-box legend-box-low"
-              style="background: var(--primary-color)"
-            ></div>
-            <span>Low Dominance (Faint Aura)</span>
+            <div class="legend-border-thick"></div>
+            <span>High Dominance</span>
           </div>
         </div>
 
@@ -477,52 +465,17 @@
        * Renders the Plotly chart
        */
       function renderPlot(dataset) {
-        // --- Dominance (Shadow/Aura) Scaling Logic ---
+        // Find min/max for scaling
         const domMin = Math.min(...dataset.map((d) => d.Dominance));
         const domMax = Math.max(...dataset.map((d) => d.Dominance));
-        // Map Dominance to a shadow alpha value for visual intensity
-        const MIN_SHADOW_ALPHA = 0.05; // Faint shadow
-        const MAX_SHADOW_ALPHA = 0.5; // Darker shadow
 
-        // Function to get the shadow alpha
-        const getShadowAlpha = (d) => {
-          if (domMin === domMax)
-            return (MIN_SHADOW_ALPHA + MAX_SHADOW_ALPHA) / 2;
-          // Linear scaling: MIN + (value - min) / (max - min) * (MAX - MIN)
-          const scaledValue =
-            MIN_SHADOW_ALPHA +
-            ((d.Dominance - domMin) / (domMax - domMin)) *
-              (MAX_SHADOW_ALPHA - MIN_SHADOW_ALPHA);
-          return scaledValue;
+        // Handle case where all dominance values are the same
+        const getLineWidth = (d) => {
+          if (domMin === domMax) return 2; // Default width
+          return 1 + ((d - domMin) / (domMax - domMin)) * 7;
         };
 
-        // Function to create the shadow color string (black with variable alpha)
-        const getShadowColor = (d) => {
-          return `rgba(0, 0, 0, ${getShadowAlpha(d).toFixed(2)})`;
-        };
-
-        // --- End Dominance Scaling ---
-
-        // Trace 1: The "Shadow" layer (larger, lower opacity, placed first to be behind)
-        const shadowTrace = {
-          x: dataset.map((d) => d.x_rot),
-          y: dataset.map((d) => d.y_rot),
-          mode: "markers",
-          hoverinfo: "none", // Shadow should not show hover text
-          marker: {
-            size: 24, // Increased shadow size (Original size was likely around 12-16 for the primary marker)
-            color: "black", // Black shadow color
-            opacity: 1, // Opacity is handled by the marker fill color rgba()
-            symbol: "circle",
-            // The shadow effect is achieved by varying the marker fill color's alpha
-            color: dataset.map(getShadowColor),
-            line: { width: 0 },
-          },
-          type: "scatter",
-        };
-
-        // Trace 2: The primary data points
-        const primaryTrace = {
+        const trace = {
           x: dataset.map((d) => d.x_rot),
           y: dataset.map((d) => d.y_rot),
           text: dataset.map((d) => d.Agency),
@@ -541,9 +494,11 @@
           mode: "markers+text",
           textposition: "top center",
           marker: {
-            size: 14, // Reverted to a larger size as requested (was 8)
+            size: 25,
             color: dataset.map((d) => d.Warmth),
+            // *** THE ONLY CHANGE: Removed reversescale: true to flip the RdBu scale ***
             colorscale: "RdBu",
+            // Blue=Cold(Low) to Red=Warm(High) is the default for RdBu, so removing reverse fixes the issue.
             cmin: -45,
             cmax: 45,
             colorbar: {
@@ -554,8 +509,8 @@
               x: 1.05,
             },
             line: {
-              width: 1,
-              color: "rgba(255,255,255,0.8)", // White border for contrast against shadow
+              width: dataset.map((d) => getLineWidth(d.Dominance)),
+              color: "#333",
             },
             symbol: "circle",
           },
@@ -584,14 +539,13 @@
           paper_bgcolor: "#fff",
         };
 
-        // Render both traces: shadow first, then primary marker on top
-        Plotly.newPlot("plot", [shadowTrace, primaryTrace], layout, {
+        Plotly.newPlot("plot", [trace], layout, {
           responsive: true,
           displayModeBar: false,
         });
       }
 
-      // --- Rotation & Correlation Helpers (Unchanged) ---
+      // --- Rotation & Correlation Helpers ---
 
       function rotateToMaximizeCorrelation(data, xCol, yCol, targetCol) {
         // Find optimal angle by checking a range
@@ -646,7 +600,7 @@
         return num / Math.sqrt(denX * denY);
       }
 
-      // --- Event Listeners (Unchanged) ---
+      // --- Event Listeners ---
 
       // 1. Load default data on page load
       document.addEventListener("DOMContentLoaded", () => {
