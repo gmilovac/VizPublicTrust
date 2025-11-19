@@ -213,12 +213,12 @@
       }
 
       /* Info Button & Tooltip */
-      /* UPDATED: Wrapper for multiple info buttons - increased z-index for layering */
+      /* --- CHANGE 1: Move Info Wrapper to the LEFT --- */
       .info-wrapper {
         position: absolute;
         top: 20px;
-        right: 20px;
-        z-index: 20; /* UPDATED to 20 to ensure it's above the legend */
+        left: 20px; /* Aligned to the left */
+        z-index: 20;
         display: flex;
         gap: 10px; /* Space between info buttons */
       }
@@ -241,6 +241,8 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         font-size: 18px;
       }
+      
+      /* --- CHANGE 2: Default tooltip positioning to open INWARD (to the right) --- */
       .info-tooltip {
         visibility: hidden;
         background-color: #fff;
@@ -250,7 +252,8 @@
         padding: 15px;
         position: absolute;
         top: 40px;
-        right: 0; /* Default position relative to the button */
+        left: 0; /* Anchor to the left of the button, opens rightward */
+        right: auto; /* Remove conflicting right positioning */
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         opacity: 0;
         transition: opacity 0.3s;
@@ -259,10 +262,9 @@
         border: 1px solid #eee;
         pointer-events: none;
       }
-      /* GUARANTEED FIX: Position agency info to the left (like the 'i' icon) */
+      
+      /* Agency specific styles */
       .info-container.agency-info .info-tooltip {
-        right: auto; /* Override default right: 0 */
-        left: 0;     /* Force alignment to the left of the button */
         max-height: 70vh; /* Ensure vertical fit */
         overflow-y: auto; /* Enable scrolling if max-height is exceeded */
       }
@@ -284,7 +286,7 @@
         margin-bottom: 8px;
       }
 
-      /* NEW: Agency List Styles for 3 Columns */
+      /* NEW: Agency List Styles for 3 Columns (Restored functionality) */
       .agency-list-wrapper {
         display: flex;
         gap: 15px; /* Space between columns */
@@ -455,8 +457,7 @@
 
           <div class="info-container agency-info">
             <div class="info-icon">?</div>
-            <div class="info-tooltip" style="width: 750px">
-              <h4>Agency Full Names</h4>
+            <div class="info-tooltip" style="width: 760px"> <h4>Agency Full Names</h4>
               <div class="agency-list-wrapper">
                 <table class="agency-tooltip-table">
                   <tr><th>Short Name</th><th>Full Name</th></tr>
@@ -750,7 +751,6 @@
           responsive: true,
           displayModeBar: false,
         });
-
       }
 
       // --- Rotation & Correlation Helpers ---
