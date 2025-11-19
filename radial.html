@@ -12,18 +12,21 @@
     <style>
       :root {
         --primary-color: #2c5f7f;
+        --secondary-color: #5d9cec;
         --bg-color: #f8f9fa;
         --text-color: #333;
-        /* Defined colors for multiple traces */
-        --color-1: rgba(5, 113, 176, 0.7);
-        --color-2: rgba(202, 0, 32, 0.7);
-        --color-3: rgba(49, 163, 84, 0.7);
-        --color-4: rgba(255, 127, 0, 0.7);
-        --color-5: rgba(140, 86, 75, 0.7);
+        /* Defined colors for multiple traces (more vibrant set) */
+        --color-1: rgba(30, 144, 255, 0.7); /* Dodger Blue */
+        --color-2: rgba(255, 99, 71, 0.7); /* Tomato */
+        --color-3: rgba(60, 179, 113, 0.7); /* Medium Sea Green */
+        --color-4: rgba(255, 165, 0, 0.7); /* Orange */
+        --color-5: rgba(138, 43, 226, 0.7); /* Blue Violet */
+        --color-6: rgba(70, 130, 180, 0.7); /* Steel Blue */
+        --color-7: rgba(105, 105, 105, 0.7); /* Dim Gray */
       }
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen, Ubuntu, Cantarell, sans-serif;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         margin: 0;
         padding: 0;
         background-color: var(--bg-color);
@@ -36,7 +39,7 @@
       /* Navigation Bar */
       nav {
         background-color: #fff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
         padding: 1rem 2rem;
         display: flex;
         justify-content: space-between;
@@ -45,8 +48,8 @@
         position: relative;
       }
       .nav-brand {
-        font-size: 1.25rem;
-        font-weight: 700;
+        font-size: 1.5rem;
+        font-weight: 800;
         color: var(--primary-color);
         text-decoration: none;
       }
@@ -60,7 +63,7 @@
         color: #666;
         font-weight: 500;
         padding: 8px 16px;
-        border-radius: 6px;
+        border-radius: 8px;
         transition: all 0.2s ease;
       }
       .nav-item:hover {
@@ -78,21 +81,24 @@
       }
       #upload-label {
         display: inline-block;
-        background-color: #eef2f5;
-        color: var(--primary-color);
+        background-color: var(--secondary-color);
+        color: white;
         padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 500;
+        border-radius: 8px;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
       #upload-label:hover {
-        background-color: #dbe4eb;
+        background-color: #4a86e8;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       }
       #file-name {
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         color: #777;
         margin-left: 10px;
+        font-style: italic;
       }
 
       /* Main Layout */
@@ -100,7 +106,7 @@
         flex: 1;
         max-width: 1600px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 30px 20px;
         width: 100%;
         box-sizing: border-box;
         display: flex;
@@ -109,11 +115,13 @@
 
       .header-section {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
       }
       h1 {
         margin: 0 0 10px 0;
         color: #1a202c;
+        font-size: 2rem;
+        font-weight: 700;
       }
       .subtitle {
         color: #666;
@@ -124,45 +132,61 @@
       .control-panel {
         background: white;
         border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        padding: 15px 20px;
-        margin-bottom: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px 25px;
+        margin-bottom: 25px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
       }
       .control-panel label {
-        font-weight: 600;
+        font-weight: 700;
         color: var(--primary-color);
-        margin-bottom: 5px;
+        font-size: 1.1rem;
         display: block;
       }
       .checklist-container {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px 20px;
+        gap: 15px 30px;
       }
       .agency-checkbox-item {
         display: flex;
         align-items: center;
         cursor: pointer;
         user-select: none;
-        font-size: 0.95rem;
+        font-size: 1rem;
+        color: #444;
+        transition: color 0.2s;
+        padding: 5px 0;
+        border-radius: 4px;
+      }
+      .agency-checkbox-item:hover {
+        color: var(--primary-color);
       }
       .agency-checkbox-item input[type="checkbox"] {
         margin-right: 8px;
         accent-color: var(--primary-color);
+        transform: scale(1.1);
+      }
+      .color-dot {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
       }
 
-      /* Charts Area (Single Comparison View) */
+      /* Charts Area */
       .viz-card {
         background: white;
         border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         padding: 20px;
         position: relative;
         flex: 1;
-        min-height: 600px;
+        min-height: 700px;
         display: flex;
         flex-direction: column;
       }
@@ -170,23 +194,25 @@
       .comparison-flex-container {
         display: flex;
         flex-wrap: wrap;
-        justify-content: center;
+        justify-content: space-around; /* Distribute space evenly */
         gap: 20px;
         flex: 1;
       }
 
       #radial-plot-container {
-        flex: 1 1 550px; /* Radial Chart takes more space */
+        flex: 1 1 500px; /* Radial Chart takes more space */
         min-height: 550px;
-        max-width: 650px;
-        margin: auto;
+        max-width: 65%; /* Constrain to prevent stretching too wide */
+        min-width: 300px;
+        padding: 20px 0;
       }
 
       #bar-plot-container {
         flex: 1 1 300px; /* Bar Chart */
         min-height: 550px;
-        max-width: 400px;
-        margin: auto;
+        max-width: 35%;
+        min-width: 300px;
+        padding: 20px 0;
       }
 
       /* Placeholder for empty state */
@@ -194,8 +220,22 @@
         color: #999;
         text-align: center;
         font-size: 1.2rem;
-        padding: 50px;
+        padding: 100px 50px;
         width: 100%;
+        align-self: center;
+      }
+
+      @media (max-width: 1200px) {
+        .comparison-flex-container {
+          flex-direction: column;
+          align-items: center;
+        }
+        #radial-plot-container,
+        #bar-plot-container {
+          max-width: 100%;
+          min-width: 100%;
+          height: 500px; /* Give them fixed height for better mobile viewing */
+        }
       }
     </style>
   </head>
@@ -217,8 +257,8 @@
       <div class="header-section">
         <h1>Agency Profile Comparison</h1>
         <p class="subtitle">
-          Select agencies below to compare their 5 Trust Dimensions (overlaid)
-          and their Warmth & Dominance scores.
+          Select agencies below to compare their 5 **Trust Dimensions**
+          (overlaid) and their **Warmth & Dominance** scores.
         </p>
       </div>
 
@@ -256,18 +296,17 @@
       ];
       const METRICS = ["Warmth", "Dominance"];
       const AGENCY_COL = "Agency";
-      const MAX_RATING = 7; // Max scale for radial/bar charts
-      const MIN_WARMTH_SCALE = -45;
-      const MAX_WARMTH_SCALE = 45;
+      const MAX_RATING = 7; // Max scale for radial chart
+
+      // Use the defined CSS variables for colors, ensuring consistency with CSS
       const COLOR_PALETTE = [
         "var(--color-1)",
         "var(--color-2)",
         "var(--color-3)",
         "var(--color-4)",
         "var(--color-5)",
-        "#4d4d4d",
-        "#969696",
-        "#d9d9d9",
+        "var(--color-6)",
+        "var(--color-7)",
       ];
 
       let allAgencyData = [];
@@ -278,6 +317,18 @@
       const agencyChecklist = document.getElementById("agency-checklist");
       const chartContainer = document.getElementById("chart-container");
 
+      /**
+       * Converts CSS variable color (rgba) to a solid color (rgb or hex string)
+       * for use in color dots and line markers.
+       */
+      function getSolidColor(cssVar) {
+        const color = getComputedStyle(
+          document.documentElement
+        ).getPropertyValue(cssVar);
+        // Simple replacement of the last part of rgba to 1 for opacity
+        return color.replace(/, 0\.\d+\)/, ", 1)").trim();
+      }
+
       // --- Core Functions ---
 
       /**
@@ -285,6 +336,7 @@
        */
       function processCSV(parsedData) {
         allAgencyData = [];
+        // Clear all selected agencies on new data load
         comparedAgencies.clear();
         agencyChecklist.innerHTML = "";
 
@@ -298,8 +350,9 @@
 
               const requiredCols = [...TRUST_DIMS, ...METRICS];
               for (const col of requiredCols) {
+                // Ensure all required numeric values are present and valid
                 const val = parseFloat(row[col]);
-                if (isNaN(val)) {
+                if (isNaN(val) || val === null || val === undefined) {
                   isValid = false;
                   break;
                 }
@@ -320,17 +373,24 @@
             .filter((d) => d);
 
           if (processedData.length === 0) {
-            throw new Error(
-              "No valid data rows found with all required metrics."
-            );
+            chartContainer.innerHTML = `<div class="chart-placeholder">
+                    Warning: No valid data rows found after processing. 
+                    Please ensure the CSV includes all required columns (Agency, ${[
+                      ...TRUST_DIMS,
+                      ...METRICS,
+                    ].join(", ")}).
+                </div>`;
+            return;
           }
 
           allAgencyData = processedData;
           populateChecklist();
-          drawCharts();
+          drawCharts(); // Draw empty or initial state chart
         } catch (error) {
           console.error(`Error processing data: ${error.message}`);
-          chartContainer.innerHTML = `<div class="chart-placeholder">Error: Could not process data. Check console for details.</div>`;
+          chartContainer.innerHTML = `<div class="chart-placeholder">
+                Error: Could not process data. Check console for details.
+            </div>`;
         }
       }
 
@@ -349,23 +409,21 @@
           input.value = data.Agency;
           input.name = "agency";
           input.dataset.agencyName = data.Agency;
-          input.dataset.colorIndex = index % COLOR_PALETTE.length; // Assign color index
+          // Assign index for color mapping
+          const colorIndex = index % COLOR_PALETTE.length;
+          input.dataset.colorIndex = colorIndex;
 
           input.addEventListener("change", handleChecklistChange);
 
-          label.appendChild(input);
-
-          // Add a colored circle next to the label for legend
+          // Add a colored dot next to the label for legend
           const colorDot = document.createElement("span");
-          colorDot.style.width = "10px";
-          colorDot.style.height = "10px";
-          colorDot.style.borderRadius = "50%";
-          colorDot.style.backgroundColor = COLOR_PALETTE[
-            index % COLOR_PALETTE.length
-          ].replace(/, 0.7\)/, ", 1)"); // Use solid color for dot
-          colorDot.style.marginRight = "5px";
-          colorDot.style.marginLeft = "5px";
+          colorDot.className = "color-dot";
+          // Use solid color for the dot
+          colorDot.style.backgroundColor = getSolidColor(
+            `--color-${colorIndex + 1}`
+          );
 
+          label.appendChild(input);
           label.appendChild(colorDot);
           label.appendChild(document.createTextNode(data.Agency));
           agencyChecklist.appendChild(label);
@@ -387,6 +445,8 @@
             comparedAgencies.set(agencyName, {
               ...agencyData,
               colorIndex: parseInt(colorIndex),
+              // Store the CSS variable for easy access
+              colorVar: `--color-${parseInt(colorIndex) + 1}`,
             });
           }
         } else {
@@ -418,15 +478,21 @@
 
         // *** CRITICAL STACKING ORDER LOGIC ***
         // Sort agencies in DESCENDING order of Trust. Plotly renders traces sequentially.
-        // Highest Trust (largest shape) is plotted first (at the bottom).
-        // Lowest Trust (smallest shape) is plotted last (on top, visible).
+        // Highest Trust (largest shape) is plotted first (at the bottom, z-index -1).
+        // Lowest Trust (smallest shape) is plotted last (on top, z-index 0, visible).
         agenciesToRender.sort((a, b) => b.Trust - a.Trust);
         // *** END STACKING ORDER LOGIC ***
 
         // --- 1. Radial Chart (Overlaid 5 Trust Dimensions) ---
-        const radialTraces = agenciesToRender.map((data) => {
+        const radialTraces = agenciesToRender.map((data, index) => {
           const radialValues = TRUST_DIMS.map((dim) => data[dim]);
-          const color = COLOR_PALETTE[data.colorIndex];
+          // Get the color from the assigned CSS variable (which is an rgba value)
+          const color = getComputedStyle(document.documentElement)
+            .getPropertyValue(data.colorVar)
+            .trim();
+
+          // Get solid color for the line and markers
+          const solidColor = getSolidColor(data.colorVar);
 
           return {
             type: "scatterpolar",
@@ -434,11 +500,19 @@
             theta: TRUST_DIMS.concat([TRUST_DIMS[0]]),
             fill: "toself",
             name: data.Agency,
-            marker: { color: color },
-            line: { color: color.replace(/, 0.7\)/, ", 1)"), width: 2 }, // Solid line for border
-            fillcolor: color,
+            marker: {
+              color: solidColor, // Use solid color for points
+              size: 8,
+            },
+            line: {
+              color: solidColor,
+              width: 3,
+              shape: "spline", // Use spline for smoother look
+            },
+            fillcolor: color, // Use rgba for fill
+            // Adjust z-index based on sort order to explicitly control stacking if needed (Plotly uses trace order for Z)
+            // z: index,
             hovertemplate: `<b>${data.Agency}</b><br>%{theta}: %{r:.2f}<extra></extra>`,
-            // Setting opacity on marker/fillcolor achieves the overlay look
           };
         });
 
@@ -448,24 +522,39 @@
               visible: true,
               range: [0, MAX_RATING],
               tickvals: [1, 2, 3, 4, 5, 6, 7],
-              ticklen: 0,
+              ticklen: 5,
+              tickcolor: "#999",
               showline: false,
               gridcolor: "#e0e0e0",
               linecolor: "transparent",
+              tickfont: { size: 12, color: "#555" },
             },
             angularaxis: {
               linecolor: "#999",
               linewidth: 1,
-              tickfont: { size: 10 },
+              tickfont: { size: 14, weight: 600, color: "#333" },
+              rotation: 90, // Start axis at the top
+              direction: "clockwise",
+              padding: 10,
             },
           },
           showlegend: true,
-          title: "5 Dimensions of Trust Comparison",
-          titlefont: { size: 16, color: "#444" },
-          legend: { x: 1.05, y: 0.5, font: { size: 12 } },
-          margin: { t: 50, b: 50, l: 50, r: 50 },
+          title: {
+            text: "Trust Dimensions Profile (Scale 1-7)",
+            font: { size: 20, color: "#2c5f7f", family: "Inter" },
+          },
+          legend: {
+            x: 1.05,
+            y: 0.5,
+            font: { size: 12 },
+            bgcolor: "rgba(255, 255, 255, 0.5)",
+            bordercolor: "#eee",
+            borderwidth: 1,
+          },
+          margin: { t: 80, b: 50, l: 50, r: 150 }, // Increased right margin for legend
           plot_bgcolor: "#fff",
           paper_bgcolor: "#fff",
+          height: 600,
         };
 
         Plotly.newPlot("radial-plot-container", radialTraces, radialLayout, {
@@ -475,7 +564,7 @@
 
         // --- 2. Bar Chart (Warmth & Dominance Comparison) ---
 
-        // Calculate average Warmth and Dominance for comparison bar chart
+        const agencies = agenciesToRender.map((d) => d.Agency);
         const warmthScores = agenciesToRender.map((d) => d.Warmth);
         const dominanceScores = agenciesToRender.map((d) => d.Dominance);
 
@@ -485,14 +574,15 @@
             name: "Warmth",
             orientation: "h",
             x: warmthScores,
-            y: agenciesToRender.map((d) => d.Agency),
+            y: agencies,
             marker: {
-              // Color the bars by the agency's assigned color for consistency
-              color: agenciesToRender.map((d) =>
-                COLOR_PALETTE[d.colorIndex].replace(/, 0.7\)/, ", 1)")
-              ),
+              // Use the solid color for Warmth
+              color: agenciesToRender.map((d) => getSolidColor(d.colorVar)),
+              opacity: 0.9,
+              line: { width: 1, color: "#333" },
             },
-            text: warmthScores.map((score) => `Warmth: ${score.toFixed(1)}`),
+            text: warmthScores.map((score) => score.toFixed(1)),
+            textposition: "outside",
             hovertemplate: "<b>%{y}</b><br>Warmth: %{x:.1f}<extra></extra>",
           },
           {
@@ -500,48 +590,50 @@
             name: "Dominance",
             orientation: "h",
             x: dominanceScores,
-            y: agenciesToRender.map((d) => d.Agency),
+            y: agencies,
             marker: {
-              // Use a pattern/opacity to distinguish Warmth vs Dominance, but same core color
+              // Use a slightly darker/different shade of the agency color for Dominance
               color: agenciesToRender.map((d) =>
-                COLOR_PALETTE[d.colorIndex].replace(/, 0.7\)/, ", 0.4)")
+                getSolidColor(d.colorVar)
+                  .replace("rgb(", "rgba(")
+                  .replace(")", ", 0.6)")
               ),
-              line: {
-                width: 1,
-                color: agenciesToRender.map((d) =>
-                  COLOR_PALETTE[d.colorIndex].replace(/, 0.7\)/, ", 0.7)")
-                ),
-              },
+              opacity: 0.7,
+              line: { width: 1, color: "#333" },
             },
-            text: dominanceScores.map(
-              (score) => `Dominance: ${score.toFixed(1)}`
-            ),
+            text: dominanceScores.map((score) => score.toFixed(1)),
+            textposition: "outside",
             hovertemplate: "<b>%{y}</b><br>Dominance: %{x:.1f}<extra></extra>",
           },
         ];
 
         const barLayout = {
-          title: "Warmth & Dominance Comparison",
-          titlefont: { size: 16, color: "#444" },
+          title: {
+            text: "Warmth & Dominance Scores",
+            font: { size: 20, color: "#2c5f7f", family: "Inter" },
+          },
           barmode: "group", // Group the Warmth and Dominance bars for each agency
           xaxis: {
             title: "Score",
             zeroline: true,
             gridcolor: "#e0e0e0",
             automargin: true,
-            // Ensure x-axis range is wide enough for both positive/negative warmth and dominance
+            // Automatically set a sensible range based on data
             range: [
-              Math.min(...warmthScores, 0) * 1.1,
-              Math.max(...warmthScores, ...dominanceScores) * 1.1,
+              Math.min(...warmthScores, ...dominanceScores, 0) * 1.1,
+              Math.max(...warmthScores, ...dominanceScores, 0) * 1.1,
             ],
           },
           yaxis: {
             automargin: true,
+            categoryorder: "array",
+            categoryarray: agencies.reverse(), // Display agencies top-to-bottom as they appear in the data
           },
           legend: { x: 0, y: 1.1, orientation: "h" },
-          margin: { t: 50, b: 50, l: 150, r: 20 },
+          margin: { t: 80, b: 50, l: 150, r: 20 }, // Increased left margin for agency names
           plot_bgcolor: "#fff",
           paper_bgcolor: "#fff",
+          height: 600,
         };
 
         Plotly.newPlot("bar-plot-container", barTraces, barLayout, {
@@ -554,6 +646,8 @@
 
       // 1. Load default data on page load
       document.addEventListener("DOMContentLoaded", () => {
+        // Fetch CSS colors once the DOM is ready for the color logic to work
+
         fetch("data/agency.csv")
           .then((response) => {
             if (!response.ok) {
