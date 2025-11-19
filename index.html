@@ -218,7 +218,7 @@
         position: absolute;
         top: 20px;
         right: 20px;
-        z-index: 10;
+        z-index: 20; /* Z-index increased to ensure tooltips appear above legend-overlay (10) */
         display: flex;
         gap: 10px; /* Space between info buttons */
       }
@@ -259,11 +259,16 @@
         border: 1px solid #eee;
         pointer-events: none;
       }
-      /* Position agency info to the left of the metric info - Adjusted to prevent spilling off screen */
+
+      /* Position agency info to the left of the metric info */
       .info-container.agency-info .info-tooltip {
         /* Set the right edge of the tooltip to be 10px past the button's right edge */
         right: -10px;
         left: auto;
+
+        /* FIX: Limit height and enable scrolling */
+        max-height: 70vh;
+        overflow-y: auto;
       }
 
       .info-container:hover .info-tooltip {
@@ -369,9 +374,9 @@
             Reliability, Ethics, Sincerity, Benevolence).
           </li>
           <li>
-            <b>X-Axis (Overall Trust):</b> Agencies further to the
-            <b>right</b> have a higher overall average trust score across the
-            five dimensions. Note that while the X-axis correlates highly with
+            <b>X-Axis (Overall Trust):</b> Agencies further to the <b>right</b>
+            have a higher overall average trust score across the five
+            dimensions. Note that while the X-axis correlates highly with
             overall trust, individual trust dimensions may still vary
             significantly.
           </li>
@@ -930,22 +935,22 @@
           });
 
         // 2. NEW: Modal Logic
-        // Check if the modal has been shown before
-        if (localStorage.getItem("trustExplorerModalShown") !== "true") {
-          // Show the modal after the plot has finished rendering (triggered by custom event)
-          document.addEventListener("plotRendered", () => {
-            // Wait for the loading overlay to be removed before showing modal
-            setTimeout(() => {
-              welcomeModal.classList.add("visible");
-            }, 500);
-          });
-        }
+        // The localStorage check is commented out to ensure the modal appears every time for easy testing/review.
+        // if (localStorage.getItem("trustExplorerModalShown") !== "true") {
+        // Show the modal after the plot has finished rendering (triggered by custom event)
+        document.addEventListener("plotRendered", () => {
+          // Wait for the loading overlay to be removed before showing modal
+          setTimeout(() => {
+            welcomeModal.classList.add("visible");
+          }, 500);
+        });
+        // }
 
         // Close button event listener
         modalCloseBtn.addEventListener("click", () => {
           welcomeModal.classList.remove("visible");
-          // Set flag in localStorage so it doesn't show again
-          localStorage.setItem("trustExplorerModalShown", "true");
+          // Set flag in localStorage so it doesn't show again (currently disabled for testing)
+          // localStorage.setItem("trustExplorerModalShown", "true");
         });
       });
 
