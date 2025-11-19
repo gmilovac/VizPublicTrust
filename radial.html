@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Radial/Bar Comparison | Trust in Gov</title>
+    <!-- Plotly.js for charting -->
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <!-- PapaParse for CSV loading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <style>
@@ -59,10 +61,6 @@
         background-color: #eef2f5;
         color: var(--primary-color);
       }
-      .nav-item.active {
-        background-color: var(--primary-color);
-        color: white;
-      }
 
       /* File Uploader */
       #csv-uploader {
@@ -91,194 +89,119 @@
       .container {
         flex: 1;
         max-width: 1600px;
-        margin: 20px auto;
-        padding: 0 20px;
+        margin: 0 auto;
+        padding: 20px;
         width: 100%;
         box-sizing: border-box;
-        display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 20px;
-      }
-
-      /* Controls Panel */
-      .controls-panel {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        padding: 20px;
-        align-self: start;
-      }
-      .controls-panel h2 {
-        margin-top: 0;
-        color: #333;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-      }
-      .control-group {
-        margin-bottom: 20px;
-      }
-      .control-group label {
-        display: block;
-        font-weight: 600;
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-      }
-      /* Removed select/button styles */
-
-      /* Agency Checkbox List Styles */
-      #agency-checkbox-list {
-        max-height: 300px;
-        overflow-y: auto;
-        border: 1px solid #eee;
-        border-radius: 6px;
-        padding: 10px;
-        background: #fcfcfc;
-      }
-      .checkbox-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 5px;
-      }
-      .checkbox-item input {
-        margin-right: 8px;
-        cursor: pointer;
-      }
-      .checkbox-item label {
-        font-weight: 400; /* Normal weight for label text */
-        margin-bottom: 0;
-        cursor: pointer;
-        user-select: none;
-      }
-
-      /* Info Button & Tooltip (Copied from index.html) */
-      .info-container {
-        position: relative; /* Changed from absolute */
-        margin-top: 20px; /* Added margin */
-        z-index: 10;
-      }
-      .info-icon {
-        width: 28px; /* Slightly smaller */
-        height: 28px;
-        background: #eef2f5; /* Lighter background */
-        color: var(--primary-color);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-family: serif;
-        font-style: italic;
-        cursor: help;
-        font-size: 16px;
-        border: 1px solid #dbe4eb;
-      }
-      .info-tooltip {
-        visibility: hidden;
-        width: 250px; /* Adjusted width */
-        background-color: #fff;
-        color: #333;
-        text-align: left;
-        border-radius: 8px;
-        padding: 15px;
-        position: absolute;
-        /* Position tooltip to the right */
-        top: -15px;
-        left: 105%;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        opacity: 0;
-        transition: opacity 0.3s;
-        font-size: 0.9rem;
-        line-height: 1.4;
-        border: 1px solid #eee;
-        pointer-events: none;
-      }
-      .info-container:hover .info-tooltip {
-        visibility: visible;
-        opacity: 1;
-      }
-      .info-tooltip h4 {
-        margin-top: 0;
-        color: var(--primary-color);
-        border-bottom: 1px solid #eee;
-        padding-bottom: 5px;
-      }
-      .info-tooltip strong {
-        color: #444;
-      }
-      .def-item {
-        margin-bottom: 8px;
-      }
-      /* End Info Button */
-
-      /* Comparison List - Used to show selected agencies with color */
-      #comparison-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .comparison-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        background: #f8f9fa;
-      }
-      .comparison-item-name {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 500;
-      }
-      .color-swatch {
-        width: 12px;
-        height: 12px;
-        border-radius: 3px;
-        display: inline-block;
-      }
-      .remove-btn {
-        background: transparent;
-        border: none;
-        color: #999;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 1.1rem;
-      }
-      .remove-btn:hover {
-        color: #d9534f;
-      }
-
-      /* Visualization Area */
-      .viz-area {
         display: flex;
         flex-direction: column;
-        gap: 20px;
       }
-      .viz-card {
+
+      .header-section {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      h1 {
+        margin: 0 0 10px 0;
+        color: #1a202c;
+      }
+      .subtitle {
+        color: #666;
+        font-size: 1.1rem;
+      }
+
+      /* Control Panel */
+      .control-panel {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .control-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      select,
+      button {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 1rem;
+      }
+      button {
+        background-color: var(--primary-color);
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border: none;
+      }
+      button:hover {
+        background-color: #1f4761;
+      }
+      #comparison-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .agency-tag {
+        background-color: #eef2f5;
+        color: var(--primary-color);
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+      }
+      .remove-btn {
+        margin-left: 5px;
+        background: none;
+        color: #666;
+        padding: 0;
+        line-height: 1;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+        transition: color 0.2s;
+      }
+      .remove-btn:hover {
+        color: red;
+      }
+
+      /* Charts Area */
+      #chart-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        padding-top: 20px;
+      }
+      .chart-card {
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         padding: 20px;
-        position: relative;
-        flex: 1;
-      }
-      .viz-card h3 {
-        margin-top: 0;
-        color: #333;
-      }
-      #radar-chart,
-      #bar-chart {
-        width: 100%;
-        min-height: 450px;
-      }
-      #placeholder {
-        min-height: 450px;
+        min-height: 400px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+      }
+      .chart-placeholder {
         color: #999;
+        text-align: center;
+      }
+      .chart-title {
         font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 10px;
       }
     </style>
   </head>
@@ -286,6 +209,7 @@
     <nav>
       <a href="index.html" class="nav-brand">Trust in Gov</a>
       <div class="nav-links">
+        <!-- File Uploader -->
         <input type="file" id="csv-uploader" accept=".csv" />
         <label for="csv-uploader" id="upload-label">Load New CSV</label>
         <span id="file-name">Loading default...</span>
@@ -296,62 +220,34 @@
     </nav>
 
     <div class="container">
-      <div class="controls-panel">
-        <div class="control-group">
-          <label>Select Agencies to Compare</label>
-          <div id="agency-checkbox-list">
-            <p style="color: #777; margin: 0">Load CSV to populate list.</p>
-          </div>
-        </div>
-
-        <div class="info-container">
-          <div class="info-icon">i</div>
-          <div class="info-tooltip">
-            <h4>Metric Definitions</h4>
-            <div class="def-item">
-              <strong>Trust Dimensions (Radial):</strong>
-            </div>
-            <ul
-              style="
-                padding-left: 15px;
-                margin: -5px 0 10px 0;
-                font-size: 0.85rem;
-              "
-            >
-              <li><strong>Competence:</strong> Ability to execute.</li>
-              <li><strong>Reliability:</strong> Consistency.</li>
-              <li><strong>Ethics:</strong> Moral principles.</li>
-              <li><strong>Sincerity:</strong> Honesty.</li>
-              <li><strong>Benevolence:</strong> Care for public interest.</li>
-            </ul>
-            <div class="def-item">
-              <strong>Warmth (Bar):</strong> Perceived friendliness & good
-              intentions.
-            </div>
-            <div class="def-item">
-              <strong>Dominance (Bar):</strong> Perceived power & capability.
-            </div>
-          </div>
-        </div>
-        <h2>Currently Comparing</h2>
-        <ul id="comparison-list">
-          <li id="no-agencies-msg" style="color: #777">
-            No agencies selected.
-          </li>
-        </ul>
+      <div class="header-section">
+        <h1>Agency Profile Comparison</h1>
+        <p class="subtitle">
+          Compare agencies across the 5 dimensions of trust using radial and bar
+          charts.
+        </p>
       </div>
 
-      <div class="viz-area">
-        <div class="viz-card">
-          <h3>Trust Dimensions (Radial)</h3>
-          <div id="radar-chart">
-            <div id="placeholder">Select agencies to see Trust Dimensions</div>
+      <div class="control-panel">
+        <div class="control-group">
+          <label for="agency-select" style="font-weight: 500"
+            >Select Agency:</label
+          >
+          <select id="agency-select"></select>
+          <button id="add-btn">Add for Comparison</button>
+        </div>
+        <div class="control-group">
+          <label style="font-weight: 500">Comparing:</label>
+          <div id="comparison-list">
+            <span class="chart-placeholder" style="margin-left: 0; color: #777">
+              Add agencies to view their profiles.
+            </span>
           </div>
         </div>
-        <div class="viz-card">
-          <h3>Warmth & Dominance (Bar)</h3>
-          <div id="bar-chart"></div>
-        </div>
+      </div>
+
+      <div id="chart-container">
+        <!-- Charts will be generated here -->
       </div>
     </div>
 
@@ -364,72 +260,90 @@
         "Sincere",
         "Benevolent",
       ];
-      const WD_DIMS = ["Warmth", "Dominance"];
+      const METRICS = ["Warmth", "Dominance"]; // Still included for data processing
       const AGENCY_COL = "Agency";
+      const MAX_RATING = 7; // Max scale for radial/bar charts
 
-      // UI Elements
+      let allAgencyData = []; // Stores all parsed data
+      const comparedAgencies = new Map(); // Stores currently compared agency data {name: {data}}
+
       const fileNameDisplay = document.getElementById("file-name");
       const fileInput = document.getElementById("csv-uploader");
-      // *** Removed agencySelect and addBtn ***
-      const agencyChecklist = document.getElementById("agency-checkbox-list");
+      const agencySelect = document.getElementById("agency-select");
+      const addBtn = document.getElementById("add-btn");
       const comparisonList = document.getElementById("comparison-list");
-      const noAgenciesMsg = document.getElementById("no-agencies-msg");
-      const radarChartEl = document.getElementById("radar-chart");
-      const barChartEl = document.getElementById("bar-chart");
-      const placeholder = document.getElementById("placeholder");
-
-      // State
-      let allAgencyData = [];
-      let comparedAgencies = new Map(); // Map<string, object>
-      const colorPalette = [
-        "#1f77b4",
-        "#ff7f0e",
-        "#2ca02c",
-        "#d62728",
-        "#9467bd",
-        "#8c564b",
-        "#e377c2",
-        "#7f7f0f",
-        "#bcbd22",
-        "#17becf",
-      ];
+      const chartContainer = document.getElementById("chart-container");
 
       // --- Core Functions ---
 
       /**
-       * Takes raw CSV data, processes, and stores it.
+       * Calculates Trust and prepares data structure.
        */
       function processCSV(parsedData) {
-        if (!parsedData || !parsedData.length || !parsedData[0][AGENCY_COL]) {
-          alert(
-            "Error: Invalid CSV file. Make sure it has an 'Agency' column and all metric columns."
-          );
-          return;
-        }
+        // Clear previous data
+        allAgencyData = [];
+        agencySelect.innerHTML =
+          '<option value="">-- Select an Agency --</option>';
 
         try {
-          allAgencyData = parsedData
+          // Filter out bad rows, calculate Trust
+          const processedData = parsedData
             .map((row) => {
               const data = { Agency: row[AGENCY_COL] };
+              let trustSum = 0;
+              let trustCount = 0;
               let isValid = true;
 
-              [...TRUST_DIMS, ...WD_DIMS].forEach((col) => {
+              // Check and process numeric columns (Trust Dims and Metrics)
+              const requiredCols = [...TRUST_DIMS, ...METRICS];
+              for (const col of requiredCols) {
                 const val = parseFloat(row[col]);
-                if (isNaN(val)) isValid = false;
+                if (isNaN(val)) {
+                  isValid = false; // Mark row as invalid
+                  break;
+                }
                 data[col] = val;
-              });
+              }
 
-              return isValid ? data : null;
+              if (!isValid) return null; // Skip invalid rows
+
+              // Calculate Trust (average of 5 dimensions)
+              for (const dim of TRUST_DIMS) {
+                trustSum += data[dim];
+                trustCount++;
+              }
+              data.Trust = trustSum / trustCount; // Store average trust score
+
+              return data;
             })
-            .filter((d) => d && d.Agency); // Filter out nulls and rows without an agency
+            .filter((d) => d); // Filter out nulls (invalid rows)
 
-          if (allAgencyData.length === 0) {
-            throw new Error("No valid agency data found in CSV.");
+          if (processedData.length === 0) {
+            throw new Error(
+              "No valid data rows found with all required metrics."
+            );
           }
 
-          // Reset state and populate new checklist
+          allAgencyData = processedData;
+
+          // Populate dropdown
+          allAgencyData.forEach((d) => {
+            const option = document.createElement("option");
+            option.value = d.Agency;
+            option.textContent = d.Agency;
+            agencySelect.appendChild(option);
+          });
+
+          // If agencies are already selected, re-add their data to the map
+          const currentAgencies = Array.from(comparedAgencies.keys());
           comparedAgencies.clear();
-          populateAgencyChecklist();
+          currentAgencies.forEach((name) => {
+            const agencyData = allAgencyData.find((d) => d.Agency === name);
+            if (agencyData) {
+              comparedAgencies.set(name, agencyData);
+            }
+          });
+
           updateComparisonList();
           drawCharts();
         } catch (error) {
@@ -438,189 +352,126 @@
       }
 
       /**
-       * Fills the Checkbox list with agency names and sets up the listener.
-       */
-      function populateAgencyChecklist() {
-        agencyChecklist.innerHTML = ""; // Clear previous list
-
-        allAgencyData
-          .sort((a, b) => a.Agency.localeCompare(b.Agency))
-          .forEach((d) => {
-            const agencyName = d.Agency;
-            const item = document.createElement("div");
-            item.className = "checkbox-item";
-
-            const input = document.createElement("input");
-            input.type = "checkbox";
-            input.id = `check-${agencyName}`;
-            input.value = agencyName;
-            input.addEventListener("change", handleCheckboxChange);
-
-            const label = document.createElement("label");
-            label.htmlFor = `check-${agencyName}`;
-            label.textContent = agencyName;
-
-            item.appendChild(input);
-            item.appendChild(label);
-            agencyChecklist.appendChild(item);
-          });
-      }
-
-      /**
-       * Handles adding/removing agencies when a checkbox is toggled.
-       */
-      function handleCheckboxChange(event) {
-        const agencyName = event.target.value;
-        if (event.target.checked) {
-          // Add agency
-          const agencyData = allAgencyData.find((d) => d.Agency === agencyName);
-          if (agencyData) {
-            comparedAgencies.set(agencyName, agencyData);
-          }
-        } else {
-          // Remove agency
-          comparedAgencies.delete(agencyName);
-        }
-        updateComparisonList();
-        drawCharts();
-      }
-
-      /**
-       * Re-draws the list of compared agencies
-       */
-      function updateComparisonList() {
-        comparisonList.innerHTML = ""; // Clear list
-        if (comparedAgencies.size === 0) {
-          comparisonList.appendChild(noAgenciesMsg);
-          return;
-        }
-
-        let i = 0;
-        comparedAgencies.forEach((data, name) => {
-          const color = colorPalette[i % colorPalette.length];
-          const item = document.createElement("li");
-          item.className = "comparison-item";
-          item.innerHTML = `
-                    <span class="comparison-item-name">
-                        <span class="color-swatch" style="background-color: ${color};"></span>
-                        ${name}
-                    </span>
-                    `;
-          comparisonList.appendChild(item);
-          i++;
-        });
-      }
-
-      /**
-       * Main render function
+       * Draws the radial and bar charts for the selected agencies.
        */
       function drawCharts() {
-        const agencies = Array.from(comparedAgencies.values());
+        chartContainer.innerHTML = ""; // Clear existing charts
 
-        if (agencies.length === 0) {
-          radarChartEl.innerHTML = "";
-          barChartEl.innerHTML = "";
-          // Restore placeholder
-          if (!document.getElementById("placeholder")) {
-            radarChartEl.appendChild(placeholder);
-          }
+        const agenciesToRender = Array.from(comparedAgencies.values());
+
+        if (agenciesToRender.length === 0) {
+          chartContainer.innerHTML = `
+            <div class="chart-placeholder">
+              Select one or more agencies to start the comparison.
+            </div>
+          `;
           return;
         }
 
-        drawRadialChart(agencies);
-        drawBarChart(agencies);
-      }
+        // *** IMPLEMENTATION OF NEW SORTING LOGIC ***
+        // Sort agencies by Trust score (highest to lowest).
+        // The highest trust (widest chart) will be rendered first,
+        // which corresponds to the "bottom" chart in the display order.
+        agenciesToRender.sort((a, b) => b.Trust - a.Trust);
+        // *** END NEW SORTING LOGIC ***
 
-      /**
-       * Draws the Polar/Radar chart for Trust Dimensions
-       */
-      function drawRadialChart(agencies) {
-        if (placeholder && placeholder.parentElement) placeholder.remove(); // Remove placeholder
-        const traces = [];
-        const theta = [...TRUST_DIMS, TRUST_DIMS[0]]; // Close the loop
+        agenciesToRender.forEach((data, index) => {
+          // Create a container for each agency's charts
+          const agencyName = data.Agency;
 
-        agencies.forEach((agency, i) => {
-          const color = colorPalette[i % colorPalette.length];
-          const r = TRUST_DIMS.map((dim) => agency[dim]);
-          r.push(r[0]); // Close the loop
+          const wrapper = document.createElement("div");
+          wrapper.className = "chart-card";
+          wrapper.innerHTML = `<div class="chart-title">${agencyName}</div>`;
 
-          traces.push({
+          const chartDiv = document.createElement("div");
+          chartDiv.id = `chart-${index}`;
+          chartDiv.style.width = "100%";
+          chartDiv.style.height = "350px";
+          wrapper.appendChild(chartDiv);
+          chartContainer.appendChild(wrapper);
+
+          // 1. Prepare data for plotting
+          const values = TRUST_DIMS.map((dim) => data[dim]);
+
+          // 2. Radial Chart Trace
+          const radialTrace = {
             type: "scatterpolar",
-            r: r,
-            theta: theta,
+            r: values,
+            theta: TRUST_DIMS,
             fill: "toself",
-            fillcolor: color + "33", // Add alpha transparency
-            line: { color: color, width: 2 },
-            name: agency.Agency,
+            name: agencyName,
+            marker: { color: "rgba(44, 95, 127, 0.6)" },
+            line: { color: "rgba(44, 95, 127, 1)", width: 2 },
+            hovertemplate: "<b>%{theta}</b><br>Score: %{r:.2f}<extra></extra>",
+          };
+
+          // 3. Radial Chart Layout
+          const radialLayout = {
+            polar: {
+              radialaxis: {
+                visible: true,
+                range: [0, MAX_RATING],
+                tickvals: [1, 2, 3, 4, 5, 6, 7],
+                ticklen: 0,
+                showline: false,
+                gridcolor: "#e0e0e0",
+                linecolor: "transparent",
+              },
+              angularaxis: {
+                linecolor: "#999",
+                linewidth: 1,
+                tickfont: { size: 10 },
+              },
+            },
+            showlegend: false,
+            title: false,
+            margin: { t: 30, b: 30, l: 30, r: 30 },
+            plot_bgcolor: "#fff",
+            paper_bgcolor: "#fff",
+          };
+
+          Plotly.newPlot(chartDiv.id, [radialTrace], radialLayout, {
+            responsive: true,
+            displayModeBar: false,
           });
         });
-
-        const layout = {
-          polar: {
-            radialaxis: {
-              visible: true,
-              range: [0, 7], // Assuming a 0-7 scale, adjust as needed
-            },
-          },
-          showlegend: true,
-          legend: { x: 1.05, y: 0.5 },
-          margin: { t: 50, b: 50, l: 50, r: 200 }, // Make room for legend
-        };
-
-        Plotly.newPlot(radarChartEl, traces, layout, {
-          responsive: true,
-          displayModeBar: false,
-        });
       }
 
       /**
-       * Draws the Bar chart for Warmth & Dominance
+       * Updates the list of currently compared agencies.
        */
-      function drawBarChart(agencies) {
-        barChartEl.innerHTML = "";
+      function updateComparisonList() {
+        comparisonList.innerHTML = "";
+        if (comparedAgencies.size === 0) {
+          comparisonList.innerHTML =
+            '<span class="chart-placeholder" style="margin-left: 0; color: #777;">Add agencies to view their profiles.</span>';
+          return;
+        }
 
-        const traces = agencies.map((agency, i) => {
-          const color = colorPalette[i % colorPalette.length];
-          return {
-            type: "bar",
-            x: WD_DIMS, // X-axis categories are ['Warmth', 'Dominance']
-            y: WD_DIMS.map((dim) => agency[dim]), // Get the values [agency.Warmth, agency.Dominance]
-            name: agency.Agency,
-            marker: {
-              color: color, // Apply the agency's consistent color
-            },
-          };
-        });
-
-        const layout = {
-          barmode: "group", // This will group the bars by the X-axis categories (Warmth, Dominance)
-          showlegend: true,
-          yaxis: { title: "Score" },
-          xaxis: { tickangle: 0 }, // No angle needed for short labels
-          margin: { t: 50, b: 50, l: 50, r: 50 }, // Standard margin
-        };
-
-        Plotly.newPlot(barChartEl, traces, layout, {
-          responsive: true,
-          displayModeBar: false,
+        comparedAgencies.forEach((data, name) => {
+          const tag = document.createElement("span");
+          tag.className = "agency-tag";
+          tag.innerHTML = `${name}<button class="remove-btn" data-agency="${name}">&times;</button>`;
+          comparisonList.appendChild(tag);
         });
       }
 
       // --- Event Listeners ---
 
-      // 1. Load default data
+      // 1. Load default data on page load
       document.addEventListener("DOMContentLoaded", () => {
         fetch("data/agency.csv")
           .then((response) => {
-            if (!response.ok)
-              throw new Error("Could not find default 'agency.csv'.");
+            if (!response.ok) {
+              throw new Error("Could not find default 'agency.csv' file.");
+            }
             return response.text();
           })
           .then((csvText) => {
             fileNameDisplay.textContent = "agency.csv (default)";
             Papa.parse(csvText, {
               header: true,
-              dynamicTyping: false, // Parse all as strings, convert manually
+              dynamicTyping: false,
               skipEmptyLines: true,
               complete: (results) => processCSV(results.data),
               error: (err) =>
@@ -633,10 +484,48 @@
           });
       });
 
-      // *** Removed the Add Agency button listener as it's replaced by handleCheckboxChange ***
-      // *** Removed the Remove Agency button listener as it's replaced by handleCheckboxChange ***
+      // 2. Load user file
+      fileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          fileNameDisplay.textContent = file.name;
+          Papa.parse(file, {
+            header: true,
+            dynamicTyping: false,
+            skipEmptyLines: true,
+            complete: (results) => processCSV(results.data),
+            error: (err) => alert(`Error parsing file: ${err.message}`),
+          });
+        }
+      });
 
-      // *** NOTE: The handleCheckboxChange function is attached when the list is populated. ***
+      // 3. Add Agency button
+      addBtn.addEventListener("click", () => {
+        const selectedAgency = agencySelect.value;
+        if (selectedAgency && !comparedAgencies.has(selectedAgency)) {
+          const agencyData = allAgencyData.find(
+            (d) => d.Agency === selectedAgency
+          );
+          if (agencyData) {
+            // Check if the Trust score is calculated and add it to the map
+            comparedAgencies.set(selectedAgency, agencyData);
+            updateComparisonList();
+            drawCharts();
+          }
+        }
+      });
+
+      // 4. Remove Agency button (using event delegation)
+      comparisonList.addEventListener("click", (event) => {
+        if (event.target.classList.contains("remove-btn")) {
+          const agencyName = event.target.dataset.agency;
+          if (comparedAgencies.has(agencyName)) {
+            comparedAgencies.delete(agencyName);
+            updateComparisonList();
+            drawCharts();
+          }
+        }
+      });
     </script>
   </body>
 </html>
