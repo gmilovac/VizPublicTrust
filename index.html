@@ -212,44 +212,8 @@
         margin-bottom: 8px;
       }
 
-      /* Custom Legend Overlay */
-      .legend-overlay {
-        position: absolute;
-        bottom: 30px;
-        right: 30px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #eee;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        font-size: 0.85rem;
-        pointer-events: none;
-        z-index: 10;
-      }
-      .legend-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-      }
-      .legend-item:last-child {
-        margin-bottom: 0;
-      } /* Remove margin from last item */
-      .legend-border-thin {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 1px solid #333;
-        margin-right: 8px;
-        background: #ddd;
-      }
-      .legend-border-thick {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 4px solid #333;
-        margin-right: 8px;
-        background: #ddd;
-      }
+      /* Custom Legend Overlay - REMOVED AS IT IS NO LONGER USED */
+      /* No longer needed as marker size is now the variable */
     </style>
   </head>
   <body>
@@ -290,7 +254,7 @@
               <strong>Warmth:</strong> Perceived friendliness (Color).
             </div>
             <div class="def-item">
-              <strong>Dominance:</strong> Perceived power (Border Thickness).
+              <strong>Dominance:</strong> Perceived power (Marker Size).
             </div>
             <div
               style="
@@ -308,17 +272,6 @@
               <li><strong>Sincerity:</strong> Honesty.</li>
               <li><strong>Benevolence:</strong> Care for public interest.</li>
             </ul>
-          </div>
-        </div>
-
-        <div class="legend-overlay">
-          <div class="legend-item">
-            <div class="legend-border-thin"></div>
-            <span>Low Dominance</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-border-thick"></div>
-            <span>High Dominance</span>
           </div>
         </div>
 
@@ -465,15 +418,21 @@
        * Renders the Plotly chart
        */
       function renderPlot(dataset) {
-        // Find min/max for scaling
+        // --- Dominance (Size) Scaling Logic ---
         const domMin = Math.min(...dataset.map((d) => d.Dominance));
         const domMax = Math.max(...dataset.map((d) => d.Dominance));
+        const MIN_SIZE = 10;
+        const MAX_SIZE = 40;
 
-        // Handle case where all dominance values are the same
-        const getLineWidth = (d) => {
-          if (domMin === domMax) return 2; // Default width
-          return 1 + ((d - domMin) / (domMax - domMin)) * 7;
+        const getMarkerSize = (d) => {
+          if (domMin === domMax) return (MIN_SIZE + MAX_SIZE) / 2;
+          // Linear scaling: MIN_SIZE + (value - min) / (max - min) * (MAX_SIZE - MIN_SIZE)
+          return (
+            MIN_SIZE +
+            ((d.Dominance - domMin) / (domMax - domMin)) * (MAX_SIZE - MIN_SIZE)
+          );
         };
+        // --- End Dominance Scaling ---
 
         const trace = {
           x: dataset.map((d) => d.x_rot),
@@ -494,11 +453,11 @@
           mode: "markers+text",
           textposition: "top center",
           marker: {
-            size: 25,
+            // *** CHANGE 1: Use Marker Size for Dominance ***
+            size: dataset.map(getMarkerSize),
+
             color: dataset.map((d) => d.Warmth),
-            // *** THE ONLY CHANGE: Removed reversescale: true to flip the RdBu scale ***
             colorscale: "RdBu",
-            // Blue=Cold(Low) to Red=Warm(High) is the default for RdBu, so removing reverse fixes the issue.
             cmin: -45,
             cmax: 45,
             colorbar: {
@@ -508,9 +467,10 @@
               y: 0.5,
               x: 1.05,
             },
+            // *** CHANGE 2: Fixed thin border around the markers ***
             line: {
-              width: dataset.map((d) => getLineWidth(d.Dominance)),
-              color: "#333",
+              width: 1,
+              color: "rgba(0,0,0,0.5)",
             },
             symbol: "circle",
           },
@@ -545,7 +505,7 @@
         });
       }
 
-      // --- Rotation & Correlation Helpers ---
+      // --- Rotation & Correlation Helpers (Unchanged) ---
 
       function rotateToMaximizeCorrelation(data, xCol, yCol, targetCol) {
         // Find optimal angle by checking a range
@@ -600,7 +560,7 @@
         return num / Math.sqrt(denX * denY);
       }
 
-      // --- Event Listeners ---
+      // --- Event Listeners (Unchanged) ---
 
       // 1. Load default data on page load
       document.addEventListener("DOMContentLoaded", () => {
