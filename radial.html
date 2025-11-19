@@ -311,6 +311,7 @@
 
       let allAgencyData = [];
       const comparedAgencies = new Map();
+      let nextColorIndex = 0; // Track next available color
 
       const fileNameDisplay = document.getElementById("file-name");
       const fileInput = document.getElementById("csv-uploader");
@@ -339,6 +340,7 @@
         // Clear all selected agencies on new data load
         comparedAgencies.clear();
         agencyChecklist.innerHTML = "";
+        nextColorIndex = 0; // Reset color counter
 
         try {
           const processedData = parsedData
@@ -400,7 +402,7 @@
       function populateChecklist() {
         agencyChecklist.innerHTML = "";
 
-        allAgencyData.forEach((data, index) => {
+        allAgencyData.forEach((data) => {
           const label = document.createElement("label");
           label.className = "agency-checkbox-item";
 
@@ -409,19 +411,13 @@
           input.value = data.Agency;
           input.name = "agency";
           input.dataset.agencyName = data.Agency;
-          // Assign index for color mapping
-          const colorIndex = index % COLOR_PALETTE.length;
-          input.dataset.colorIndex = colorIndex;
 
           input.addEventListener("change", handleChecklistChange);
 
-          // Add a colored dot next to the label for legend
+          // Color dot will be added when agency is selected
           const colorDot = document.createElement("span");
           colorDot.className = "color-dot";
-          // Use solid color for the dot
-          colorDot.style.backgroundColor = getSolidColor(
-            `--color-${colorIndex + 1}`
-          );
+          colorDot.style.display = "none"; // Hidden by default
 
           label.appendChild(input);
           label.appendChild(colorDot);
@@ -435,22 +431,37 @@
        */
       function handleChecklistChange(event) {
         const agencyName = event.target.dataset.agencyName;
-        const colorIndex = event.target.dataset.colorIndex;
         const isChecked = event.target.checked;
+        const label = event.target.parentElement;
+        const colorDot = label.querySelector(".color-dot");
 
         if (isChecked) {
           const agencyData = allAgencyData.find((d) => d.Agency === agencyName);
           if (agencyData) {
-            // Store data and the assigned color index
+            // Assign next available color
+            const colorIndex = nextColorIndex % COLOR_PALETTE.length;
+            const colorVar = `--color-${colorIndex + 1}`;
+
+            // Store data with assigned color
             comparedAgencies.set(agencyName, {
               ...agencyData,
-              colorIndex: parseInt(colorIndex),
-              // Store the CSS variable for easy access
-              colorVar: `--color-${parseInt(colorIndex) + 1}`,
+              colorIndex: colorIndex,
+              colorVar: colorVar,
             });
+
+            // Update color dot
+            colorDot.style.backgroundColor = getSolidColor(colorVar);
+            colorDot.style.display = "inline-block";
+
+            nextColorIndex++;
           }
         } else {
+          // Remove from comparison and free up the color
           comparedAgencies.delete(agencyName);
+          colorDot.style.display = "none";
+
+          // Note: We don't decrement nextColorIndex to keep color assignment simple
+          // Colors will cycle through the palette as needed
         }
         drawCharts();
       }
@@ -484,7 +495,7 @@
         // *** END STACKING ORDER LOGIC ***
 
         // --- 1. Radial Chart (Overlaid 5 Trust Dimensions) ---
-        const radialTraces = agenciesToRender.map((data, index) => {
+        const radialTraces = agenciesToRender.map((data) => {
           const radialValues = TRUST_DIMS.map((dim) => data[dim]);
           // Get the color from the assigned CSS variable (which is an rgba value)
           const color = getComputedStyle(document.documentElement)
@@ -510,8 +521,6 @@
               shape: "spline", // Use spline for smoother look
             },
             fillcolor: color, // Use rgba for fill
-            // Adjust z-index based on sort order to explicitly control stacking if needed (Plotly uses trace order for Z)
-            // z: index,
             hovertemplate: `<b>${data.Agency}</b><br>%{theta}: %{r:.2f}<extra></extra>`,
           };
         });
@@ -568,6 +577,12 @@
         const warmthScores = agenciesToRender.map((d) => d.Warmth);
         const dominanceScores = agenciesToRender.map((d) => d.Dominance);
 
+        // Calculate appropriate x-axis range
+        const allScores = [...warmthScores, ...dominanceScores];
+        const minScore = Math.min(...allScores);
+        const maxScore = Math.max(...allScores);
+        const rangePadding = (maxScore - minScore) * 0.1; // 10% padding
+
         const barTraces = [
           {
             type: "bar",
@@ -582,7 +597,8 @@
               line: { width: 1, color: "#333" },
             },
             text: warmthScores.map((score) => score.toFixed(1)),
-            textposition: "outside",
+            textposition: "auto",
+            textfont: { size: 12 },
             hovertemplate: "<b>%{y}</b><br>Warmth: %{x:.1f}<extra></extra>",
           },
           {
@@ -602,7 +618,8 @@
               line: { width: 1, color: "#333" },
             },
             text: dominanceScores.map((score) => score.toFixed(1)),
-            textposition: "outside",
+            textposition: "auto",
+            textfont: { size: 12 },
             hovertemplate: "<b>%{y}</b><br>Dominance: %{x:.1f}<extra></extra>",
           },
         ];
@@ -618,10 +635,10 @@
             zeroline: true,
             gridcolor: "#e0e0e0",
             automargin: true,
-            // Automatically set a sensible range based on data
+            // Set range with padding to ensure labels are visible
             range: [
-              Math.min(...warmthScores, ...dominanceScores, 0) * 1.1,
-              Math.max(...warmthScores, ...dominanceScores, 0) * 1.1,
+              Math.min(minScore - rangePadding, -60), // Ensure enough space for negative values
+              Math.max(maxScore + rangePadding, 80), // Ensure enough space for positive values
             ],
           },
           yaxis: {
@@ -630,7 +647,7 @@
             categoryarray: agencies.reverse(), // Display agencies top-to-bottom as they appear in the data
           },
           legend: { x: 0, y: 1.1, orientation: "h" },
-          margin: { t: 80, b: 50, l: 150, r: 20 }, // Increased left margin for agency names
+          margin: { t: 80, b: 50, l: 150, r: 50 }, // Increased margins to prevent cutting off
           plot_bgcolor: "#fff",
           paper_bgcolor: "#fff",
           height: 600,
@@ -646,8 +663,6 @@
 
       // 1. Load default data on page load
       document.addEventListener("DOMContentLoaded", () => {
-        // Fetch CSS colors once the DOM is ready for the color logic to work
-
         fetch("data/agency.csv")
           .then((response) => {
             if (!response.ok) {
