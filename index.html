@@ -153,12 +153,77 @@
         opacity: 1;
       }
 
+      /* --- NEW: Modal Overlay Styles --- */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s;
+      }
+      .modal-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+      .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+      }
+      .modal-content h2 {
+        color: var(--primary-color);
+        margin-top: 0;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+      }
+      .modal-content ul {
+        padding-left: 20px;
+      }
+      .modal-close-btn {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        margin-top: 20px;
+        display: block;
+        margin-left: auto;
+        transition: background-color 0.2s;
+      }
+      .modal-close-btn:hover {
+        background-color: #1a435a;
+      }
+
       /* Info Button & Tooltip */
-      .info-container {
+      /* NEW: Wrapper for multiple info buttons */
+      .info-wrapper {
         position: absolute;
         top: 20px;
         right: 20px;
         z-index: 10;
+        display: flex;
+        gap: 10px; /* Space between info buttons */
+      }
+      .info-container {
+        position: static; /* Allows flex layout in parent */
       }
       .info-icon {
         width: 32px;
@@ -178,7 +243,6 @@
       }
       .info-tooltip {
         visibility: hidden;
-        width: 300px;
         background-color: #fff;
         color: #333;
         text-align: left;
@@ -186,7 +250,7 @@
         padding: 15px;
         position: absolute;
         top: 40px;
-        right: 0;
+        right: 0; /* Default position relative to the button */
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         opacity: 0;
         transition: opacity 0.3s;
@@ -195,6 +259,12 @@
         border: 1px solid #eee;
         pointer-events: none;
       }
+      /* Position agency info to the left of the metric info */
+      .info-container.agency-info .info-tooltip {
+        right: auto;
+        left: 0;
+      }
+
       .info-container:hover .info-tooltip {
         visibility: visible;
         opacity: 1;
@@ -210,6 +280,24 @@
       }
       .def-item {
         margin-bottom: 8px;
+      }
+      /* NEW: Agency Table Styles */
+      .agency-tooltip-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        margin-top: 10px;
+      }
+      .agency-tooltip-table th,
+      .agency-tooltip-table td {
+        border-bottom: 1px solid #eee;
+        padding: 6px 0;
+        text-align: left;
+      }
+      .agency-tooltip-table th {
+        font-weight: bold;
+        color: var(--primary-color);
+        padding-bottom: 8px;
       }
 
       /* Custom Legend Overlay */
@@ -265,12 +353,57 @@
       </div>
     </nav>
 
+    <div id="welcome-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Welcome to the Trust Profile Explorer</h2>
+        <p>
+          This visualization uses a **UMAP** (Uniform Manifold Approximation and
+          Projection) algorithm to plot U.S. government agencies based on the
+          **similarity of their trust dimension profiles**.
+        </p>
+        <ul>
+          <li>
+            **Similarity:** Agencies positioned closer together have more
+            similar scores across the five core trust dimensions (Competence,
+            Reliability, Ethics, Sincerity, Benevolence).
+          </li>
+          <li>
+            **X-Axis (Overall Trust):** Agencies further to the **right** have a
+            higher overall average trust score across the five dimensions. Note
+            that while the X-axis correlates highly with overall trust,
+            individual trust dimensions may still vary significantly.
+          </li>
+          <li>
+            **Color (Warmth):** The dot color represents the agency's perceived
+            **Warmth**. The scale goes from **bright red (High Warmth)** to
+            **icy aqua blue (Low Warmth/Cold)**.
+          </li>
+          <li>
+            **Border Thickness (Dominance):** The black outline thickness
+            represents the agency's perceived **Dominance**. Thicker lines mean
+            higher Dominance.
+          </li>
+        </ul>
+        <p>
+          To explore the raw data and compare specific agencies directly, switch
+          to the **Radial/Bar Views** tab at the top.
+          <br />
+          You can also use the **info buttons** next to the plot for metric
+          definitions and a list of all agency full names.
+        </p>
+        <button id="modal-close" class="modal-close-btn">
+          Start Exploring
+        </button>
+      </div>
+    </div>
+
     <div class="container">
       <div class="header-section">
         <h1>Agency Trust Profile Explorer</h1>
         <p class="subtitle">
-          Agencies positioned by similarity.
-          <strong>Right X-Axis = More Trusted.</strong>
+          Agencies are positioned by similarity on a UMAP plot. The **X-Axis
+          represents Overall Trust**, with higher trust to the right, while the
+          **color and border** represent Warmth and Dominance metrics.
         </p>
       </div>
 
@@ -279,35 +412,160 @@
           <div>Calculating UMAP...</div>
         </div>
 
-        <div class="info-container">
-          <div class="info-icon">i</div>
-          <div class="info-tooltip">
-            <h4>Metric Definitions</h4>
-            <div class="def-item">
-              <strong>Trust:</strong> Overall confidence (X-Axis).
+        <div class="info-wrapper">
+          <div class="info-container metric-info">
+            <div class="info-icon">i</div>
+            <div class="info-tooltip" style="width: 300px">
+              <h4>Metric Definitions</h4>
+              <div class="def-item">
+                <strong>Trust:</strong> Overall confidence (X-Axis).
+              </div>
+              <div class="def-item">
+                <strong>Warmth:</strong> Perceived friendliness (Color).
+              </div>
+              <div class="def-item">
+                <strong>Dominance:</strong> Perceived power (Border Thickness).
+              </div>
+              <div
+                style="
+                  margin-top: 10px;
+                  border-top: 1px solid #eee;
+                  padding-top: 5px;
+                "
+              >
+                <strong>5 Dimensions of Trust:</strong>
+              </div>
+              <ul style="padding-left: 15px; margin: 5px 0">
+                <li><strong>Competence:</strong> Ability to execute.</li>
+                <li><strong>Reliability:</strong> Consistency.</li>
+                <li><strong>Ethics:</strong> Moral principles.</li>
+                <li><strong>Sincerity:</strong> Honesty.</li>
+                <li><strong>Benevolence:</strong> Care for public interest.</li>
+              </ul>
             </div>
-            <div class="def-item">
-              <strong>Warmth:</strong> Perceived friendliness (Color).
+          </div>
+
+          <div class="info-container agency-info">
+            <div class="info-icon">?</div>
+            <div class="info-tooltip" style="width: 450px">
+              <h4>Agency Full Names</h4>
+              <table class="agency-tooltip-table">
+                <tr>
+                  <th>Short Name</th>
+                  <th>Full Name</th>
+                </tr>
+                <tr>
+                  <td>Amtrak</td>
+                  <td>Amtrak</td>
+                </tr>
+                <tr>
+                  <td>BPR</td>
+                  <td>Bureau of Prisons (BPR)</td>
+                </tr>
+                <tr>
+                  <td>CBP</td>
+                  <td>Customs & Border Protection (CBP)</td>
+                </tr>
+                <tr>
+                  <td>CDC</td>
+                  <td>Center for Disease Control (CDC)</td>
+                </tr>
+                <tr>
+                  <td>Census</td>
+                  <td>Census Bureau</td>
+                </tr>
+                <tr>
+                  <td>CISA</td>
+                  <td>
+                    Cybersecurity and Infrastructure Security Agency (CISA)
+                  </td>
+                </tr>
+                <tr>
+                  <td>DEd</td>
+                  <td>Department of Education</td>
+                </tr>
+                <tr>
+                  <td>DOD</td>
+                  <td>Department of Defense (DoD)</td>
+                </tr>
+                <tr>
+                  <td>DOJ</td>
+                  <td>Department of Justice (DOJ)</td>
+                </tr>
+                <tr>
+                  <td>EPA</td>
+                  <td>Environmental Protection Agency (EPA)</td>
+                </tr>
+                <tr>
+                  <td>FAA</td>
+                  <td>Federal Aviation Administration (FAA)</td>
+                </tr>
+                <tr>
+                  <td>FairHousing</td>
+                  <td>Office of Fair Housing and Equal Opportunity</td>
+                </tr>
+                <tr>
+                  <td>FBI</td>
+                  <td>Federal Bureau of Investigation (FBI)</td>
+                </tr>
+                <tr>
+                  <td>FDA</td>
+                  <td>Food & Drug Administration (FDA)</td>
+                </tr>
+                <tr>
+                  <td>FEMA</td>
+                  <td>Federal Emergency Management Agency (FEMA)</td>
+                </tr>
+                <tr>
+                  <td>IRS</td>
+                  <td>Internal Revenue Services (IRS)</td>
+                </tr>
+                <tr>
+                  <td>LaborDept</td>
+                  <td>Labor Department</td>
+                </tr>
+                <tr>
+                  <td>Lib</td>
+                  <td>Library of Congress</td>
+                </tr>
+                <tr>
+                  <td>Mus</td>
+                  <td>Smithsonian Museums</td>
+                </tr>
+                <tr>
+                  <td>NASA</td>
+                  <td>National Aeronautics & Space Administration (NASA)</td>
+                </tr>
+                <tr>
+                  <td>NEA</td>
+                  <td>National Endowment for the Arts (NEA)</td>
+                </tr>
+                <tr>
+                  <td>NSF</td>
+                  <td>National Science Foundation (NSF)</td>
+                </tr>
+                <tr>
+                  <td>SocSecurity</td>
+                  <td>Social Security Administration</td>
+                </tr>
+                <tr>
+                  <td>Treas</td>
+                  <td>Treasury</td>
+                </tr>
+                <tr>
+                  <td>TSA</td>
+                  <td>Transportation Security Administration (TSA)</td>
+                </tr>
+                <tr>
+                  <td>USPS</td>
+                  <td>U.S. Postal Service (USPS)</td>
+                </tr>
+                <tr>
+                  <td>Zoo</td>
+                  <td>National Zoo</td>
+                </tr>
+              </table>
             </div>
-            <div class="def-item">
-              <strong>Dominance:</strong> Perceived power (Border Thickness).
-            </div>
-            <div
-              style="
-                margin-top: 10px;
-                border-top: 1px solid #eee;
-                padding-top: 5px;
-              "
-            >
-              <strong>5 Dimensions of Trust:</strong>
-            </div>
-            <ul style="padding-left: 15px; margin: 5px 0">
-              <li><strong>Competence:</strong> Ability to execute.</li>
-              <li><strong>Reliability:</strong> Consistency.</li>
-              <li><strong>Ethics:</strong> Moral principles.</li>
-              <li><strong>Sincerity:</strong> Honesty.</li>
-              <li><strong>Benevolence:</strong> Care for public interest.</li>
-            </ul>
           </div>
         </div>
 
@@ -341,6 +599,8 @@
       const loadingOverlay = document.getElementById("loading-overlay");
       const fileNameDisplay = document.getElementById("file-name");
       const fileInput = document.getElementById("csv-uploader");
+      const welcomeModal = document.getElementById("welcome-modal");
+      const modalCloseBtn = document.getElementById("modal-close");
 
       // --- Core Functions ---
 
@@ -557,6 +817,9 @@
           responsive: true,
           displayModeBar: false,
         });
+
+        // NEW: Emit event after plot rendering to trigger modal
+        document.dispatchEvent(new Event("plotRendered"));
       }
 
       // --- Rotation & Correlation Helpers ---
@@ -619,9 +882,10 @@
       // 1. Load default data on page load
       document.addEventListener("DOMContentLoaded", () => {
         loadingOverlay.classList.add("visible");
-        fetch("data/agency.csv")
+        fetch("agency.csv")
           .then((response) => {
             if (!response.ok) {
+              // Assuming 'data/agency.csv' was an internal path, and using the uploaded 'agency.csv' instead
               throw new Error("Could not find default 'agency.csv' file.");
             }
             return response.text();
@@ -644,9 +908,28 @@
             loadingOverlay.classList.remove("visible");
             fileNameDisplay.textContent = "No file loaded.";
           });
+
+        // 2. NEW: Modal Logic
+        // Check if the modal has been shown before
+        if (localStorage.getItem("trustExplorerModalShown") !== "true") {
+          // Show the modal after the plot has finished rendering (triggered by custom event)
+          document.addEventListener("plotRendered", () => {
+            // Wait for the loading overlay to be removed before showing modal
+            setTimeout(() => {
+              welcomeModal.classList.add("visible");
+            }, 500);
+          });
+        }
+
+        // Close button event listener
+        modalCloseBtn.addEventListener("click", () => {
+          welcomeModal.classList.remove("visible");
+          // Set flag in localStorage so it doesn't show again
+          localStorage.setItem("trustExplorerModalShown", "true");
+        });
       });
 
-      // 2. Listen for user-uploaded file
+      // 3. Listen for user-uploaded file
       fileInput.addEventListener("change", (event) => {
         const file = event.target.files[0];
         if (file) {
