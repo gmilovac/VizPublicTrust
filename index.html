@@ -213,12 +213,12 @@
       }
 
       /* Info Button & Tooltip */
-      /* NEW: Wrapper for multiple info buttons */
+      /* UPDATED: Wrapper for multiple info buttons - increased z-index for layering */
       .info-wrapper {
         position: absolute;
         top: 20px;
         right: 20px;
-        z-index: 20; /* UPDATED to 20 to be above the legend-overlay */
+        z-index: 20; /* UPDATED to 20 to ensure it's above the legend */
         display: flex;
         gap: 10px; /* Space between info buttons */
       }
@@ -259,7 +259,7 @@
         border: 1px solid #eee;
         pointer-events: none;
       }
-      /* Position agency info to the left of the metric info, and add scrolling/height limits */
+      /* UPDATED: Position agency info to the left of the metric info, and add scrolling/height limits */
       .info-container.agency-info .info-tooltip {
         right: auto;
         left: 0;
@@ -284,7 +284,7 @@
         margin-bottom: 8px;
       }
 
-      /* Agency List Styles for 3 Columns */
+      /* NEW: Agency List Styles for 3 Columns */
       .agency-list-wrapper {
         display: flex;
         gap: 15px; /* Space between columns */
@@ -649,6 +649,7 @@
 
         // 4. Render Plot
         renderPlot(rotatedData);
+        document.dispatchEvent(new Event("plotRendered"));
         loadingOverlay.classList.remove("visible");
       }
 
@@ -749,8 +750,6 @@
           displayModeBar: false,
         });
 
-        // NEW: Emit event after plot rendering to trigger modal
-        document.dispatchEvent(new Event("plotRendered"));
       }
 
       // --- Rotation & Correlation Helpers ---
