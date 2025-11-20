@@ -33,11 +33,51 @@
       color: #1e293b;
     }
     .hero p {
-      font-size: 18px;
+      font-size: 20px;
       color: #64748b;
-      max-width: 800px;
-      margin: 0 auto;
+      max-width: 900px;
+      margin: 0 auto 30px;
       line-height: 1.8;
+    }
+    .intro-text {
+      font-size: 18px;
+      color: #475569;
+      max-width: 900px;
+      margin: 0 auto 30px;
+      line-height: 1.7;
+      text-align: left;
+      background: #f8fafc;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    .intro-text strong {
+      color: #1e293b;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 30px;
+      text-align: left;
+    }
+    .metric-card {
+      background: #f8fafc;
+      padding: 16px 20px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+    .metric-card h3 {
+      margin: 0 0 6px;
+      color: #1e293b;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .metric-card p {
+      margin: 0;
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.4;
     }
     .section {
       background: white;
@@ -104,6 +144,58 @@
       color: #1e293b;
       font-size: 14px;
     }
+    .info-box {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 24px 0;
+      color: #1e40af;
+    }
+    .info-box h4 {
+      margin: 0 0 12px;
+      color: #1e40af;
+      font-size: 18px;
+    }
+    .info-box p {
+      margin: 8px 0;
+      line-height: 1.6;
+    }
+    .agency-list {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 30px;
+      border: 1px solid #e2e8f0;
+    }
+    .agency-list h3 {
+      margin: 0 0 16px;
+      color: #1e293b;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .agency-list p {
+      margin: 0 0 16px;
+      color: #64748b;
+      font-size: 14px;
+    }
+    .agency-grid {
+      columns: 2;
+      column-gap: 24px;
+      font-size: 13px;
+      color: #64748b;
+    }
+    .agency-item {
+      padding: 4px 0;
+      break-inside: avoid;
+      line-height: 1.6;
+    }
+    .agency-short {
+      font-weight: 600;
+      color: #1e293b;
+      font-family: monospace;
+      font-size: 12px;
+    }
     .error-msg {
       background: #fee;
       border: 1px solid #fcc;
@@ -113,23 +205,14 @@
       margin: 20px 0;
       text-align: center;
     }
-    .info-box {
-      background: #eff6ff;
-      border-left: 4px solid #3b82f6;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 24px 0;
-      color: #1e40af;
-    }
-    .info-box p {
-      margin: 8px 0;
-      line-height: 1.6;
-    }
     @media (max-width: 768px) {
       .hero {padding: 40px 20px;}
       .hero h1 {font-size: 36px;}
       .section {padding: 25px;}
       .gallery {grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px;}
+      .metrics-grid {grid-template-columns: 1fr;}
+      .agency-grid {columns: 1;}
+      .intro-text {font-size: 16px; padding: 20px;}
     }
   </style>
 </head>
@@ -137,79 +220,167 @@
   <div class="container">
     <div class="hero">
       <h1>Agency Trust Visualizations</h1>
-      <p>This page shows how Americans view different government agencies. We measure trust using five key factors: how competent (skilled) they are, how benevolent (caring) they are, how much integrity (honesty) they have, how warm (friendly) they seem, and how dominant (powerful) they are.</p>
+      <p>Understanding How Americans View Federal Agencies</p>
+      
+      <div class="intro-text">
+        <strong>What is this page about?</strong><br>
+        This page shows research on how Americans feel about 27 different federal government agencies. We asked people questions to measure their trust in these agencies. Below, you'll see charts that visualize the results.
+        <br><br>
+        <strong>What will you see?</strong><br>
+        • A chart showing trust trends over time<br>
+        • A scatter plot comparing agencies on two key dimensions<br>
+        • Individual profiles for each agency showing their scores on all dimensions
+        <br><br>
+        <strong>What do we measure?</strong><br>
+        We measure trust using seven dimensions. Here's what each one means:
+      </div>
+      
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <h3>Ethical</h3>
+          <p>Does the right thing morally</p>
+        </div>
+        <div class="metric-card">
+          <h3>Reliable</h3>
+          <p>Can be counted on consistently</p>
+        </div>
+        <div class="metric-card">
+          <h3>Sincere</h3>
+          <p>Genuinely means what they say</p>
+        </div>
+        <div class="metric-card">
+          <h3>Competent</h3>
+          <p>Has the skills to do the job well</p>
+        </div>
+        <div class="metric-card">
+          <h3>Benevolent</h3>
+          <p>Genuinely cares about helping people</p>
+        </div>
+        <div class="metric-card">
+          <h3>Warmth</h3>
+          <p>Feels friendly and approachable</p>
+        </div>
+        <div class="metric-card">
+          <h3>Dominance</h3>
+          <p>Has power and influence</p>
+        </div>
+      </div>
     </div>
 
     <div class="section">
       <h2 class="section-title">Trust Trends Over Time</h2>
-      <p class="section-description">This chart shows how public trust in different agencies has changed over time. You can see which agencies are gaining or losing trust.</p>
+      <p class="section-description">See how trust levels have changed for different agencies. Rising lines show increasing trust, falling lines show decreasing trust.</p>
       <div class="img-container">
         <img src="data/2d_trend_chart.png" alt="Agency Trust Trends Chart" onerror="handleImageError(this, 'Trend Chart')">
       </div>
     </div>
 
     <div class="section">
-      <h2 class="section-title">Warmth vs Dominance Analysis</h2>
-      <p class="section-description">This scatter plot shows where each agency falls on two scales: how warm (friendly and caring) people think they are, and how dominant (powerful and influential) they are. Agencies in different corners have very different public images.</p>
+      <h2 class="section-title">Warmth vs Dominance</h2>
+      <p class="section-description">See where each agency falls on two key dimensions:</p>
+      <div class="info-box">
+        <p><strong>🔵 Top Right:</strong> Warm and powerful (caring + influential)</p>
+        <p><strong>🟢 Top Left:</strong> Warm but less powerful (friendly but limited influence)</p>
+        <p><strong>🔴 Bottom Right:</strong> Cold but powerful (strong but impersonal)</p>
+        <p><strong>🟡 Bottom Left:</strong> Cold and less powerful (distant + limited influence)</p>
+      </div>
       <div class="img-container">
         <img src="data/2d_scatter_plot.png" alt="Warmth vs Dominance Scatter Plot" onerror="handleImageError(this, 'Scatter Plot')">
       </div>
     </div>
 
     <div class="section">
-      <h2 class="section-title">Individual Agency Trust Profiles</h2>
-      <p class="section-description">Each radar chart below shows one agency's complete trust profile across all five dimensions. The larger the colored area, the higher that agency scores on these trust factors.</p>
+      <h2 class="section-title">Individual Agency Profiles</h2>
+      <p class="section-description">Each radar chart shows one agency's scores across all trust dimensions.</p>
       
       <div class="info-box">
-        <p><strong>💡 How to read these charts:</strong></p>
-        <p>• Each point on the chart represents one trust dimension (Competence, Benevolence, Integrity, Warmth, Dominance)</p>
-        <p>• The further out from the center, the higher the score</p>
-        <p>• Click any chart to see it larger in a new window</p>
+        <h4>💡 How to Read These Charts:</h4>
+        <p>• Each corner represents one trust dimension</p>
+        <p>• Further from center = higher score on that dimension</p>
+        <p>• Larger colored area = stronger overall trust profile</p>
+        <p>• Click any chart to see it larger</p>
       </div>
 
       <div id="gallery" class="gallery">
         <!-- Gallery populated by JavaScript -->
       </div>
+
+      <div class="agency-list">
+        <h3>Agency Abbreviations</h3>
+        <p>Here's what the short names stand for:</p>
+        <div class="agency-grid" id="agencyNames">
+          <!-- Agency names populated by JavaScript -->
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    // List of all 27 agencies
-    const agencies = [
-      'Amtrak', 'BPR', 'CBP', 'CDC', 'CISA', 'Census', 'DOD', 'DOJ', 'Ded', 
-      'EPA', 'FAA', 'FBI', 'FDA', 'FEMA', 'FairHousing', 'IRS', 'LaborDept', 
-      'Lib', 'Mus', 'NASA', 'NEA', 'NSF', 'SocSecurity', 'TSA', 'Treas', 
-      'USPS', 'Zoo'
-    ];
+    // Agency data with full names
+    const agencyData = {
+      'Amtrak': 'Amtrak',
+      'BPR': 'Bureau of Prisons (BPR)',
+      'CBP': 'Customs & Border Protection (CBP)',
+      'CDC': 'Center for Disease Control (CDC)',
+      'Census': 'Census Bureau',
+      'CISA': 'Cybersecurity and Infrastructure Security Agency (CISA)',
+      'Ded': 'Department of Education',
+      'DOD': 'Department of Defense (DoD)',
+      'DOJ': 'Department of Justice (DOJ)',
+      'EPA': 'Environmental Protection Agency (EPA)',
+      'FAA': 'Federal Aviation Administration (FAA)',
+      'FairHousing': 'Office of Fair Housing and Equal Opportunity',
+      'FBI': 'Federal Bureau of Investigation (FBI)',
+      'FDA': 'Food & Drug Administration (FDA)',
+      'FEMA': 'Federal Emergency Management Agency (FEMA)',
+      'IRS': 'Internal Revenue Services (IRS)',
+      'LaborDept': 'Labor Department',
+      'Lib': 'Library of Congress',
+      'Mus': 'Smithsonian Museums',
+      'NASA': 'National Aeronautics & Space Administration (NASA)',
+      'NEA': 'National Endowment for the Arts (NEA)',
+      'NSF': 'National Science Foundation (NSF)',
+      'SocSecurity': 'Social Security Administration',
+      'Treas': 'Treasury',
+      'TSA': 'Transportation Security Administration (TSA)',
+      'USPS': 'U.S. Postal Service (USPS)',
+      'Zoo': 'National Zoo'
+    };
 
     const gallery = document.getElementById('gallery');
+    const agencyNamesDiv = document.getElementById('agencyNames');
     const radialFolder = 'data/2d_Radial_graphs';
 
-    // Create a card for each agency
-    agencies.forEach(agency => {
+    // Create gallery items
+    Object.keys(agencyData).forEach(shortName => {
       const item = document.createElement('div');
       item.className = 'gallery-item';
       
       const img = document.createElement('img');
-      img.src = `${radialFolder}/${agency}.png`;
-      img.alt = `${agency} Trust Profile`;
+      img.src = `${radialFolder}/${shortName}.png`;
+      img.alt = `${agencyData[shortName]} Trust Profile`;
       img.onerror = function() {
         this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%23666"%3EImage not found%3C/text%3E%3C/svg%3E';
       };
       
       const name = document.createElement('div');
       name.className = 'agency-name';
-      name.textContent = agency;
+      name.textContent = shortName;
       
       item.appendChild(img);
       item.appendChild(name);
       
-      // Click to open full-size in new window
       item.addEventListener('click', () => {
-        window.open(`${radialFolder}/${agency}.png`, '_blank');
+        window.open(`${radialFolder}/${shortName}.png`, '_blank');
       });
       
       gallery.appendChild(item);
+
+      // Add to agency names list
+      const nameItem = document.createElement('div');
+      nameItem.className = 'agency-item';
+      nameItem.innerHTML = `<span class="agency-short">${shortName}</span> — ${agencyData[shortName]}`;
+      agencyNamesDiv.appendChild(nameItem);
     });
 
     function handleImageError(img, type) {
@@ -218,8 +389,7 @@
       errorDiv.className = 'error-msg';
       errorDiv.innerHTML = `
         <strong>❌ Image not found: ${type}</strong><br><br>
-        Looking for: <code>${img.src}</code><br><br>
-        The file might not be uploaded yet.
+        Looking for: <code>${img.src}</code>
       `;
       container.replaceChild(errorDiv, img);
     }
