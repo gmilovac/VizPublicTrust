@@ -1,4 +1,28 @@
-<!doctype html>
+.agency-list-intro {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 30px auto;
+      border: 1px solid #e2e8f0;
+      max-width: 900px;
+    }
+    .agency-list-intro h3 {
+      margin: 0 0 16px;
+      color: #1e293b;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .agency-list-intro p {
+      margin: 0 0 16px;
+      color: #64748b;
+      font-size: 14px;
+    }
+    .agency-grid-intro {
+      columns: 2;
+      column-gap: 24px;
+      font-size: 13px;
+      color: #64748b;
+    }<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -53,6 +77,16 @@
     }
     .intro-text strong {
       color: #1e293b;
+    }
+    .intro-text a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .intro-text a:hover {
+      color: #2563eb;
+      text-decoration: underline;
     }
     .metrics-grid {
       display: grid;
@@ -212,6 +246,7 @@
       .gallery {grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px;}
       .metrics-grid {grid-template-columns: 1fr;}
       .agency-grid {columns: 1;}
+      .agency-grid-intro {columns: 1;}
       .intro-text {font-size: 16px; padding: 20px;}
     }
   </style>
@@ -227,9 +262,9 @@
         This page shows research on how Americans feel about 27 different federal government agencies. We asked people questions to measure their trust in these agencies. Below, you'll see charts that visualize the results.
         <br><br>
         <strong>What will you see?</strong><br>
-        • A chart showing trust trends over time<br>
-        • A scatter plot comparing agencies on two key dimensions<br>
-        • Individual profiles for each agency showing their scores on all dimensions
+        • <a href="#trends">A chart showing trust trends over time</a><br>
+        • <a href="#scatter">A scatter plot comparing agencies on two key dimensions</a><br>
+        • <a href="#profiles">Individual profiles for each agency showing their scores on all dimensions</a>
         <br><br>
         <strong>What do we measure?</strong><br>
         We measure trust using seven dimensions. Here's what each one means:
@@ -265,9 +300,17 @@
           <p>Has power and influence</p>
         </div>
       </div>
+
+      <div class="agency-list-intro">
+        <h3>The 27 Federal Agencies We Studied</h3>
+        <p>Here are all the agencies included in this research:</p>
+        <div class="agency-grid-intro" id="agencyNamesIntro">
+          <!-- Agency names populated by JavaScript -->
+        </div>
+      </div>
     </div>
 
-    <div class="section">
+    <div class="section" id="trends">
       <h2 class="section-title">Trust Trends Over Time</h2>
       <p class="section-description">See how trust levels have changed for different agencies. Rising lines show increasing trust, falling lines show decreasing trust.</p>
       <div class="img-container">
@@ -275,7 +318,7 @@
       </div>
     </div>
 
-    <div class="section">
+    <div class="section" id="scatter">
       <h2 class="section-title">Warmth vs Dominance</h2>
       <p class="section-description">See where each agency falls on two key dimensions:</p>
       <div class="info-box">
@@ -289,7 +332,7 @@
       </div>
     </div>
 
-    <div class="section">
+    <div class="section" id="profiles">
       <h2 class="section-title">Individual Agency Profiles</h2>
       <p class="section-description">Each radar chart shows one agency's scores across all trust dimensions.</p>
       
@@ -349,7 +392,16 @@
 
     const gallery = document.getElementById('gallery');
     const agencyNamesDiv = document.getElementById('agencyNames');
+    const agencyNamesIntroDiv = document.getElementById('agencyNamesIntro');
     const radialFolder = 'data/2d_Radial_graphs';
+
+    // Populate intro agency list (with abbreviations)
+    Object.keys(agencyData).forEach(shortName => {
+      const nameItem = document.createElement('div');
+      nameItem.className = 'agency-item';
+      nameItem.innerHTML = `<span class="agency-short">${shortName}</span> — ${agencyData[shortName]}`;
+      agencyNamesIntroDiv.appendChild(nameItem);
+    });
 
     // Create gallery items
     Object.keys(agencyData).forEach(shortName => {
