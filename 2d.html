@@ -127,7 +127,7 @@
       <h2 class="section-title">Trust Trends Over Time</h2>
       <p>This chart displays how trust metrics have evolved across agencies, revealing patterns in public confidence over time.</p>
       <div class="img-container">
-        <img id="trendImg" src="2d- agency_trend_chart.png" alt="Agency Trust Trends Chart" onerror="handleImageError(this, 'Trend Chart')">
+        <img id="trendImg" src="data/2d_trend_chart.png" alt="Agency Trust Trends Chart" onerror="handleImageError(this, 'Trend Chart')">
       </div>
     </div>
 
@@ -135,7 +135,7 @@
       <h2 class="section-title">Warmth vs Dominance Analysis</h2>
       <p>This scatter plot maps agencies across two key dimensions: warmth (perceived friendliness and caring) and dominance (perceived power and influence). The positioning reveals how different agencies are characterized in the public consciousness.</p>
       <div class="img-container">
-        <img id="scatterImg" src="2d- warmth_dominance_scatter.png" alt="Warmth vs Dominance Scatter Plot" onerror="handleImageError(this, 'Scatter Plot')">
+        <img id="scatterImg" src="data/2d_scatter_plot.png" alt="Warmth vs Dominance Scatter Plot" onerror="handleImageError(this, 'Scatter Plot')">
       </div>
     </div>
 
@@ -158,7 +158,7 @@
     ];
 
     const gallery = document.getElementById('gallery');
-    const radialFolder = 'Radial Graphs (5 Dimensions of Trust)';
+    const radialFolder = 'data/Radial Graphs (5 Dimensions of Trust)';
 
     // Create gallery items
     agencies.forEach(agency => {
