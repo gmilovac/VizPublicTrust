@@ -10,7 +10,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #f8fafc;
       color: #1a202c;
       line-height: 1.6;
     }
@@ -24,43 +24,46 @@
       border-radius: 16px;
       padding: 60px 40px;
       margin: 40px 0;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       text-align: center;
     }
     .hero h1 {
       font-size: 48px;
       margin: 0 0 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #1e293b;
     }
     .hero p {
       font-size: 18px;
-      color: #4a5568;
+      color: #64748b;
       max-width: 800px;
       margin: 0 auto;
+      line-height: 1.8;
     }
     .section {
       background: white;
       border-radius: 16px;
       padding: 40px;
       margin: 30px 0;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     .section-title {
       font-size: 32px;
-      margin: 0 0 20px;
-      color: #2d3748;
-      border-bottom: 3px solid #667eea;
-      padding-bottom: 10px;
+      margin: 0 0 12px;
+      color: #1e293b;
+      font-weight: 600;
+    }
+    .section-description {
+      font-size: 16px;
+      color: #64748b;
+      margin-bottom: 24px;
+      line-height: 1.6;
     }
     .img-container {
-      background: #f7fafc;
+      background: #f8fafc;
       border-radius: 12px;
       padding: 20px;
       margin-top: 20px;
-      border: 2px solid #e2e8f0;
+      border: 1px solid #e2e8f0;
     }
     .img-container img {
       width: 100%;
@@ -68,19 +71,65 @@
       border-radius: 8px;
       display: block;
     }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 24px;
+      margin-top: 30px;
+    }
+    .gallery-item {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .gallery-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      border-color: #3b82f6;
+    }
+    .gallery-item img {
+      width: 100%;
+      height: 220px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: white;
+    }
+    .agency-name {
+      text-align: center;
+      margin-top: 12px;
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 14px;
+    }
     .error-msg {
-      background: #fed7d7;
-      border: 2px solid #fc8181;
+      background: #fee;
+      border: 1px solid #fcc;
       border-radius: 8px;
       padding: 15px;
-      color: #742a2a;
+      color: #b91c1c;
       margin: 20px 0;
       text-align: center;
+    }
+    .info-box {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 24px 0;
+      color: #1e40af;
+    }
+    .info-box p {
+      margin: 8px 0;
+      line-height: 1.6;
     }
     @media (max-width: 768px) {
       .hero {padding: 40px 20px;}
       .hero h1 {font-size: 36px;}
       .section {padding: 25px;}
+      .gallery {grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px;}
     }
   </style>
 </head>
@@ -88,12 +137,12 @@
   <div class="container">
     <div class="hero">
       <h1>Agency Trust Visualizations</h1>
-      <p>Explore comprehensive visualizations of public trust metrics across 27 federal agencies. This analysis examines trust dimensions including competence, benevolence, integrity, warmth, and dominance to understand how Americans perceive different government institutions.</p>
+      <p>This page shows how Americans view different government agencies. We measure trust using five key factors: how competent (skilled) they are, how benevolent (caring) they are, how much integrity (honesty) they have, how warm (friendly) they seem, and how dominant (powerful) they are.</p>
     </div>
 
     <div class="section">
       <h2 class="section-title">Trust Trends Over Time</h2>
-      <p>This chart displays how trust metrics have evolved across agencies, revealing patterns in public confidence over time.</p>
+      <p class="section-description">This chart shows how public trust in different agencies has changed over time. You can see which agencies are gaining or losing trust.</p>
       <div class="img-container">
         <img src="data/2d_trend_chart.png" alt="Agency Trust Trends Chart" onerror="handleImageError(this, 'Trend Chart')">
       </div>
@@ -101,14 +150,68 @@
 
     <div class="section">
       <h2 class="section-title">Warmth vs Dominance Analysis</h2>
-      <p>This scatter plot maps agencies across two key dimensions: warmth (perceived friendliness and caring) and dominance (perceived power and influence). The positioning reveals how different agencies are characterized in the public consciousness.</p>
+      <p class="section-description">This scatter plot shows where each agency falls on two scales: how warm (friendly and caring) people think they are, and how dominant (powerful and influential) they are. Agencies in different corners have very different public images.</p>
       <div class="img-container">
         <img src="data/2d_scatter_plot.png" alt="Warmth vs Dominance Scatter Plot" onerror="handleImageError(this, 'Scatter Plot')">
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Individual Agency Trust Profiles</h2>
+      <p class="section-description">Each radar chart below shows one agency's complete trust profile across all five dimensions. The larger the colored area, the higher that agency scores on these trust factors.</p>
+      
+      <div class="info-box">
+        <p><strong>💡 How to read these charts:</strong></p>
+        <p>• Each point on the chart represents one trust dimension (Competence, Benevolence, Integrity, Warmth, Dominance)</p>
+        <p>• The further out from the center, the higher the score</p>
+        <p>• Click any chart to see it larger in a new window</p>
+      </div>
+
+      <div id="gallery" class="gallery">
+        <!-- Gallery populated by JavaScript -->
       </div>
     </div>
   </div>
 
   <script>
+    // List of all 27 agencies
+    const agencies = [
+      'Amtrak', 'BPR', 'CBP', 'CDC', 'CISA', 'Census', 'DOD', 'DOJ', 'Ded', 
+      'EPA', 'FAA', 'FBI', 'FDA', 'FEMA', 'FairHousing', 'IRS', 'LaborDept', 
+      'Lib', 'Mus', 'NASA', 'NEA', 'NSF', 'SocSecurity', 'TSA', 'Treas', 
+      'USPS', 'Zoo'
+    ];
+
+    const gallery = document.getElementById('gallery');
+    const radialFolder = 'data/2d_Radial_graphs';
+
+    // Create a card for each agency
+    agencies.forEach(agency => {
+      const item = document.createElement('div');
+      item.className = 'gallery-item';
+      
+      const img = document.createElement('img');
+      img.src = `${radialFolder}/${agency}.png`;
+      img.alt = `${agency} Trust Profile`;
+      img.onerror = function() {
+        this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%23666"%3EImage not found%3C/text%3E%3C/svg%3E';
+      };
+      
+      const name = document.createElement('div');
+      name.className = 'agency-name';
+      name.textContent = agency;
+      
+      item.appendChild(img);
+      item.appendChild(name);
+      
+      // Click to open full-size in new window
+      item.addEventListener('click', () => {
+        window.open(`${radialFolder}/${agency}.png`, '_blank');
+      });
+      
+      gallery.appendChild(item);
+    });
+
     function handleImageError(img, type) {
       const container = img.parentElement;
       const errorDiv = document.createElement('div');
@@ -116,7 +219,7 @@
       errorDiv.innerHTML = `
         <strong>❌ Image not found: ${type}</strong><br><br>
         Looking for: <code>${img.src}</code><br><br>
-        Full URL attempted: <code>${img.src}</code>
+        The file might not be uploaded yet.
       `;
       container.replaceChild(errorDiv, img);
     }
