@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Agency Visualizations — Overview</title>
+  <style>
+    body{font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; margin:0; color:#0b1220}
+    header{background:#f8fafc;padding:28px 24px;border-bottom:1px solid #e6eef8}
+    h1{margin:0 0 6px;font-size:22px}
+    p.lead{margin:0;color:#334155}
+    main{padding:24px;max-width:1100px;margin:0 auto}
+    section{margin:28px 0}
+    .visual-title{font-size:18px;margin:6px 0 12px;color:#0f172a}
+    .img-wrap{background:#fff;border:1px solid #e6eef8;padding:12px;border-radius:8px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    img.display{width:100%;height:auto;border-radius:6px;display:block}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+    .thumb{width:100%;height:160px;object-fit:contain;background:#fff;border-radius:6px;border:1px solid #eef2f7;padding:6px}
+    footer{margin:30px 0;color:#475569;font-size:14px}
+    .note{background:#f1f5f9;padding:10px;border-left:4px solid #60a5fa;border-radius:4px;color:#0f172a}
+    a.path{color:#0b5cff}
+    @media (max-width:700px){.thumb{height:120px}}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" style="text-decoration:none;"><button style="margin-bottom:10px;padding:8px 14px;border-radius:6px;border:1px solid #cbd5e1;background:#e2e8f0;cursor:pointer;">⬅ Back to Home</button></a>
+    <h1>Agency Visualizations — Overview</h1>
+    <p class="lead">This page presents the main visual outputs used in the study: a trend chart, a warmth/dominance scatter, and a set of radial graphs (one per agency). Scroll down to view each element. If you are preparing files locally, see the notes at the bottom for file placement and CSV links.</p>
+  </header>
+
+  <main>
+    <section id="trend">
+      <div class="visual-title">Trend Chart</div>
+      <div class="img-wrap">
+        <!-- Replace the src with the exact path or URL to your trend chart PNG -->
+        <img class="display" src="./2d- agency_trend_chart.png" alt="Trend chart of trust metrics across agencies">
+      </div>
+    </section>
+
+    <section id="scatter">
+      <div class="visual-title">Warmth & Dominance Scatter</div>
+      <div class="img-wrap">
+        <!-- Replace the src with the exact path or URL to your scatter PNG -->
+        <img class="display" src="./2d- warmth_dominance_scatter.png" alt="Scatter plot of Warmth vs Dominance for agencies">
+      </div>
+    </section>
+
+    <section id="radials">
+      <div class="visual-title">Radial Graphs (5 Dimensions of Trust)</div>
+      <div class="note">Below are the radial graphs for each of the 27 agencies. Place the 27 radial PNGs in a folder named <strong>Radial Graphs (5 Dimensions of Trust)</strong> in the same directory as this HTML file, or update the folder name in the script below to match your setup.</div>
+
+      <div style="height:12px"></div>
+      <div id="gallery" class="gallery" aria-live="polite">
+        <!-- thumbnails populated by script -->
+      </div>
+    </section>
+
+    <footer>
+      <div>Notes:</div>
+      <ul>
+        <li>If you stored the CSVs used to generate these visuals on the server, they are located at:</li>
+        <li><code><a class="path" href="/mnt/data/agency_trust_dimensions.csv">/mnt/data/agency_trust_dimensions.csv</a></code></li>
+        <li><code><a class="path" href="/mnt/data/agency_warmth_dominance.csv">/mnt/data/agency_warmth_dominance.csv</a></code></li>
+        <li>If your radial images have custom names, edit the <code>radialFilenames</code> array in the script below.</li>
+        <li>For best results, keep file and folder names URL-friendly (avoid special characters). Spaces are supported but may need encoding.</li>
+      </ul>
+    </footer>
+  </main>
+
+  <script>
+    // Configuration: update these values if your files are placed elsewhere
+    const radialFolder = './Radial Graphs (5 Dimensions of Trust)/';
+
+    // Default expected filenames for radial images. Replace with your actual filenames if needed.
+    const radialFilenames = [
+      'radial1.png','radial2.png','radial3.png','radial4.png','radial5.png','radial6.png','radial7.png','radial8.png','radial9.png','radial10.png',
+      'radial11.png','radial12.png','radial13.png','radial14.png','radial15.png','radial16.png','radial17.png','radial18.png','radial19.png','radial20.png',
+      'radial21.png','radial22.png','radial23.png','radial24.png','radial25.png','radial26.png','radial27.png'
+    ];
+
+    const gallery = document.getElementById('gallery');
+
+    radialFilenames.forEach((fname, idx)=>{
+      const div = document.createElement('div');
+      const img = document.createElement('img');
+      img.className = 'thumb';
+      img.src = radialFolder + fname;
+      img.alt = 'Radial graph ' + (idx+1) + ' - ' + fname;
+      div.appendChild(img);
+      gallery.appendChild(div);
+
+      // click to open full-size in new tab
+      img.addEventListener('click', ()=>{
+        window.open(img.src, '_blank');
+      });
+    });
+  </script>
+</body>
+</html>
