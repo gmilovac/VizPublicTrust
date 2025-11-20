@@ -95,7 +95,7 @@
       <h2 class="section-title">Trust Trends Over Time</h2>
       <p>This chart displays how trust metrics have evolved across agencies, revealing patterns in public confidence over time.</p>
       <div class="img-container">
-        <img src="./data/2d_trend_chart.png" alt="Agency Trust Trends Chart" onerror="handleImageError(this, 'Trend Chart')">
+        <img src="data/2d_trend_chart.png" alt="Agency Trust Trends Chart" onerror="handleImageError(this, 'Trend Chart')">
       </div>
     </div>
 
@@ -103,7 +103,7 @@
       <h2 class="section-title">Warmth vs Dominance Analysis</h2>
       <p>This scatter plot maps agencies across two key dimensions: warmth (perceived friendliness and caring) and dominance (perceived power and influence). The positioning reveals how different agencies are characterized in the public consciousness.</p>
       <div class="img-container">
-        <img src="./data/2d_scatter_plot.png" alt="Warmth vs Dominance Scatter Plot" onerror="handleImageError(this, 'Scatter Plot')">
+        <img src="data/2d_scatter_plot.png" alt="Warmth vs Dominance Scatter Plot" onerror="handleImageError(this, 'Scatter Plot')">
       </div>
     </div>
   </div>
@@ -116,10 +116,7 @@
       errorDiv.innerHTML = `
         <strong>❌ Image not found: ${type}</strong><br><br>
         Looking for: <code>${img.src}</code><br><br>
-        <strong>Make sure:</strong><br>
-        1. The 'data' folder is in the same location as this HTML file<br>
-        2. File names match exactly: 2d_trend_chart.png and 2d_scatter_plot.png<br>
-        3. You've committed and pushed the images to your repository
+        Full URL attempted: <code>${img.src}</code>
       `;
       container.replaceChild(errorDiv, img);
     }
