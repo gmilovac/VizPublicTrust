@@ -69,30 +69,32 @@
   </main>
 
   <script>
-    // Configuration: update these values if your files are placed elsewhere
-    const radialFolder = 'data/Radial Graphs (5 Dimensions of Trust)';
 
-    // Default expected filenames for radial images. Replace with your actual filenames if needed.
-    const radialFilenames = [
-    'Amtrak.png','BPR.png','CBP.png','CDC.png','CISA.png','Census.png','DOD.png','DOJ.png','Ded.png','EPA.png','FAA.png','FBI.png','FDA.png','FEMA.png','FairHousing.png','IRS.png','LaborDept.png','Lib.png','Mus.png','NASA.png','NEA.png','NSF.png','SocSecurity.png','TSA.png','Treas.png','USPS.png','Zoo.png'
-    ];
+    
+  //   // Configuration: update these values if your files are placed elsewhere
+  //   const radialFolder = 'data/Radial Graphs (5 Dimensions of Trust)';
 
-    const gallery = document.getElementById('gallery');
+  //   // Default expected filenames for radial images. Replace with your actual filenames if needed.
+  //   const radialFilenames = [
+  //   'Amtrak.png','BPR.png','CBP.png','CDC.png','CISA.png','Census.png','DOD.png','DOJ.png','Ded.png','EPA.png','FAA.png','FBI.png','FDA.png','FEMA.png','FairHousing.png','IRS.png','LaborDept.png','Lib.png','Mus.png','NASA.png','NEA.png','NSF.png','SocSecurity.png','TSA.png','Treas.png','USPS.png','Zoo.png'
+  //   ];
 
-    radialFilenames.forEach((fname, idx)=>{
-      const div = document.createElement('div');
-      const img = document.createElement('img');
-      img.className = 'thumb';
-      img.src = radialFolder + fname;
-      img.alt = 'Radial graph ' + (idx+1) + ' - ' + fname;
-      div.appendChild(img);
-      gallery.appendChild(div);
+  //   const gallery = document.getElementById('gallery');
 
-      // click to open full-size in new tab
-      img.addEventListener('click', ()=>{
-        window.open(img.src, '_blank');
-      });
-    });
-  </script>
+  //   radialFilenames.forEach((fname, idx)=>{
+  //     const div = document.createElement('div');
+  //     const img = document.createElement('img');
+  //     img.className = 'thumb';
+  //     img.src = radialFolder + fname;
+  //     img.alt = 'Radial graph ' + (idx+1) + ' - ' + fname;
+  //     div.appendChild(img);
+  //     gallery.appendChild(div);
+
+  //     // click to open full-size in new tab
+  //     img.addEventListener('click', ()=>{
+  //       window.open(img.src, '_blank');
+  //     });
+  //   });
+  // </script>
 </body>
 </html>
