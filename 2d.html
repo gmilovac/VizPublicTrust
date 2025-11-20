@@ -75,12 +75,12 @@
       padding: 15px;
       color: #742a2a;
       margin: 20px 0;
+      text-align: center;
     }
     @media (max-width: 768px) {
       .hero {padding: 40px 20px;}
       .hero h1 {font-size: 36px;}
       .section {padding: 25px;}
-      .gallery {grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;}
     }
   </style>
 </head>
@@ -95,7 +95,7 @@
       <h2 class="section-title">Trust Trends Over Time</h2>
       <p>This chart displays how trust metrics have evolved across agencies, revealing patterns in public confidence over time.</p>
       <div class="img-container">
-        <img id="trendImg" src="data/2d_trend_chart.png" alt="Agency Trust Trends Chart" onerror="handleImageError(this, 'Trend Chart')">
+        <img src="./data/2d_trend_chart.png" alt="Agency Trust Trends Chart" onerror="handleImageError(this, 'Trend Chart')">
       </div>
     </div>
 
@@ -103,11 +103,9 @@
       <h2 class="section-title">Warmth vs Dominance Analysis</h2>
       <p>This scatter plot maps agencies across two key dimensions: warmth (perceived friendliness and caring) and dominance (perceived power and influence). The positioning reveals how different agencies are characterized in the public consciousness.</p>
       <div class="img-container">
-        <img id="scatterImg" src="data/2d_scatter_plot.png" alt="Warmth vs Dominance Scatter Plot" onerror="handleImageError(this, 'Scatter Plot')">
+        <img src="./data/2d_scatter_plot.png" alt="Warmth vs Dominance Scatter Plot" onerror="handleImageError(this, 'Scatter Plot')">
       </div>
     </div>
-
-
   </div>
 
   <script>
@@ -115,7 +113,14 @@
       const container = img.parentElement;
       const errorDiv = document.createElement('div');
       errorDiv.className = 'error-msg';
-      errorDiv.innerHTML = `<strong>Image not found:</strong> ${type} image could not be loaded. Please check the file path: <code>${img.src}</code>`;
+      errorDiv.innerHTML = `
+        <strong>❌ Image not found: ${type}</strong><br><br>
+        Looking for: <code>${img.src}</code><br><br>
+        <strong>Make sure:</strong><br>
+        1. The 'data' folder is in the same location as this HTML file<br>
+        2. File names match exactly: 2d_trend_chart.png and 2d_scatter_plot.png<br>
+        3. You've committed and pushed the images to your repository
+      `;
       container.replaceChild(errorDiv, img);
     }
   </script>
