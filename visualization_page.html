@@ -1,28 +1,3 @@
-<!-- .agency-list-intro {
-      background: #f8fafc;
-      border-radius: 12px;
-      padding: 24px;
-      margin: 30px auto;
-      border: 1px solid #e2e8f0;
-      max-width: 900px;
-    }
-    .agency-list-intro h3 {
-      margin: 0 0 16px;
-      color: #1e293b;
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .agency-list-intro p {
-      margin: 0 0 16px;
-      color: #64748b;
-      font-size: 14px;
-    }
-    .agency-grid-intro {
-      columns: 2;
-      column-gap: 24px;
-      font-size: 13px;
-      color: #64748b;
-    } -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -303,9 +278,10 @@
 
       <div class="agency-list-intro">
         <h3>The 27 Federal Agencies We Studied</h3>
-        <p>Here are all the agencies included in this research:</p>
-        <div class="agency-grid-intro" id="agencyNamesIntro">
-          <!-- Agency names populated by JavaScript -->
+        <p>Here’s what each abbreviation stands for:</p>
+
+        <div class="agency-grid" id="agencyNamesIntro">
+          <!-- Full agency names (moved from bottom) will populate here -->
         </div>
       </div>
     </div>
@@ -322,10 +298,8 @@
       <h2 class="section-title">Warmth vs Dominance</h2>
       <p class="section-description">See where each agency falls on two key dimensions:</p>
       <div class="info-box">
-        <p><strong>🔵 Top Right:</strong> Warm and powerful (caring + influential)</p>
-        <p><strong>🟢 Top Left:</strong> Warm but less powerful (friendly but limited influence)</p>
-        <p><strong>🔴 Bottom Right:</strong> Cold but powerful (strong but impersonal)</p>
-        <p><strong>🟡 Bottom Left:</strong> Cold and less powerful (distant + limited influence)</p>
+        <p><strong>As you go higher:</strong> More dominant</p>
+        <p><strong>As you go to the right:</strong> More warm</p>
       </div>
       <div class="img-container">
         <img src="data/2d_scatter_plot.png" alt="Warmth vs Dominance Scatter Plot" onerror="handleImageError(this, 'Scatter Plot')">
@@ -348,13 +322,7 @@
         <!-- Gallery populated by JavaScript -->
       </div>
 
-      <div class="agency-list">
-        <h3>Agency Abbreviations</h3>
-        <p>Here's what the short names stand for:</p>
-        <div class="agency-grid" id="agencyNames">
-          <!-- Agency names populated by JavaScript -->
-        </div>
-      </div>
+      <!-- Bottom agency list removed (moved to the top) -->
     </div>
   </div>
 
@@ -391,11 +359,11 @@
     };
 
     const gallery = document.getElementById('gallery');
-    const agencyNamesDiv = document.getElementById('agencyNames');
+    const agencyNamesDiv = document.getElementById('agencyNames'); // kept in case other scripts expect it (unused)
     const agencyNamesIntroDiv = document.getElementById('agencyNamesIntro');
     const radialFolder = 'data/2d_Radial_graphs';
 
-    // Populate intro agency list (with abbreviations)
+    // Populate intro agency list (with abbreviations) — now uses the bottom list content
     Object.keys(agencyData).forEach(shortName => {
       const nameItem = document.createElement('div');
       nameItem.className = 'agency-item';
@@ -403,7 +371,7 @@
       agencyNamesIntroDiv.appendChild(nameItem);
     });
 
-    // Create gallery items
+    // Create gallery items (kept as before, but no second population of a bottom list)
     Object.keys(agencyData).forEach(shortName => {
       const item = document.createElement('div');
       item.className = 'gallery-item';
@@ -427,12 +395,6 @@
       });
       
       gallery.appendChild(item);
-
-      // Add to agency names list
-      const nameItem = document.createElement('div');
-      nameItem.className = 'agency-item';
-      nameItem.innerHTML = `<span class="agency-short">${shortName}</span> — ${agencyData[shortName]}`;
-      agencyNamesDiv.appendChild(nameItem);
     });
 
     function handleImageError(img, type) {
@@ -448,3 +410,4 @@
   </script>
 </body>
 </html>
+
