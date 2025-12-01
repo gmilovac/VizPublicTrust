@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trust in Gov — UMAP Explorer</title>
+  <title>Trust in Gov — UMAP Explorer (Dominance + Info)</title>
 
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -15,30 +15,18 @@
     nav { background:#fff; padding:12px 18px; box-shadow:0 2px 6px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; z-index:4000; position:relative; }
     .nav-brand { color:var(--primary-color); font-weight:700; text-decoration:none; }
 
-    /* IMPORTANT: page content shifted right so plot cannot appear underneath sidebar */
-    .main {
-      margin-left: calc(var(--sidebar-w) + 28px);
-      padding:18px;
-      box-sizing:border-box;
-    }
+    /* Page shifted right so sidebar never overlaps plot */
+    .main { margin-left: calc(var(--sidebar-w) + 28px); padding:18px; box-sizing:border-box; }
 
+    /* Sidebar */
     .sidebar {
-      position:fixed;
-      top:76px;
-      left:20px;
-      width:var(--sidebar-w);
-      max-height: calc(100vh - 100px);
-      background:#fff;
-      border-radius:10px;
-      box-shadow:0 12px 34px rgba(0,0,0,0.12);
-      border:1px solid #e9f0f4;
-      padding:12px;
-      overflow:auto;
-      z-index:2147483647;
-      pointer-events:auto !important;
+      position:fixed; top:76px; left:20px; width:var(--sidebar-w);
+      max-height: calc(100vh - 100px); background:#fff; border-radius:10px;
+      box-shadow:0 12px 34px rgba(0,0,0,0.12); border:1px solid #e9f0f4; padding:12px;
+      overflow:auto; z-index:2147483647; pointer-events:auto !important;
     }
     .sidebar h3 { margin:0 0 8px 0; color:var(--primary-color); }
-    .sidebar .controls { display:flex; gap:8px; justify-content:flex-end; margin-bottom:10px; }
+    .controls { display:flex; gap:8px; justify-content:flex-end; margin-bottom:10px; }
     .btn { border:0; padding:7px 10px; border-radius:8px; cursor:pointer; }
     .btn.primary { background:var(--primary-color); color:#fff; }
     .btn.ghost { background:#eef6fa; color:var(--primary-color); }
@@ -54,10 +42,25 @@
     .agency-list li:hover { background:#f2f7fb; }
     .agency-list input[type="checkbox"] { pointer-events:auto !important; }
 
+    /* Dominance legend area */
+    .dom-legend { margin-top:12px; padding-top:10px; border-top:1px dashed #eef6fa; font-size:13px; color:#333; }
+    .dom-legend .examples { display:flex; gap:12px; align-items:center; margin-top:8px; }
+    .dom-sample { display:flex; flex-direction:column; align-items:center; gap:6px; width:72px; }
+    .dom-circle { width:40px; height:40px; border-radius:50%; background:#ddd; display:flex; align-items:center; justify-content:center; }
+
+    /* Plot card */
     .viz-card { background:#fff; border-radius:10px; padding:14px; box-shadow:0 8px 30px rgba(0,0,0,0.06); min-height:680px; position:relative; }
     #plot { width:100%; height:720px; }
 
-    /* tiny debug toast */
+    /* Info buttons */
+    .plot-info { position:absolute; top:22px; left:38px; display:flex; gap:10px; z-index:1000; }
+    .info-btn { width:36px; height:36px; border-radius:50%; background:var(--primary-color); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(10,20,30,0.12); border:0; }
+    .info-modal { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; padding:18px; border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,0.25); z-index:2147483650; width:90%; max-width:720px; display:none; }
+    .info-modal.visible { display:block; }
+    .info-modal h2 { margin-top:0; color:var(--primary-color); }
+    .info-close { margin-top:12px; padding:8px 12px; background:var(--primary-color); color:#fff; border:0; border-radius:8px; cursor:pointer; }
+
+    /* tiny debug toast (optional) */
     #click-toast { position:fixed; right:18px; bottom:18px; background:rgba(0,0,0,0.72); color:#fff; padding:8px 12px; border-radius:8px; font-size:13px; z-index:999999; display:none; pointer-events:none; }
 
     @media (max-width:900px) {
@@ -77,7 +80,7 @@
     </div>
   </nav>
 
-  <!-- Sidebar (fixed) -->
+  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <h3>Agencies</h3>
@@ -92,11 +95,96 @@
     <div class="alpha-filter" id="alpha-filter"></div>
 
     <ul class="agency-list" id="agency-list" aria-label="Agencies"></ul>
+
+    <!-- Dominance legend (min / median / max placeholders; filled after data loads) -->
+    <div class="dom-legend" id="dom-legend" aria-hidden="false">
+      <div style="font-weight:600;color:#444">Dominance (border thickness)</div>
+      <div style="font-size:12px;color:#666;margin-top:6px">Thin → Thick (lower → higher)</div>
+      <div class="examples" id="dom-examples" aria-hidden="true">
+        <div class="dom-sample">
+          <div class="dom-circle" id="dom-min" style="border:2px solid #333"></div>
+          <div style="font-size:12px" id="dom-min-label">min</div>
+        </div>
+        <div class="dom-sample">
+          <div class="dom-circle" id="dom-med" style="border:4px solid #333"></div>
+          <div style="font-size:12px" id="dom-med-label">median</div>
+        </div>
+        <div class="dom-sample">
+          <div class="dom-circle" id="dom-max" style="border:8px solid #333"></div>
+          <div style="font-size:12px" id="dom-max-label">max</div>
+        </div>
+      </div>
+    </div>
   </aside>
 
-  <!-- Main content (shifted right so sidebar never overlaps) -->
+  <!-- Main -->
   <main class="main">
-    <div class="viz-card">
+    <div class="viz-card" id="viz-card">
+      <!-- Info buttons -->
+      <div class="plot-info" id="plot-info">
+        <button class="info-btn" id="metrics-info">i</button>
+        <button class="info-btn" id="agency-info">?</button>
+      </div>
+
+      <!-- Info modals -->
+      <div class="info-modal" id="modal-metrics" role="dialog" aria-modal="true" aria-labelledby="metrics-title">
+        <h2 id="metrics-title">Metric Definitions</h2>
+        <div>
+          <p><strong>Trust</strong> — Overall average across: Competence, Reliability, Ethics, Sincerity, Benevolence.</p>
+          <p><strong>Warmth</strong> — Perceived friendliness (color, red = warm, aqua = cold).</p>
+          <p><strong>Dominance</strong> — Perceived power (border thickness).</p>
+          <p><strong>Five Dimensions:</strong></p>
+          <ul>
+            <li>Competence — Ability to execute</li>
+            <li>Reliability — Consistency</li>
+            <li>Ethics — Moral principles</li>
+            <li>Sincerity — Honesty</li>
+            <li>Benevolence — Care for public interest</li>
+          </ul>
+        </div>
+        <button class="info-close" id="close-metrics">Close</button>
+      </div>
+
+      <div class="info-modal" id="modal-agencies" role="dialog" aria-modal="true" aria-labelledby="agency-title">
+        <h2 id="agency-title">Agency Full Names</h2>
+        <div id="agency-fullnames" style="display:flex;gap:12px;flex-wrap:wrap">
+          <!-- many names will be filled statically for convenience -->
+          <div style="min-width:220px">
+            <div><strong>Amtrak</strong> — Amtrak</div>
+            <div><strong>BPR</strong> — Bureau of Prisons (BPR)</div>
+            <div><strong>CBP</strong> — Customs & Border Protection (CBP)</div>
+            <div><strong>CDC</strong> — Center for Disease Control (CDC)</div>
+            <div><strong>Census</strong> — Census Bureau</div>
+            <div><strong>CISA</strong> — Cybersecurity and Infrastructure Security Agency (CISA)</div>
+            <div><strong>DEd</strong> — Department of Education</div>
+            <div><strong>DOD</strong> — Department of Defense (DoD)</div>
+            <div><strong>DOJ</strong> — Department of Justice (DOJ)</div>
+          </div>
+          <div style="min-width:220px">
+            <div><strong>EPA</strong> — Environmental Protection Agency (EPA)</div>
+            <div><strong>FAA</strong> — Federal Aviation Administration (FAA)</div>
+            <div><strong>FBI</strong> — Federal Bureau of Investigation (FBI)</div>
+            <div><strong>FDA</strong> — Food & Drug Administration (FDA)</div>
+            <div><strong>FEMA</strong> — Federal Emergency Management Agency (FEMA)</div>
+            <div><strong>IRS</strong> — Internal Revenue Service (IRS)</div>
+            <div><strong>LaborDept</strong> — Labor Department</div>
+            <div><strong>Lib</strong> — Library of Congress</div>
+          </div>
+          <div style="min-width:220px">
+            <div><strong>Mus</strong> — Smithsonian Museums</div>
+            <div><strong>NASA</strong> — National Aeronautics & Space Administration (NASA)</div>
+            <div><strong>NEA</strong> — National Endowment for the Arts (NEA)</div>
+            <div><strong>NSF</strong> — National Science Foundation (NSF)</div>
+            <div><strong>SocSecurity</strong> — Social Security Administration</div>
+            <div><strong>Treas</strong> — Treasury</div>
+            <div><strong>TSA</strong> — Transportation Security Administration (TSA)</div>
+            <div><strong>USPS</strong> — U.S. Postal Service (USPS)</div>
+            <div><strong>Zoo</strong> — National Zoo</div>
+          </div>
+        </div>
+        <button class="info-close" id="close-agencies">Close</button>
+      </div>
+
       <div id="plot"></div>
     </div>
   </main>
@@ -104,7 +192,7 @@
   <div id="click-toast"></div>
 
   <script>
-  /* --- DATA + UMAP + Plotly --- */
+  /* --- Globals & elements --- */
   const TRUST_DIMS = ["Competent","Reliable","Ethical","Sincere","Benevolent"];
   const METRICS = ["Warmth","Dominance"];
   const AGENCY_COL = "Agency";
@@ -117,25 +205,37 @@
   const resetBtn = document.getElementById('reset-btn');
   const fileInput = document.getElementById('csv-uploader');
   const fileNameDisplay = document.getElementById('file-name');
+  const domExamples = document.getElementById('dom-examples');
+  const domMinEl = document.getElementById('dom-min');
+  const domMedEl = document.getElementById('dom-med');
+  const domMaxEl = document.getElementById('dom-max');
+  const domMinLabel = document.getElementById('dom-min-label');
+  const domMedLabel = document.getElementById('dom-med-label');
+  const domMaxLabel = document.getElementById('dom-max-label');
+
+  const metricsInfoBtn = document.getElementById('metrics-info');
+  const agencyInfoBtn = document.getElementById('agency-info');
+  const modalMetrics = document.getElementById('modal-metrics');
+  const modalAgencies = document.getElementById('modal-agencies');
+  const closeMetrics = document.getElementById('close-metrics');
+  const closeAgencies = document.getElementById('close-agencies');
+
   const toast = document.getElementById('click-toast');
 
   let dataset = []; // processed + rotated
   let plotId = 'plot';
 
-  function showToast(msg, ms=900){
-    toast.textContent = msg;
-    toast.style.display = 'block';
-    setTimeout(()=> toast.style.display = 'none', ms);
-  }
+  function showToast(msg, ms=900){ toast.textContent = msg; toast.style.display = 'block'; setTimeout(()=> toast.style.display='none', ms); }
 
+  /* --- Data processing --- */
   function processRows(rows){
     const processed = [];
-    rows.forEach(row=>{
+    rows.forEach(row => {
       if (!row[AGENCY_COL]) return;
       const obj = { Agency: row[AGENCY_COL] };
       let valid = true, sum = 0;
       TRUST_DIMS.forEach(dim => { const v = parseFloat(row[dim]); if (Number.isNaN(v)) valid=false; obj[dim]=v; sum+=v; });
-      METRICS.forEach(m => { const v=parseFloat(row[m]); if (Number.isNaN(v)) valid=false; obj[m]=v; });
+      METRICS.forEach(m => { const v = parseFloat(row[m]); if (Number.isNaN(v)) valid=false; obj[m]=v; });
       if (!valid) return;
       obj.Trust = sum / TRUST_DIMS.length;
       processed.push(obj);
@@ -173,16 +273,32 @@
     if (!dx||!dy) return 0; return num/Math.sqrt(dx*dy);
   }
 
+  /* --- Plot rendering (restores colorbar + hover + dominance mapping) --- */
   function renderPlot(data){
     dataset = data.map((d,i)=>({...d,__idx:i}));
+
     const domMin = Math.min(...data.map(d=>d.Dominance));
     const domMax = Math.max(...data.map(d=>d.Dominance));
+    const domMed = median(data.map(d=>d.Dominance));
+    // fill dominance legend (numbers + line widths)
+    domExamples.style.display = 'flex';
+    domMinLabel.textContent = domMin.toFixed(1);
+    domMedLabel.textContent = domMed.toFixed(1);
+    domMaxLabel.textContent = domMax.toFixed(1);
+
+    const borderWidth = (val) => {
+      if (domMin === domMax) return 2;
+      return Math.round(1 + ((val - domMin) / (domMax - domMin)) * 7);
+    };
+    domMinEl.style.border = `${borderWidth(domMin)}px solid #333`;
+    domMedEl.style.border = `${borderWidth(domMed)}px solid #333`;
+    domMaxEl.style.border = `${borderWidth(domMax)}px solid #333`;
+
     const warmthMin = Math.min(...data.map(d=>d.Warmth));
     const warmthMax = Math.max(...data.map(d=>d.Warmth));
     const cabs = Math.max(Math.abs(warmthMin), Math.abs(warmthMax));
 
-    const widths = data.map(d => domMin===domMax ? 2 : 1 + ((d.Dominance-domMin)/(domMax-domMin))*7);
-
+    const widths = data.map(d => borderWidth(d.Dominance));
     const trace = {
       x: data.map(d=>d.x_rot),
       y: data.map(d=>d.y_rot),
@@ -203,7 +319,7 @@
     };
 
     const layout = {
-      margin:{t:48,l:40,r:160,b:40}, // increased right margin so colorbar and labels are visible
+      margin:{t:48,l:40,r:160,b:40},
       hovermode:'closest',
       dragmode:'zoom',
       xaxis:{visible:true, showticklabels:false, title: { text: 'Trust Score (Low → High)', font: { size: 14, color: '#888' } }},
@@ -216,6 +332,9 @@
     });
   }
 
+  function median(arr){ const s = [...arr].sort((a,b)=>a-b); const m = Math.floor(s.length/2); return s.length%2 ? s[m] : (s[m-1]+s[m])/2; }
+
+  /* --- Sidebar population & interactions --- */
   function populateSidebar(data){
     agencyListEl.innerHTML = '';
     const sorted = [...data].sort((a,b)=> a.Agency.localeCompare(b.Agency));
@@ -255,16 +374,8 @@
     resetBtn.onclick = ()=>{ Plotly.relayout(plotId, {'xaxis.autorange':true,'yaxis.autorange':true}); clearHighlight(); };
   }
 
-  function setActiveAlpha(btn){
-    Array.from(alphaFilterEl.querySelectorAll('button')).forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  }
-  function filterSidebar(letter){
-    Array.from(agencyListEl.children).forEach(li => {
-      const name = li.dataset.agency;
-      li.style.display = (!letter || name[0].toUpperCase()===letter) ? '' : 'none';
-    });
-  }
+  function setActiveAlpha(btn){ Array.from(alphaFilterEl.querySelectorAll('button')).forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  function filterSidebar(letter){ Array.from(agencyListEl.children).forEach(li => { const name = li.dataset.agency; li.style.display = (!letter || name[0].toUpperCase()===letter) ? '' : 'none'; }); }
 
   function highlightByNames(names){
     const idx = names.map(n => dataset.findIndex(d => d.Agency===n)).filter(i=>i>=0);
@@ -282,12 +393,11 @@
     const padY = Math.max(0.4, (ymax-ymin)*0.6);
     Plotly.relayout(plotId, {'xaxis.range':[xmin-padX,xmax+padX], 'yaxis.range':[ymin-padY,ymax+padY]});
   }
-  function clearHighlight(){
-    if (!dataset || dataset.length===0) return;
-    Plotly.restyle(plotId, {'marker.size':[dataset.map(()=>25)], 'marker.opacity':[dataset.map(()=>1.0)]});
-  }
+  function clearHighlight(){ if (!dataset || dataset.length===0) return; Plotly.restyle(plotId, {'marker.size':[dataset.map(()=>25)], 'marker.opacity':[dataset.map(()=>1.0)]}); }
 
+  /* --- File loading + boot --- */
   document.addEventListener('DOMContentLoaded', ()=>{
+    // Load default CSV
     fetch('data/agency.csv').then(r => { if (!r.ok) throw new Error('default CSV not found'); return r.text(); })
     .then(txt => {
       fileNameDisplay.textContent = 'agency.csv (default)';
@@ -302,6 +412,7 @@
       alert('Default CSV not found. Please upload a CSV using Load CSV.');
     });
 
+    // file upload
     fileInput.addEventListener('change', e=>{
       const f = e.target.files && e.target.files[0];
       if (!f) return;
@@ -315,15 +426,21 @@
       }});
     });
 
-    // Diagnostic toast for sidebar clicks (shows top element)
+    // Info modal wiring
+    metricsInfoBtn.addEventListener('click', ()=> modalMetrics.classList.add('visible'));
+    agencyInfoBtn.addEventListener('click', ()=> modalAgencies.classList.add('visible'));
+    closeMetrics.addEventListener('click', ()=> modalMetrics.classList.remove('visible'));
+    closeAgencies.addEventListener('click', ()=> modalAgencies.classList.remove('visible'));
+
+    // small diagnostic (optional) to confirm sidebar clicks
     sidebar.addEventListener('click', (e) => {
       const top = document.elementFromPoint(e.clientX, e.clientY);
       const info = (top && (top.tagName + (top.id?('#'+top.id):(' '+(top.className||'')).split(' ')[0]))) || String(top);
-      showToast('Top element: ' + info, 900);
+      // uncomment to see toast during debugging: showToast('Top element: ' + info, 900);
     }, true);
   });
 
-  // quick helper to test top element at top-left of sidebar
+  // helper: developer console quick test
   window.debugTopOfSidebar = function(){ const r = sidebar.getBoundingClientRect(); return document.elementFromPoint(r.left+6, r.top+6); };
   </script>
 </body>
