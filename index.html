@@ -1446,5 +1446,32 @@
         }
       });
     </script>
+
+    <script>
+  // Defensive: ensure pointer-events match the visibility classes for overlays
+  const modal = document.getElementById('welcome-modal');
+  const loading = document.getElementById('loading-overlay');
+
+  const syncPointer = (el, visibleClass='visible') => {
+    if (!el) return;
+    if (el.classList.contains(visibleClass)) {
+      el.style.pointerEvents = 'auto';
+    } else {
+      el.style.pointerEvents = 'none';
+    }
+  };
+
+  // Keep overlays synced whenever class changes (works for most cases)
+  const observerConfig = { attributes: true, attributeFilter: ['class'] };
+  if (modal) {
+    new MutationObserver(() => syncPointer(modal)).observe(modal, observerConfig);
+    syncPointer(modal);
+  }
+  if (loading) {
+    new MutationObserver(() => syncPointer(loading)).observe(loading, observerConfig);
+    syncPointer(loading);
+  }
+</script>
+
   </body>
 </html>
