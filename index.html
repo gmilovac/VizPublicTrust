@@ -15,6 +15,7 @@
         --primary-color: #2c5f7f;
         --bg-color: #f8f9fa;
         --text-color: #333;
+        --sidebar-width: 320px; /* change here to widen/narrow sidebar */
       }
       html, body { height: 100%; }
       body {
@@ -45,12 +46,14 @@
       .nav-item { text-decoration:none; color:#666; padding:8px 14px; border-radius:8px; }
       .nav-item.active { background:var(--primary-color); color:white; }
 
-      /* File uploader */
       #csv-uploader { display:none; }
       #upload-label { background:#eef2f5; color:var(--primary-color); padding:8px 14px; border-radius:8px; cursor:pointer; }
       #file-name { color:#666; font-size:0.85rem; margin-left:6px; }
 
-      /* Layout: leave room for permanent sidebar */
+      /*
+        IMPORTANT LAYOUT CHANGE:
+        Use margin-left on the main content so the plot area never renders under the fixed sidebar.
+      */
       .container {
         display:flex;
         flex-direction:column;
@@ -60,7 +63,7 @@
         width:100%;
         box-sizing:border-box;
         padding:20px;
-        padding-left: 340px; /* room for sidebar */
+        margin-left: calc(var(--sidebar-width) + 24px); /* room for sidebar + gap */
       }
 
       .header-section { text-align:center; margin-bottom:16px; }
@@ -151,12 +154,12 @@
         font-size:0.86rem;
       }
 
-      /* Sidebar (permanent) - FORCE top stacking and pointer-events */
+      /* Sidebar (fixed, not overlapping content) */
       .agency-sidebar {
         position:fixed;
         top:80px;
         left:20px;
-        width:300px;
+        width: var(--sidebar-width);
         max-height: calc(100vh - 120px);
         background:white;
         border-radius:10px;
@@ -164,13 +167,17 @@
         border:1px solid #eef2f5;
         padding:12px;
         overflow:auto;
-        z-index:99999; /* super high to ensure it's above plot overlays */
-        transform: translateZ(0); /* create a new stacking context */
-        pointer-events:auto;
+        z-index:2147483647; /* very high to ensure it's above everything else */
+        transform: translateZ(0); /* create a stacking context */
+        pointer-events:auto !important;
+        -webkit-user-select: none;
+        user-select: none;
       }
+      .agency-sidebar * { user-select: none; } /* avoid unwanted text selection when clicking rapidly */
+
       .sidebar-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
       .agency-list { list-style:none; padding:0; margin:0; }
-      .agency-list li { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; cursor:pointer; pointer-events:auto; }
+      .agency-list li { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; cursor:pointer; pointer-events:auto !important; }
       .agency-list li:hover { background:#f2f7fb; }
       .alpha-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
       .alpha-filter button { background:#f6fbfd; border:1px solid #eef6fa; padding:4px 6px; border-radius:6px; cursor:pointer; color:var(--primary-color); font-size:0.78rem; }
@@ -180,12 +187,13 @@
       .sidebar-action.ghost { background:#eef2f5; color:var(--primary-color); }
 
       /* ensure checkboxes are clickable */
-      .agency-list input[type="checkbox"] { pointer-events:auto; }
+      .agency-list input[type="checkbox"] { pointer-events:auto !important; margin-right:8px; }
 
-      /* Responsive adjustments */
+      /* Small screens */
       @media (max-width:920px) {
-        .container { padding-left: 240px; }
-        .agency-sidebar { width:220px; }
+        :root { --sidebar-width: 220px; }
+        .container { margin-left: calc(var(--sidebar-width) + 24px); }
+        .agency-sidebar { width: var(--sidebar-width); }
       }
     </style>
   </head>
@@ -213,7 +221,7 @@
           <li><b>Color (Warmth):</b> Red = warm, aqua = cold.</li>
           <li><b>Border (Dominance):</b> Thicker outline = higher dominance.</li>
         </ul>
-        <p>Use the sidebar to locate agencies. You can select multiple agencies using the checkboxes or click multiple list items (Ctrl/Cmd+click).</p>
+        <p>Use the sidebar to locate agencies. You can select multiple agencies using the checkboxes.</p>
         <button id="modal-close" class="modal-close-btn">Start Exploring</button>
       </div>
     </div>
@@ -340,6 +348,30 @@
       let currentDataset = []; // will hold processed + rotated data with __idx
       let currentPlotId = "plot";
       let lastHighlightedIndices = [];
+
+      /* ------------------------
+         Defensive: ensure sidebar receives pointer events.
+         Capture-phase listener: if a pointer event occurs inside the sidebar bounding rect,
+         stop propagation so other overlays/handlers can't intercept it.
+         ------------------------ */
+      (function guardSidebarClicks(){
+        function inSidebar(x,y){
+          const r = agencySidebar.getBoundingClientRect();
+          return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+        }
+        // capture-phase pointerdown & click handlers
+        ['pointerdown','mousedown','touchstart','click'].forEach(evt => {
+          document.addEventListener(evt, function(e){
+            try{
+              if (inSidebar(e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX), e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY))) {
+                // stop any other handler earlier/later from intercepting
+                e.stopPropagation();
+                // do not preventDefault — we want the event to reach sidebar elements naturally
+              }
+            }catch(err){}
+          }, true); // capture
+        });
+      })();
 
       /* ------------------------
          Utility helpers
@@ -519,7 +551,7 @@
         buildSidebar(sorted);
         populateAlphaFilter(sorted);
 
-        // Wire Clear/Reset (still present)
+        // Wire Clear/Reset
         clearBtn.onclick = () => {
           clearHighlight();
         };
@@ -562,7 +594,7 @@
           li.appendChild(label);
           agencyListEl.appendChild(li);
 
-          // clicking li toggles checkbox (but avoid double toggles from input)
+          // clicking li toggles checkbox
           li.addEventListener("click", (ev) => {
             if (ev.target.tagName.toLowerCase() === "input") return;
             cb.checked = !cb.checked;
@@ -693,19 +725,17 @@
             }
           });
           mo.observe(el, { attributes:true, attributeFilter:['class'] });
-          // run once
           if (!el.classList.contains('visible')) { el.style.display = 'none'; el.style.pointerEvents = 'none'; }
         };
         observeVisibility(welcomeModal);
         observeVisibility(loadingOverlay);
       });
 
-      // Programmatic highlight helper (sidebar-only)
+      /* Expose programmatic helper */
       window.highlightAgencies = (namesArray) => {
         if (!Array.isArray(namesArray)) namesArray = [namesArray];
         const valid = namesArray.filter(n => currentDataset.findIndex(d=>d.Agency===n)>=0);
         if (valid.length===0) return;
-        // check matching sidebar checkboxes
         Array.from(agencyListEl.querySelectorAll("li")).forEach(li => {
           const cb = li.querySelector("input[type=checkbox]");
           if (!cb) return;
