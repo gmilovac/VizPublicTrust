@@ -153,7 +153,7 @@
         opacity: 1;
       }
 
-      /* --- NEW: Modal Overlay Styles --- */
+      /* Modal Overlay Styles */
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -213,17 +213,16 @@
       }
 
       /* Info Button & Tooltip */
-      /* --- CHANGE 1: Move Info Wrapper to the LEFT --- */
       .info-wrapper {
         position: absolute;
         top: 20px;
-        left: 20px; /* Aligned to the left */
+        left: 20px;
         z-index: 20;
         display: flex;
-        gap: 10px; /* Space between info buttons */
+        gap: 10px;
       }
       .info-container {
-        position: static; /* Allows flex layout in parent */
+        position: static;
       }
       .info-icon {
         width: 32px;
@@ -242,7 +241,6 @@
         font-size: 18px;
       }
 
-      /* --- CHANGE 2: Default tooltip positioning to open INWARD (to the right) --- */
       .info-tooltip {
         visibility: hidden;
         background-color: #fff;
@@ -252,8 +250,8 @@
         padding: 15px;
         position: absolute;
         top: 40px;
-        left: 0; /* Anchor to the left of the button, opens rightward */
-        right: auto; /* Remove conflicting right positioning */
+        left: 0;
+        right: auto;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         opacity: 0;
         transition: opacity 0.3s;
@@ -263,10 +261,9 @@
         pointer-events: none;
       }
 
-      /* Agency specific styles */
       .info-container.agency-info .info-tooltip {
-        max-height: 70vh; /* Ensure vertical fit */
-        overflow-y: auto; /* Enable scrolling if max-height is exceeded */
+        max-height: 70vh;
+        overflow-y: auto;
       }
 
       .info-container:hover .info-tooltip {
@@ -286,14 +283,13 @@
         margin-bottom: 8px;
       }
 
-      /* NEW: Agency List Styles for 3 Columns (Restored functionality) */
       .agency-list-wrapper {
         display: flex;
-        gap: 15px; /* Space between columns */
+        gap: 15px;
         margin-top: 10px;
       }
       .agency-tooltip-table {
-        flex: 1; /* Distribute space evenly among the tables */
+        flex: 1;
         border-collapse: collapse;
         font-size: 0.85rem;
       }
@@ -330,7 +326,7 @@
       }
       .legend-item:last-child {
         margin-bottom: 0;
-      } /* Remove margin from last item */
+      }
       .legend-border-thin {
         width: 12px;
         height: 12px;
@@ -348,115 +344,99 @@
         background: #ddd;
       }
 
-
-
-
-      /*SS*/
       /* Agency Search & List Panel */
-    .search-panel {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      width: 280px;
-      max-height: 500px;
-      display: flex;
-      flex-direction: column;
-      z-index: 15;
-      pointer-events: auto;
-    }
-    .search-panel h3 {
-      margin: 0 0 10px 0;
-      font-size: 1rem;
-      color: var(--primary-color);
-      border-bottom: 2px solid #eee;
-      padding-bottom: 8px;
-    }
-    .search-input {
-      width: 100%;
-      padding: 8px 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      margin-bottom: 10px;
-      box-sizing: border-box;
-      transition: border-color 0.2s;
-    }
-    .search-input:focus {
-      outline: none;
-      border-color: var(--primary-color);
-    }
-    .agency-list {
-      overflow-y: auto;
-      max-height: 380px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .agency-list-item {
-      padding: 8px 10px;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.2s;
-      font-size: 0.85rem;
-      margin-bottom: 2px;
-    }
-    .agency-list-item:hover {
-      background-color: #eef2f5;
-      color: var(--primary-color);
-    }
-    .agency-list-item.selected {
-      background-color: var(--primary-color);
-      color: white;
-      font-weight: 600;
-    }
-    .agency-list-item.hidden {
-      display: none;
-    }
-    
-    /* Control Buttons */
-    .control-buttons {
-      position: absolute;
-      bottom: 30px;
-      left: 30px;
-      display: flex;
-      gap: 10px;
-      z-index: 15;
-    }
-    .control-btn {
-      background: white;
-      border: 2px solid var(--primary-color);
-      color: var(--primary-color);
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      transition: all 0.2s;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    .control-btn:hover {
-      background: var(--primary-color);
-      color: white;
-    }
-    .control-btn:active {
-      transform: scale(0.95);
-    }
+      .search-panel {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 280px;
+        max-height: 500px;
+        display: flex;
+        flex-direction: column;
+        z-index: 15;
+        pointer-events: auto;
+      }
+      .search-panel h3 {
+        margin: 0 0 10px 0;
+        font-size: 1rem;
+        color: var(--primary-color);
+        border-bottom: 2px solid #eee;
+        padding-bottom: 8px;
+      }
+      .search-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+      }
+      .search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+      .agency-list {
+        overflow-y: auto;
+        max-height: 380px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .agency-list-item {
+        padding: 8px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+        margin-bottom: 2px;
+      }
+      .agency-list-item:hover {
+        background-color: #eef2f5;
+        color: var(--primary-color);
+      }
+      .agency-list-item.selected {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+      }
+      .agency-list-item.hidden {
+        display: none;
+      }
 
-      /*SS*/
-
-
-
-
-
-
-
-
-
-      
+      /* Control Buttons */
+      .control-buttons {
+        position: absolute;
+        bottom: 30px;
+        left: 30px;
+        display: flex;
+        gap: 10px;
+        z-index: 15;
+      }
+      .control-btn {
+        background: white;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      .control-btn:hover {
+        background: var(--primary-color);
+        color: white;
+      }
+      .control-btn:active {
+        transform: scale(0.95);
+      }
     </style>
   </head>
   <body>
@@ -466,12 +446,8 @@
         <input type="file" id="csv-uploader" accept=".csv" />
         <label for="csv-uploader" id="upload-label">Load New CSV</label>
         <span id="file-name">Loading default...</span>
-
         <a href="index.html" class="nav-item active">High-Dimensional (UMAP)</a>
         <a href="radial.html" class="nav-item">Radial/Bar Views</a>
-        
-        <!-- <a href="visualization_page.html" class="nav-item">2D Visualizations</a> -->
-
       </div>
     </nav>
 
@@ -510,8 +486,7 @@
         <p>
           To explore the raw data and compare specific agencies directly, switch
           to the <b>Radial/Bar Views</b> tab at the top.
-          <br />
-          <br />
+          <br /><br />
           You can also use the <b>info buttons</b> next to the plot for metric
           definitions and a list of all agency full names.
         </p>
@@ -550,13 +525,7 @@
               <div class="def-item">
                 <strong>Dominance:</strong> Perceived power (Border Thickness).
               </div>
-              <div
-                style="
-                  margin-top: 10px;
-                  border-top: 1px solid #eee;
-                  padding-top: 5px;
-                "
-              >
+              <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 5px;">
                 <strong>5 Dimensions of Trust:</strong>
               </div>
               <ul style="padding-left: 15px; margin: 5px 0">
@@ -575,154 +544,45 @@
               <h4>Agency Full Names</h4>
               <div class="agency-list-wrapper">
                 <table class="agency-tooltip-table">
-                  <tr>
-                    <th>Short Name</th>
-                    <th>Full Name</th>
-                  </tr>
-                  <tr>
-                    <td>Amtrak</td>
-                    <td>Amtrak</td>
-                  </tr>
-                  <tr>
-                    <td>BPR</td>
-                    <td>Bureau of Prisons (BPR)</td>
-                  </tr>
-                  <tr>
-                    <td>CBP</td>
-                    <td>Customs & Border Protection (CBP)</td>
-                  </tr>
-                  <tr>
-                    <td>CDC</td>
-                    <td>Center for Disease Control (CDC)</td>
-                  </tr>
-                  <tr>
-                    <td>Census</td>
-                    <td>Census Bureau</td>
-                  </tr>
-                  <tr>
-                    <td>CISA</td>
-                    <td>
-                      Cybersecurity and Infrastructure Security Agency (CISA)
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>DEd</td>
-                    <td>Department of Education</td>
-                  </tr>
-                  <tr>
-                    <td>DOD</td>
-                    <td>Department of Defense (DoD)</td>
-                  </tr>
-                  <tr>
-                    <td>DOJ</td>
-                    <td>Department of Justice (DOJ)</td>
-                  </tr>
+                  <tr><th>Short Name</th><th>Full Name</th></tr>
+                  <tr><td>Amtrak</td><td>Amtrak</td></tr>
+                  <tr><td>BPR</td><td>Bureau of Prisons (BPR)</td></tr>
+                  <tr><td>CBP</td><td>Customs & Border Protection (CBP)</td></tr>
+                  <tr><td>CDC</td><td>Center for Disease Control (CDC)</td></tr>
+                  <tr><td>Census</td><td>Census Bureau</td></tr>
+                  <tr><td>CISA</td><td>Cybersecurity and Infrastructure Security Agency (CISA)</td></tr>
+                  <tr><td>DEd</td><td>Department of Education</td></tr>
+                  <tr><td>DOD</td><td>Department of Defense (DoD)</td></tr>
+                  <tr><td>DOJ</td><td>Department of Justice (DOJ)</td></tr>
                 </table>
-
                 <table class="agency-tooltip-table">
-                  <tr>
-                    <th>Short Name</th>
-                    <th>Full Name</th>
-                  </tr>
-                  <tr>
-                    <td>EPA</td>
-                    <td>Environmental Protection Agency (EPA)</td>
-                  </tr>
-                  <tr>
-                    <td>FAA</td>
-                    <td>Federal Aviation Administration (FAA)</td>
-                  </tr>
-                  <tr>
-                    <td>FairHousing</td>
-                    <td>Office of Fair Housing and Equal Opportunity</td>
-                  </tr>
-                  <tr>
-                    <td>FBI</td>
-                    <td>Federal Bureau of Investigation (FBI)</td>
-                  </tr>
-                  <tr>
-                    <td>FDA</td>
-                    <td>Food & Drug Administration (FDA)</td>
-                  </tr>
-                  <tr>
-                    <td>FEMA</td>
-                    <td>Federal Emergency Management Agency (FEMA)</td>
-                  </tr>
-                  <tr>
-                    <td>IRS</td>
-                    <td>Internal Revenue Services (IRS)</td>
-                  </tr>
-                  <tr>
-                    <td>LaborDept</td>
-                    <td>Labor Department</td>
-                  </tr>
-                  <tr>
-                    <td>Lib</td>
-                    <td>Library of Congress</td>
-                  </tr>
+                  <tr><th>Short Name</th><th>Full Name</th></tr>
+                  <tr><td>EPA</td><td>Environmental Protection Agency (EPA)</td></tr>
+                  <tr><td>FAA</td><td>Federal Aviation Administration (FAA)</td></tr>
+                  <tr><td>FairHousing</td><td>Office of Fair Housing and Equal Opportunity</td></tr>
+                  <tr><td>FBI</td><td>Federal Bureau of Investigation (FBI)</td></tr>
+                  <tr><td>FDA</td><td>Food & Drug Administration (FDA)</td></tr>
+                  <tr><td>FEMA</td><td>Federal Emergency Management Agency (FEMA)</td></tr>
+                  <tr><td>IRS</td><td>Internal Revenue Services (IRS)</td></tr>
+                  <tr><td>LaborDept</td><td>Labor Department</td></tr>
+                  <tr><td>Lib</td><td>Library of Congress</td></tr>
                 </table>
-
                 <table class="agency-tooltip-table">
-                  <tr>
-                    <th>Short Name</th>
-                    <th>Full Name</th>
-                  </tr>
-                  <tr>
-                    <td>Mus</td>
-                    <td>Smithsonian Museums</td>
-                  </tr>
-                  <tr>
-                    <td>NASA</td>
-                    <td>National Aeronautics & Space Administration (NASA)</td>
-                  </tr>
-                  <tr>
-                    <td>NEA</td>
-                    <td>National Endowment for the Arts (NEA)</td>
-                  </tr>
-                  <tr>
-                    <td>NSF</td>
-                    <td>National Science Foundation (NSF)</td>
-                  </tr>
-                  <tr>
-                    <td>SocSecurity</td>
-                    <td>Social Security Administration</td>
-                  </tr>
-                  <tr>
-                    <td>Treas</td>
-                    <td>Treasury</td>
-                  </tr>
-                  <tr>
-                    <td>TSA</td>
-                    <td>Transportation Security Administration (TSA)</td>
-                  </tr>
-                  <tr>
-                    <td>USPS</td>
-                    <td>U.S. Postal Service (USPS)</td>
-                  </tr>
-                  <tr>
-                    <td>Zoo</td>
-                    <td>National Zoo</td>
-                  </tr>
+                  <tr><th>Short Name</th><th>Full Name</th></tr>
+                  <tr><td>Mus</td><td>Smithsonian Museums</td></tr>
+                  <tr><td>NASA</td><td>National Aeronautics & Space Administration (NASA)</td></tr>
+                  <tr><td>NEA</td><td>National Endowment for the Arts (NEA)</td></tr>
+                  <tr><td>NSF</td><td>National Science Foundation (NSF)</td></tr>
+                  <tr><td>SocSecurity</td><td>Social Security Administration</td></tr>
+                  <tr><td>Treas</td><td>Treasury</td></tr>
+                  <tr><td>TSA</td><td>Transportation Security Administration (TSA)</td></tr>
+                  <tr><td>USPS</td><td>U.S. Postal Service (USPS)</td></tr>
+                  <tr><td>Zoo</td><td>National Zoo</td></tr>
                 </table>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- <div class="legend-overlay">
-          <div class="legend-item">
-            <div class="legend-border-thin"></div>
-            <span>Low Dominance</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-border-thick"></div>
-            <span>High Dominance</span>
-          </div>
-        </div> -->
-
-
-        
-      /*SS*/
 
         <div class="legend-overlay">
           <div class="legend-item">
@@ -734,33 +594,22 @@
             <span>High Dominance</span>
           </div>
         </div>
-        
+
         <div class="search-panel">
           <h3>Agency Finder</h3>
-          <input
-            type="text"
-            id="agency-search"
-            class="search-input"
-            placeholder="Search agencies..."
-          />
+          <input type="text" id="agency-search" class="search-input" placeholder="Search agencies..." />
           <ul id="agency-list" class="agency-list"></ul>
         </div>
-        
+
         <div class="control-buttons">
           <button id="reset-view" class="control-btn">Reset View</button>
           <button id="clear-selection" class="control-btn">Clear Selection</button>
         </div>
-        
-        <div id="plot"></div>
-
-
-        /*SS*/
 
         <div id="plot"></div>
       </div>
     </div>
-
-    <script>
+<script>
       // --- Globals ---
       const TRUST_DIMS = [
         "Competent",
@@ -772,16 +621,6 @@
       const METRICS = ["Warmth", "Dominance"];
       const AGENCY_COL = "Agency";
 
-      // const loadingOverlay = document.getElementById("loading-overlay");
-      // const fileNameDisplay = document.getElementById("file-name");
-      // const fileInput = document.getElementById("csv-uploader");
-      // const welcomeModal = document.getElementById("welcome-modal");
-      // const modalCloseBtn = document.getElementById("modal-close");
-
-
-
-/*SS*/
-
       const loadingOverlay = document.getElementById("loading-overlay");
       const fileNameDisplay = document.getElementById("file-name");
       const fileInput = document.getElementById("csv-uploader");
@@ -791,14 +630,11 @@
       const agencyListEl = document.getElementById("agency-list");
       const resetViewBtn = document.getElementById("reset-view");
       const clearSelectionBtn = document.getElementById("clear-selection");
-      
+
       let currentData = [];
       let selectedAgency = null;
       let originalLayout = null;
 
-/*SS*/
-
-      
       // --- Core Functions ---
 
       /**
@@ -919,135 +755,36 @@
         loadingOverlay.classList.remove("visible");
       }
 
-      // /**
-      //  * Renders the Plotly chart
-      //  */
-      // function renderPlot(dataset) {
-      //   // Find min/max for scaling
-      //   const domMin = Math.min(...dataset.map((d) => d.Dominance));
-      //   const domMax = Math.max(...dataset.map((d) => d.Dominance));
-
-      //   // Find min/max for Warmth to define the colorbar range
-      //   const warmthMin = Math.min(...dataset.map((d) => d.Warmth));
-      //   const warmthMax = Math.max(...dataset.map((d) => d.Warmth));
-
-      //   // Use a symmetric range around zero for Warmth for a balanced colorscale
-      //   const c_abs_max = Math.max(Math.abs(warmthMin), Math.abs(warmthMax));
-
-      //   // Handle case where all dominance values are the same
-      //   const getLineWidth = (d) => {
-      //     if (domMin === domMax) return 2; // Default width
-      //     return 1 + ((d - domMin) / (domMax - domMin)) * 7;
-      //   };
-
-      //   // Custom colorscale for bright aqua blue to bright red
-      //   // Format: [[scale_position, color_hex], ...]
-      //   const custom_colorscale = [
-      //     [0.0, "#40e0d0"], // Bright Aqua (Low Warmth)
-      //     [0.5, "#ffffff"], // White (Midpoint - Zero Warmth)
-      //     [1.0, "#ff0000"], // Bright Red (High Warmth)
-      //   ];
-
-      //   const trace = {
-      //     x: dataset.map((d) => d.x_rot),
-      //     y: dataset.map((d) => d.y_rot),
-      //     text: dataset.map((d) => d.Agency),
-      //     hovertemplate: dataset.map((d) => {
-      //       let hover =
-      //         `<b>${d.Agency}</b><br>` +
-      //         `Trust: ${d.Trust.toFixed(2)}<br>` +
-      //         `Warmth: ${d.Warmth.toFixed(1)}<br>` +
-      //         `Dominance: ${d.Dominance.toFixed(1)}<br>` +
-      //         `<i>Dimensions:</i><br>`;
-      //       TRUST_DIMS.forEach((dim) => {
-      //         hover += `${dim}: ${d[dim].toFixed(2)}<br>`;
-      //       });
-      //       return hover + "<extra></extra>";
-      //     }),
-      //     mode: "markers+text",
-      //     textposition: "top center",
-      //     marker: {
-      //       size: 25,
-      //       color: dataset.map((d) => d.Warmth),
-      //       // *** UPDATED: Use custom_colorscale for brighter blue/red ***
-      //       colorscale: custom_colorscale,
-      //       cmin: -c_abs_max, // Set cmin to the negative of the max absolute value
-      //       cmax: c_abs_max, // Set cmax to the max absolute value
-      //       colorbar: {
-      //         title: "Warmth",
-      //         thickness: 15,
-      //         len: 0.5,
-      //         y: 0.5,
-      //         x: 1.05,
-      //       },
-      //       line: {
-      //         width: dataset.map((d) => getLineWidth(d.Dominance)),
-      //         color: "#333",
-      //       },
-      //       symbol: "circle",
-      //     },
-      //     type: "scatter",
-      //   };
-
-      //   const layout = {
-      //     hovermode: "closest",
-      //     dragmode: "zoom",
-      //     showlegend: false,
-      //     margin: { t: 40, b: 40, l: 40, r: 80 },
-      //     xaxis: {
-      //       visible: true,
-      //       showgrid: false,
-      //       zeroline: false,
-      //       showticklabels: false,
-      //       title: "Trust Score (Low → High)",
-      //       titlefont: { size: 14, color: "#888" },
-      //     },
-      //     yaxis: {
-      //       visible: false,
-      //       showgrid: false,
-      //       zeroline: false,
-      //     },
-      //     plot_bgcolor: "#fff",
-      //     paper_bgcolor: "#fff",
-      //   };
-
-      //   Plotly.newPlot("plot", [trace], layout, {
-      //     responsive: true,
-      //     displayModeBar: false,
-      //   });
-      // }
-
-      
       /**
        * Renders the Plotly chart
        */
       function renderPlot(dataset) {
         currentData = dataset;
-        
+
         // Find min/max for scaling
         const domMin = Math.min(...dataset.map((d) => d.Dominance));
         const domMax = Math.max(...dataset.map((d) => d.Dominance));
-      
+
         // Find min/max for Warmth to define the colorbar range
         const warmthMin = Math.min(...dataset.map((d) => d.Warmth));
         const warmthMax = Math.max(...dataset.map((d) => d.Warmth));
-      
+
         // Use a symmetric range around zero for Warmth for a balanced colorscale
         const c_abs_max = Math.max(Math.abs(warmthMin), Math.abs(warmthMax));
-      
+
         // Handle case where all dominance values are the same
         const getLineWidth = (d) => {
           if (domMin === domMax) return 2; // Default width
           return 1 + ((d - domMin) / (domMax - domMin)) * 7;
         };
-      
+
         // Custom colorscale for bright aqua blue to bright red
         const custom_colorscale = [
           [0.0, "#40e0d0"], // Bright Aqua (Low Warmth)
           [0.5, "#ffffff"], // White (Midpoint - Zero Warmth)
           [1.0, "#ff0000"], // Bright Red (High Warmth)
         ];
-      
+
         const trace = {
           x: dataset.map((d) => d.x_rot),
           y: dataset.map((d) => d.y_rot),
@@ -1088,7 +825,7 @@
           },
           type: "scatter",
         };
-      
+
         const layout = {
           hovermode: "closest",
           dragmode: "zoom",
@@ -1110,17 +847,17 @@
           plot_bgcolor: "#fff",
           paper_bgcolor: "#fff",
         };
-      
+
         originalLayout = JSON.parse(JSON.stringify(layout));
-      
+
         Plotly.newPlot("plot", [trace], layout, {
           responsive: true,
           displayModeBar: false,
         });
-      
+
         // Populate agency list
         populateAgencyList(dataset);
-        
+
         // Add click handler for points
         document.getElementById('plot').on('plotly_click', function(data) {
           if (data.points.length > 0) {
@@ -1129,15 +866,15 @@
           }
         });
       }
-      
+
       /**
        * Populate the searchable agency list
        */
       function populateAgencyList(dataset) {
-        const sortedAgencies = [...dataset].sort((a, b) => 
+        const sortedAgencies = [...dataset].sort((a, b) =>
           a.Agency.localeCompare(b.Agency)
         );
-        
+
         agencyListEl.innerHTML = '';
         sortedAgencies.forEach(agency => {
           const li = document.createElement('li');
@@ -1148,16 +885,16 @@
           agencyListEl.appendChild(li);
         });
       }
-      
+
       /**
        * Highlight and zoom to a specific agency with spotlight effect
        */
       function highlightAgency(agencyName) {
         selectedAgency = agencyName;
         const agencyData = currentData.find(d => d.Agency === agencyName);
-        
+
         if (!agencyData) return;
-      
+
         // Update list selection
         document.querySelectorAll('.agency-list-item').forEach(item => {
           if (item.dataset.agency === agencyName) {
@@ -1167,44 +904,44 @@
             item.classList.remove('selected');
           }
         });
-      
+
         // Create spotlight effect by dimming others and enlarging selected
-        const sizes = currentData.map(d => 
+        const sizes = currentData.map(d =>
           d.Agency === agencyName ? 40 : 20
         );
-        const opacities = currentData.map(d => 
+        const opacities = currentData.map(d =>
           d.Agency === agencyName ? 1 : 0.2
         );
         const lineWidths = currentData.map((d, i) => {
           const domMin = Math.min(...currentData.map(d => d.Dominance));
           const domMax = Math.max(...currentData.map(d => d.Dominance));
-          const baseWidth = domMin === domMax ? 2 : 
+          const baseWidth = domMin === domMax ? 2 :
             1 + ((d.Dominance - domMin) / (domMax - domMin)) * 7;
           return d.Agency === agencyName ? baseWidth + 3 : baseWidth;
         });
-      
+
         Plotly.restyle('plot', {
           'marker.size': [sizes],
           'marker.opacity': [opacities],
           'marker.line.width': [lineWidths]
         });
-      
+
         // Zoom to agency with padding
         const padding = 3;
         const xRange = [agencyData.x_rot - padding, agencyData.x_rot + padding];
         const yRange = [agencyData.y_rot - padding, agencyData.y_rot + padding];
-      
+
         Plotly.relayout('plot', {
           'xaxis.range': xRange,
           'yaxis.range': yRange
         });
-      
+
         // Flash animation
         let flashCount = 0;
         const flashInterval = setInterval(() => {
           const isVisible = flashCount % 2 === 0;
           Plotly.restyle('plot', {
-            'marker.opacity': [currentData.map(d => 
+            'marker.opacity': [currentData.map(d =>
               d.Agency === agencyName ? (isVisible ? 1 : 0.5) : 0.2
             )]
           });
@@ -1212,25 +949,25 @@
           if (flashCount >= 6) {
             clearInterval(flashInterval);
             Plotly.restyle('plot', {
-              'marker.opacity': [currentData.map(d => 
+              'marker.opacity': [currentData.map(d =>
                 d.Agency === agencyName ? 1 : 0.2
               )]
             });
           }
         }, 200);
       }
-      
+
       /**
        * Clear selection and reset to normal view
        */
       function clearSelection() {
         selectedAgency = null;
-        
+
         // Clear list selection
         document.querySelectorAll('.agency-list-item').forEach(item => {
           item.classList.remove('selected');
         });
-      
+
         // Reset marker sizes and opacities
         const domMin = Math.min(...currentData.map(d => d.Dominance));
         const domMax = Math.max(...currentData.map(d => d.Dominance));
@@ -1238,14 +975,14 @@
           if (domMin === domMax) return 2;
           return 1 + ((d.Dominance - domMin) / (domMax - domMin)) * 7;
         });
-      
+
         Plotly.restyle('plot', {
           'marker.size': [currentData.map(() => 25)],
           'marker.opacity': [currentData.map(() => 0.9)],
           'marker.line.width': [lineWidths]
         });
       }
-      
+
       /**
        * Reset the view to original layout
        */
@@ -1259,19 +996,6 @@
         }
       }
 
-
-
-
-
-
-
-
-
-
-
-
-
-      
       // --- Rotation & Correlation Helpers ---
 
       function rotateToMaximizeCorrelation(data, xCol, yCol, targetCol) {
@@ -1358,7 +1082,7 @@
             fileNameDisplay.textContent = "No file loaded.";
           });
 
-        // 2. NEW: Modal Logic
+        // 2. Modal Logic
         // Check if the modal has been shown before
         if (localStorage.getItem("trustExplorerModalShown") !== "true") {
           // Show the modal after the plot has finished rendering (triggered by custom event)
@@ -1379,61 +1103,38 @@
       });
 
       // 3. Listen for user-uploaded file
-      // fileInput.addEventListener("change", (event) => {
-      //   const file = event.target.files[0];
-      //   if (file) {
-      //     fileNameDisplay.textContent = file.name;
-      //     Papa.parse(file, {
-      //       header: true,
-      //       dynamicTyping: false, // Parse as strings, convert manually
-      //       skipEmptyLines: true,
-      //       complete: (results) => processAndPlot(results.data),
-      //       error: (err) => {
-      //         alert(`Error parsing file: ${err.message}`);
-      //       },
-      //     });
-      //   }
-      // });
+      fileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          fileNameDisplay.textContent = file.name;
+          Papa.parse(file, {
+            header: true,
+            dynamicTyping: false,
+            skipEmptyLines: true,
+            complete: (results) => processAndPlot(results.data),
+            error: (err) => {
+              alert(`Error parsing file: ${err.message}`);
+            },
+          });
+        }
+      });
 
-
-/*SS*/
-
-      // 3. Listen for user-uploaded file
-        fileInput.addEventListener("change", (event) => {
-          const file = event.target.files[0];
-          if (file) {
-            fileNameDisplay.textContent = file.name;
-            Papa.parse(file, {
-              header: true,
-              dynamicTyping: false,
-              skipEmptyLines: true,
-              complete: (results) => processAndPlot(results.data),
-              error: (err) => {
-                alert(`Error parsing file: ${err.message}`);
-              },
-            });
+      // 4. Search input listener
+      agencySearchInput.addEventListener("input", (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        document.querySelectorAll('.agency-list-item').forEach(item => {
+          const agencyName = item.dataset.agency.toLowerCase();
+          if (agencyName.includes(searchTerm)) {
+            item.classList.remove('hidden');
+          } else {
+            item.classList.add('hidden');
           }
         });
-        
-        // 4. Search input listener
-        agencySearchInput.addEventListener("input", (e) => {
-          const searchTerm = e.target.value.toLowerCase();
-          document.querySelectorAll('.agency-list-item').forEach(item => {
-            const agencyName = item.dataset.agency.toLowerCase();
-            if (agencyName.includes(searchTerm)) {
-              item.classList.remove('hidden');
-            } else {
-              item.classList.add('hidden');
-            }
-          });
-        });
-        
-        // 5. Control button listeners
-        resetViewBtn.addEventListener("click", resetView);
-        clearSelectionBtn.addEventListener("click", clearSelection);
+      });
 
-      /*SS*/
-
+      // 5. Control button listeners
+      resetViewBtn.addEventListener("click", resetView);
+      clearSelectionBtn.addEventListener("click", clearSelection);
     </script>
   </body>
 </html>
