@@ -25,6 +25,28 @@
         flex-direction: column;
         min-height: 100vh;
       }
+            /* Ensure permanent sidebar sits above plot and is clickable */
+      .agency-sidebar {
+        z-index: 1200; /* higher than nav/plot so sidebar elements are on top */
+        pointer-events: auto;
+      }
+      
+      /* Make modal and loading overlays non-interactive when hidden,
+         but accept events when visible. This prevents them from blocking clicks. */
+      .modal-overlay {
+        pointer-events: none; /* don't intercept clicks when invisible */
+      }
+      .modal-overlay.visible {
+        pointer-events: auto; /* allow interaction only when visible */
+      }
+      
+      #loading-overlay {
+        pointer-events: none; /* allow clicking through when hidden */
+      }
+      #loading-overlay.visible {
+        pointer-events: auto; /* block interaction only while visible */
+      }
+
 
       /* Navigation Bar */
       nav {
