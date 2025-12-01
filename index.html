@@ -16,9 +16,7 @@
         --bg-color: #f8f9fa;
         --text-color: #333;
       }
-      html, body {
-        height: 100%;
-      }
+      html, body { height: 100%; }
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
           Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -52,7 +50,9 @@
       #upload-label { background:#eef2f5; color:var(--primary-color); padding:8px 14px; border-radius:8px; cursor:pointer; }
       #file-name { color:#666; font-size:0.85rem; margin-left:6px; }
 
-      /* Agency dropdown */
+      /* Agency dropdown label + select */
+      .dropdown-wrapper { display:flex; flex-direction:column; gap:4px; }
+      .dropdown-label { font-size:0.78rem; color:#444; margin-left:4px; }
       #agency-select {
         min-width:220px;
         padding:8px 10px;
@@ -60,6 +60,7 @@
         border:1px solid #e6eef3;
         background:white;
         font-weight:500;
+        height:38px; /* visible single-line box */
       }
 
       /* Layout: leave room for permanent sidebar */
@@ -163,7 +164,7 @@
         font-size:0.86rem;
       }
 
-      /* Sidebar (permanent) */
+      /* Sidebar (permanent) - FORCE top stacking and pointer-events */
       .agency-sidebar {
         position:fixed;
         top:80px;
@@ -176,12 +177,13 @@
         border:1px solid #eef2f5;
         padding:12px;
         overflow:auto;
-        z-index:4000;
+        z-index:99999; /* super high to ensure it's above plot overlays */
+        transform: translateZ(0); /* create a new stacking context */
         pointer-events:auto;
       }
       .sidebar-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
       .agency-list { list-style:none; padding:0; margin:0; }
-      .agency-list li { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; cursor:pointer; }
+      .agency-list li { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; cursor:pointer; pointer-events:auto; }
       .agency-list li:hover { background:#f2f7fb; }
       .alpha-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
       .alpha-filter button { background:#f6fbfd; border:1px solid #eef6fa; padding:4px 6px; border-radius:6px; cursor:pointer; color:var(--primary-color); font-size:0.78rem; }
@@ -189,6 +191,9 @@
       .sidebar-action { padding:6px 8px; border-radius:8px; cursor:pointer; border:0; font-weight:600; }
       .sidebar-action.primary { background:var(--primary-color); color:white; }
       .sidebar-action.ghost { background:#eef2f5; color:var(--primary-color); }
+
+      /* ensure checkboxes are clickable */
+      .agency-list input[type="checkbox"] { pointer-events:auto; }
 
       /* Responsive adjustments */
       @media (max-width:920px) {
@@ -206,8 +211,11 @@
         <label id="upload-label" for="csv-uploader">Load New CSV</label>
         <span id="file-name">Loading default...</span>
 
-        <!-- Multi-select dropdown (will be populated after UMAP) -->
-        <select id="agency-select" multiple title="Select agencies (hold Ctrl/Cmd to multi-select)"></select>
+        <!-- Dropdown with explicit label so the "Jump to agency" cue is visible -->
+        <div class="dropdown-wrapper" style="margin-left:6px;">
+          <div class="dropdown-label">Jump to agency (multi-select)</div>
+          <select id="agency-select" multiple title="Select agencies (hold Ctrl/Cmd to multi-select)"></select>
+        </div>
 
         <a class="nav-item active" href="index.html">High-Dimensional (UMAP)</a>
         <a class="nav-item" href="radial.html">Radial/Bar Views</a>
@@ -224,7 +232,7 @@
           <li><b>Color (Warmth):</b> Red = warm, aqua = cold.</li>
           <li><b>Border (Dominance):</b> Thicker outline = higher dominance.</li>
         </ul>
-        <p>Use the sidebar or the dropdown to locate agencies. You can select multiple agencies (Ctrl/Cmd + click / or use checkboxes).</p>
+        <p>Use the sidebar or the dropdown to locate agencies. You can select multiple agencies (Ctrl/Cmd + click or use checkboxes).</p>
         <button id="modal-close" class="modal-close-btn">Start Exploring</button>
       </div>
     </div>
@@ -427,7 +435,6 @@
         showLoading(false);
         // show modal once (controlled by localStorage)
         if (localStorage.getItem("trustExplorerModalShown") !== "true") {
-          // wait briefly for plot to render
           setTimeout(()=> showModal(true), 550);
         }
       }
@@ -531,7 +538,7 @@
         // dropdown (multi)
         agencySelect.innerHTML = "";
         const placeholder = document.createElement("option");
-        placeholder.textContent = "Jump to agency... (multi-select supported)";
+        placeholder.textContent = "Jump to agency... (hold Ctrl/Cmd to multi-select)";
         placeholder.disabled = true;
         placeholder.selected = true;
         agencySelect.appendChild(placeholder);
@@ -543,6 +550,9 @@
           o.textContent = d.Agency;
           agencySelect.appendChild(o);
         });
+
+        // Make sure the select is clickable and visible
+        agencySelect.style.pointerEvents = "auto";
 
         // sidebar list build
         buildSidebar(sorted);
@@ -575,13 +585,13 @@
         sorted.forEach(d => {
           const li = document.createElement("li");
           li.dataset.agency = d.Agency;
+          li.style.pointerEvents = "auto";
 
           const cb = document.createElement("input");
           cb.type = "checkbox";
           cb.style.marginRight = "8px";
           cb.title = `Select ${d.Agency}`;
           cb.addEventListener("change", (e) => {
-            // collect selected names
             const selected = Array.from(agencyListEl.querySelectorAll("input[type=checkbox]:checked")).map(c => c.parentElement.dataset.agency);
             if (selected.length === 0) { clearHighlight(); syncDropdownSelection([]); }
             else { highlightMultipleByNames(selected); syncDropdownSelection(selected); }
@@ -603,7 +613,7 @@
           li.appendChild(label);
           agencyListEl.appendChild(li);
 
-          // clicking li toggles checkbox (but avoid double toggles)
+          // clicking li toggles checkbox (but avoid double toggles from input)
           li.addEventListener("click", (ev) => {
             if (ev.target.tagName.toLowerCase() === "input") return;
             cb.checked = !cb.checked;
@@ -752,12 +762,11 @@
         observeVisibility(loadingOverlay);
       });
 
-      // expose a small helper in case you want to programmatically highlight by name:
+      // Utility: programmatic highlight if needed
       window.highlightAgencies = (namesArray) => {
         if (!Array.isArray(namesArray)) namesArray = [namesArray];
         const valid = namesArray.filter(n => currentDataset.findIndex(d=>d.Agency===n)>=0);
         if (valid.length===0) return;
-        // sync controls
         syncSidebarSelection(valid);
         syncDropdownSelection(valid);
         highlightMultipleByNames(valid);
