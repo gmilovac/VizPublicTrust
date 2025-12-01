@@ -88,6 +88,21 @@
         margin-left: 10px;
       }
 
+      /* Agency selector in nav */
+      #agency-select {
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #e6eef3;
+        background: white;
+        color: #333;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      #agency-select:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(44, 95, 127, 0.08);
+      }
+
       /* Main Layout */
       .container {
         flex: 1;
@@ -347,6 +362,102 @@
         margin-right: 8px;
         background: #ddd;
       }
+
+      /* --- NEW: Agency Sidebar --- */
+      .agency-sidebar {
+        position: fixed;
+        top: 80px;
+        left: 20px;
+        width: 280px;
+        max-height: calc(100vh - 140px);
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        border: 1px solid #eef2f5;
+        padding: 12px;
+        overflow-y: auto;
+        z-index: 110;
+        transition: transform 0.25s ease, opacity 0.25s ease;
+        transform: translateX(-8px);
+      }
+      .agency-sidebar .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .agency-sidebar h3 {
+        margin: 0;
+        font-size: 0.95rem;
+        color: var(--primary-color);
+      }
+      .agency-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .agency-list li {
+        padding: 6px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #333;
+      }
+      .agency-list li:hover {
+        background: #f2f7fb;
+      }
+      .agency-list .short {
+        color: #666;
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+      .sidebar-close {
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        color: #666;
+        font-weight: 700;
+      }
+      .sidebar-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .alpha-filter {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .alpha-filter button {
+        background: #f6fbfd;
+        border: 1px solid #eef6fa;
+        padding: 4px 6px;
+        font-size: 0.75rem;
+        border-radius: 6px;
+        cursor: pointer;
+        color: var(--primary-color);
+      }
+      .alpha-filter button.active {
+        background: var(--primary-color);
+        color: white;
+      }
+      .alpha-filter button:focus {
+        outline: none;
+      }
+
+      /* Mobile adjustments for sidebar */
+      @media (max-width: 900px) {
+        .agency-sidebar {
+          width: 220px;
+          top: 90px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -356,6 +467,11 @@
         <input type="file" id="csv-uploader" accept=".csv" />
         <label for="csv-uploader" id="upload-label">Load New CSV</label>
         <span id="file-name">Loading default...</span>
+
+        <!-- NEW: Agency Selector Dropdown (populated after UMAP) -->
+        <select id="agency-select" title="Select an agency to highlight">
+          <option value="">Jump to agency...</option>
+        </select>
 
         <a href="index.html" class="nav-item active">High-Dimensional (UMAP)</a>
         <a href="radial.html" class="nav-item">Radial/Bar Views</a>
@@ -614,6 +730,24 @@
       </div>
     </div>
 
+    <!-- --- NEW: Agency Sidebar (hidden until populated) --- -->
+    <div id="agency-sidebar" class="agency-sidebar" aria-hidden="true" style="display:none;">
+      <div class="sidebar-header">
+        <h3>Agencies</h3>
+        <button class="sidebar-close" id="sidebar-close" title="Close">&times;</button>
+      </div>
+
+      <div class="sidebar-controls">
+        <input id="sidebar-search" placeholder="Filter agencies..." style="flex:1;padding:8px;border-radius:8px;border:1px solid #eef6fa;" />
+      </div>
+
+      <div class="alpha-filter" id="alpha-filter" aria-hidden="false" style="margin-bottom:8px;">
+        <!-- letters populated by JS -->
+      </div>
+
+      <ul class="agency-list" id="agency-list"></ul>
+    </div>
+
     <script>
       // --- Globals ---
       const TRUST_DIMS = [
@@ -631,6 +765,18 @@
       const fileInput = document.getElementById("csv-uploader");
       const welcomeModal = document.getElementById("welcome-modal");
       const modalCloseBtn = document.getElementById("modal-close");
+
+      // NEW globals for agency interaction
+      let currentDataset = [];
+      let currentPlotId = "plot";
+      const agencySelect = document.getElementById("agency-select");
+      const agencySidebar = document.getElementById("agency-sidebar");
+      const agencyListEl = document.getElementById("agency-list");
+      const sidebarCloseBtn = document.getElementById("sidebar-close");
+      const sidebarSearch = document.getElementById("sidebar-search");
+      const alphaFilterEl = document.getElementById("alpha-filter");
+      let lastHighlightedIndex = null;
+      let highlightTimer = null;
 
       // --- Core Functions ---
 
@@ -756,6 +902,9 @@
        * Renders the Plotly chart
        */
       function renderPlot(dataset) {
+        // save to global for later interactions
+        currentDataset = dataset.map((d, i) => ({ ...d, __idx: i }));
+
         // Find min/max for scaling
         const domMin = Math.min(...dataset.map((d) => d.Dominance));
         const domMax = Math.max(...dataset.map((d) => d.Dominance));
@@ -781,10 +930,16 @@
           [1.0, "#ff0000"], // Bright Red (High Warmth)
         ];
 
+        // Build arrays for markers so we can manipulate them later
+        const markerSizes = dataset.map(() => 25);
+        const markerOpacities = dataset.map(() => 1.0);
+        const lineWidths = dataset.map((d) => getLineWidth(d.Dominance));
+
         const trace = {
           x: dataset.map((d) => d.x_rot),
           y: dataset.map((d) => d.y_rot),
           text: dataset.map((d) => d.Agency),
+          customdata: dataset.map((d) => d.Agency),
           hovertemplate: dataset.map((d) => {
             let hover =
               `<b>${d.Agency}</b><br>` +
@@ -800,7 +955,8 @@
           mode: "markers+text",
           textposition: "top center",
           marker: {
-            size: 25,
+            size: markerSizes,
+            opacity: markerOpacities,
             color: dataset.map((d) => d.Warmth),
             // *** UPDATED: Use custom_colorscale for brighter blue/red ***
             colorscale: custom_colorscale,
@@ -814,7 +970,7 @@
               x: 1.05,
             },
             line: {
-              width: dataset.map((d) => getLineWidth(d.Dominance)),
+              width: lineWidths,
               color: "#333",
             },
             symbol: "circle",
@@ -847,6 +1003,9 @@
         Plotly.newPlot("plot", [trace], layout, {
           responsive: true,
           displayModeBar: false,
+        }).then(() => {
+          // After plot is drawn, populate UI controls
+          createAgencyControls(currentDataset);
         });
       }
 
@@ -905,6 +1064,199 @@
         return num / Math.sqrt(denX * denY);
       }
 
+      // --- Agency Interaction Utilities ---
+
+      // Populate dropdown and sidebar once plot is rendered
+      function createAgencyControls(dataset) {
+        // Populate dropdown
+        agencySelect.innerHTML =
+          '<option value="">Jump to agency...</option>';
+        const sorted = [...dataset].sort((a, b) =>
+          a.Agency.localeCompare(b.Agency)
+        );
+        sorted.forEach((d, idx) => {
+          const opt = document.createElement("option");
+          opt.value = d.Agency;
+          opt.textContent = d.Agency;
+          agencySelect.appendChild(opt);
+        });
+
+        // Build sidebar list
+        buildSidebar(sorted);
+
+        // Show sidebar
+        agencySidebar.style.display = "block";
+        agencySidebar.setAttribute("aria-hidden", "false");
+
+        // Populate alphabet filter
+        populateAlphaFilter(sorted);
+
+        // Wire up dropdown selection
+        agencySelect.onchange = (e) => {
+          const name = e.target.value;
+          if (!name) return;
+          highlightAgencyByName(name);
+        };
+      }
+
+      // Build sidebar clickable list
+      function buildSidebar(sortedDataset) {
+        agencyListEl.innerHTML = "";
+        sortedDataset.forEach((d) => {
+          const li = document.createElement("li");
+          li.dataset.agency = d.Agency;
+          li.innerHTML = `<span class="short">${d.Agency}</span><span class="full" style="display:none;"></span>`;
+          li.title = `Click to highlight ${d.Agency}`;
+          li.addEventListener("click", () => {
+            highlightAgencyByName(d.Agency);
+            // set dropdown value for coherence
+            agencySelect.value = d.Agency;
+          });
+          agencyListEl.appendChild(li);
+        });
+      }
+
+      // Populate alphabet filter buttons
+      function populateAlphaFilter(sortedDataset) {
+        const letters = Array.from(
+          new Set(sortedDataset.map((d) => d.Agency[0].toUpperCase()))
+        ).sort();
+        alphaFilterEl.innerHTML = "";
+        const allBtn = document.createElement("button");
+        allBtn.textContent = "All";
+        allBtn.classList.add("active");
+        allBtn.addEventListener("click", () => {
+          filterSidebar("");
+          setAlphaActive(allBtn);
+        });
+        alphaFilterEl.appendChild(allBtn);
+
+        letters.forEach((L) => {
+          const btn = document.createElement("button");
+          btn.textContent = L;
+          btn.addEventListener("click", () => {
+            filterSidebar(L);
+            setAlphaActive(btn);
+          });
+          alphaFilterEl.appendChild(btn);
+        });
+
+        // Search filter
+        sidebarSearch.oninput = () => {
+          const q = sidebarSearch.value.trim().toLowerCase();
+          filterSidebarQuery(q);
+        };
+
+        sidebarCloseBtn.onclick = () => {
+          agencySidebar.style.display = "none";
+          agencySidebar.setAttribute("aria-hidden", "true");
+        };
+      }
+
+      function setAlphaActive(btn) {
+        Array.from(alphaFilterEl.querySelectorAll("button")).forEach((b) =>
+          b.classList.remove("active")
+        );
+        btn.classList.add("active");
+      }
+
+      function filterSidebar(letter) {
+        Array.from(agencyListEl.children).forEach((li) => {
+          const name = li.dataset.agency;
+          if (!letter || name[0].toUpperCase() === letter) {
+            li.style.display = "";
+          } else {
+            li.style.display = "none";
+          }
+        });
+      }
+
+      function filterSidebarQuery(q) {
+        Array.from(agencyListEl.children).forEach((li) => {
+          const name = li.dataset.agency.toLowerCase();
+          li.style.display = name.includes(q) ? "" : "none";
+        });
+      }
+
+      // Find agency index and highlight
+      function highlightAgencyByName(name) {
+        const idx = currentDataset.findIndex((d) => d.Agency === name);
+        if (idx === -1) {
+          alert(`Agency "${name}" not found in current dataset.`);
+          return;
+        }
+        // Animate flash & zoom to the point
+        flashAndZoomPoint(idx);
+      }
+
+      // Flash & zoom animation
+      function flashAndZoomPoint(idx) {
+        // Clear any existing timers
+        if (highlightTimer) {
+          clearTimeout(highlightTimer);
+          highlightTimer = null;
+        }
+
+        lastHighlightedIndex = idx;
+
+        // Build base arrays
+        const baseSizes = currentDataset.map(() => 25);
+        const baseOpacities = currentDataset.map(() => 1.0);
+
+        // Make arrays for highlighting
+        const highlightSizes = [...baseSizes];
+        const highlightOpacities = [...baseOpacities];
+        highlightSizes[idx] = 42;
+        highlightOpacities[idx] = 1.0;
+
+        // Dim others when highlighting
+        const dimOpacities = currentDataset.map((_, i) =>
+          i === idx ? 1.0 : 0.18
+        );
+
+        // Sequence: quick flashes (3 pulses), then settle on highlighted state
+        const pulses = [
+          { sizes: (() => { const a = [...baseSizes]; a[idx] = 42; return a })(), opac: dimOpacities },
+          { sizes: baseSizes, opac: (() => { const a = [...baseOpacities]; a[idx] = 0.45; return a })() },
+          { sizes: (() => { const a = [...baseSizes]; a[idx] = 48; return a })(), opac: dimOpacities },
+          { sizes: highlightSizes, opac: dimOpacities },
+        ];
+
+        // Apply pulse frames sequentially
+        let t = 0;
+        pulses.forEach((frame, i) => {
+          setTimeout(() => {
+            Plotly.restyle(currentPlotId, {
+              "marker.size": [frame.sizes],
+              "marker.opacity": [frame.opac],
+            });
+          }, t);
+          t += 220;
+        });
+
+        // Final state: keep highlighted & dim others
+        setTimeout(() => {
+          Plotly.restyle(currentPlotId, {
+            "marker.size": [highlightSizes],
+            "marker.opacity": [dimOpacities],
+          });
+        }, t + 50);
+
+        // Zoom/pan to the selected point with some padding
+        const x = currentDataset[idx].x_rot;
+        const y = currentDataset[idx].y_rot;
+        const spanX = 0.9;
+        const spanY = 0.6;
+        const newRange = {
+          "xaxis.range": [x - spanX, x + spanX],
+          "yaxis.range": [y - spanY, y + spanY],
+        };
+        // Slight delay so zoom happens after first pulse
+        setTimeout(() => {
+          Plotly.relayout(currentPlotId, newRange);
+        }, 260);
+      }
+
       // --- Event Listeners ---
 
       // 1. Load default data on page load
@@ -953,6 +1305,16 @@
           welcomeModal.classList.remove("visible");
           // Set flag in localStorage so it doesn't show again
           localStorage.setItem("trustExplorerModalShown", "true");
+        });
+
+        // Sidebar toggle: clicking the "?" info tooltip will show the sidebar already (we left the tooltip)
+        // but we want explicit open on first plotRendered if hidden
+        document.addEventListener("plotRendered", () => {
+          // show sidebar after render if not visible
+          if (agencySidebar.style.display === "none") {
+            // show it (it will be populated by createAgencyControls)
+            // createAgencyControls is invoked from renderPlot; keep behavior minimal
+          }
         });
       });
 
