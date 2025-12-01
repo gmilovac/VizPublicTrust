@@ -50,19 +50,6 @@
       #upload-label { background:#eef2f5; color:var(--primary-color); padding:8px 14px; border-radius:8px; cursor:pointer; }
       #file-name { color:#666; font-size:0.85rem; margin-left:6px; }
 
-      /* Agency dropdown label + select */
-      .dropdown-wrapper { display:flex; flex-direction:column; gap:4px; }
-      .dropdown-label { font-size:0.78rem; color:#444; margin-left:4px; }
-      #agency-select {
-        min-width:220px;
-        padding:8px 10px;
-        border-radius:8px;
-        border:1px solid #e6eef3;
-        background:white;
-        font-weight:500;
-        height:38px; /* visible single-line box */
-      }
-
       /* Layout: leave room for permanent sidebar */
       .container {
         display:flex;
@@ -211,12 +198,6 @@
         <label id="upload-label" for="csv-uploader">Load New CSV</label>
         <span id="file-name">Loading default...</span>
 
-        <!-- Dropdown with explicit label so the "Jump to agency" cue is visible -->
-        <div class="dropdown-wrapper" style="margin-left:6px;">
-          <div class="dropdown-label">Jump to agency (multi-select)</div>
-          <select id="agency-select" multiple title="Select agencies (hold Ctrl/Cmd to multi-select)"></select>
-        </div>
-
         <a class="nav-item active" href="index.html">High-Dimensional (UMAP)</a>
         <a class="nav-item" href="radial.html">Radial/Bar Views</a>
       </div>
@@ -232,7 +213,7 @@
           <li><b>Color (Warmth):</b> Red = warm, aqua = cold.</li>
           <li><b>Border (Dominance):</b> Thicker outline = higher dominance.</li>
         </ul>
-        <p>Use the sidebar or the dropdown to locate agencies. You can select multiple agencies (Ctrl/Cmd + click or use checkboxes).</p>
+        <p>Use the sidebar to locate agencies. You can select multiple agencies using the checkboxes or click multiple list items (Ctrl/Cmd+click).</p>
         <button id="modal-close" class="modal-close-btn">Start Exploring</button>
       </div>
     </div>
@@ -240,7 +221,7 @@
     <div class="container">
       <div class="header-section">
         <h1>Agency Trust Profile Explorer</h1>
-        <p class="subtitle">Agencies positioned by similarity (UMAP). Hover for details. Use sidebar/dropdown to search & highlight.</p>
+        <p class="subtitle">Agencies positioned by similarity (UMAP). Hover for details. Use sidebar to search & highlight.</p>
       </div>
 
       <div class="viz-card">
@@ -349,7 +330,6 @@
       const welcomeModal = document.getElementById("welcome-modal");
       const modalCloseBtn = document.getElementById("modal-close");
 
-      const agencySelect = document.getElementById("agency-select");
       const agencySidebar = document.getElementById("agency-sidebar");
       const agencyListEl = document.getElementById("agency-list");
       const sidebarSearch = document.getElementById("sidebar-search");
@@ -380,7 +360,6 @@
         showLoading(true);
 
         // validate
-        const requiredCols = [...TRUST_DIMS, ...METRICS];
         let processed = [];
 
         if (!parsedData || !parsedData.length || !parsedData[0][AGENCY_COL]) {
@@ -532,51 +511,21 @@
       }
 
       /* ------------------------
-         Controls: populate dropdown + sidebar
+         Controls: populate sidebar only
          ------------------------ */
       function populateControls(dataset) {
-        // dropdown (multi)
-        agencySelect.innerHTML = "";
-        const placeholder = document.createElement("option");
-        placeholder.textContent = "Jump to agency... (hold Ctrl/Cmd to multi-select)";
-        placeholder.disabled = true;
-        placeholder.selected = true;
-        agencySelect.appendChild(placeholder);
-
+        // Build sidebar list
         const sorted = [...dataset].sort((a,b)=> a.Agency.localeCompare(b.Agency));
-        sorted.forEach(d => {
-          const o = document.createElement("option");
-          o.value = d.Agency;
-          o.textContent = d.Agency;
-          agencySelect.appendChild(o);
-        });
-
-        // Make sure the select is clickable and visible
-        agencySelect.style.pointerEvents = "auto";
-
-        // sidebar list build
         buildSidebar(sorted);
-
-        // alphabet filter
         populateAlphaFilter(sorted);
 
-        // wire dropdown
-        agencySelect.onchange = () => {
-          const selected = Array.from(agencySelect.selectedOptions).map(o=>o.value).filter(Boolean);
-          if (selected.length === 0) { clearHighlight(); return; }
-          syncSidebarSelection(selected);
-          highlightMultipleByNames(selected);
-        };
-
-        // wire Clear/Reset
+        // Wire Clear/Reset (still present)
         clearBtn.onclick = () => {
           clearHighlight();
-          Array.from(agencySelect.options).forEach(o => o.selected = false);
         };
         resetBtn.onclick = () => {
           Plotly.relayout(currentPlotId, { "xaxis.autorange": true, "yaxis.autorange": true });
           clearHighlight();
-          Array.from(agencySelect.options).forEach(o => o.selected = false);
         };
       }
 
@@ -593,8 +542,8 @@
           cb.title = `Select ${d.Agency}`;
           cb.addEventListener("change", (e) => {
             const selected = Array.from(agencyListEl.querySelectorAll("input[type=checkbox]:checked")).map(c => c.parentElement.dataset.agency);
-            if (selected.length === 0) { clearHighlight(); syncDropdownSelection([]); }
-            else { highlightMultipleByNames(selected); syncDropdownSelection(selected); }
+            if (selected.length === 0) { clearHighlight(); }
+            else { highlightMultipleByNames(selected); }
           });
 
           const label = document.createElement("label");
@@ -655,17 +604,6 @@
           const name = li.dataset.agency;
           li.style.display = (!letter || name[0].toUpperCase() === letter) ? "" : "none";
         });
-      }
-
-      function syncSidebarSelection(selectedNames) {
-        Array.from(agencyListEl.querySelectorAll("li")).forEach(li => {
-          const cb = li.querySelector("input[type=checkbox]");
-          if (!cb) return;
-          cb.checked = selectedNames.includes(li.dataset.agency);
-        });
-      }
-      function syncDropdownSelection(names) {
-        Array.from(agencySelect.options).forEach(o=> o.selected = names.includes(o.value));
       }
 
       /* ------------------------
@@ -762,13 +700,17 @@
         observeVisibility(loadingOverlay);
       });
 
-      // Utility: programmatic highlight if needed
+      // Programmatic highlight helper (sidebar-only)
       window.highlightAgencies = (namesArray) => {
         if (!Array.isArray(namesArray)) namesArray = [namesArray];
         const valid = namesArray.filter(n => currentDataset.findIndex(d=>d.Agency===n)>=0);
         if (valid.length===0) return;
-        syncSidebarSelection(valid);
-        syncDropdownSelection(valid);
+        // check matching sidebar checkboxes
+        Array.from(agencyListEl.querySelectorAll("li")).forEach(li => {
+          const cb = li.querySelector("input[type=checkbox]");
+          if (!cb) return;
+          cb.checked = valid.includes(li.dataset.agency);
+        });
         highlightMultipleByNames(valid);
       };
     </script>
