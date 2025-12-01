@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trust in Gov — UMAP Explorer (Sidebar Fix)</title>
+  <title>Trust in Gov — UMAP Explorer</title>
 
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -34,7 +34,7 @@
       border:1px solid #e9f0f4;
       padding:12px;
       overflow:auto;
-      z-index:2147483647; /* max */
+      z-index:2147483647;
       pointer-events:auto !important;
     }
     .sidebar h3 { margin:0 0 8px 0; color:var(--primary-color); }
@@ -60,7 +60,6 @@
     /* tiny debug toast */
     #click-toast { position:fixed; right:18px; bottom:18px; background:rgba(0,0,0,0.72); color:#fff; padding:8px 12px; border-radius:8px; font-size:13px; z-index:999999; display:none; pointer-events:none; }
 
-    /* ensure responsiveness */
     @media (max-width:900px) {
       :root { --sidebar-w:220px; }
       .main { margin-left: calc(var(--sidebar-w) + 20px); padding:12px; }
@@ -105,7 +104,7 @@
   <div id="click-toast"></div>
 
   <script>
-  /* --- DATA + UMAP + Plotly (kept minimal) --- */
+  /* --- DATA + UMAP + Plotly --- */
   const TRUST_DIMS = ["Competent","Reliable","Ethical","Sincere","Benevolent"];
   const METRICS = ["Warmth","Dominance"];
   const AGENCY_COL = "Agency";
@@ -120,37 +119,30 @@
   const fileNameDisplay = document.getElementById('file-name');
   const toast = document.getElementById('click-toast');
 
-  let dataset = []; // processed + rotated, includes .Agency and .x_rot .y_rot etc.
+  let dataset = []; // processed + rotated
   let plotId = 'plot';
 
-  // helper: small toast for click diagnostics
   function showToast(msg, ms=900){
     toast.textContent = msg;
     toast.style.display = 'block';
     setTimeout(()=> toast.style.display = 'none', ms);
   }
 
-  function showLoading(show=true){ /* NO overlay in this simplified file */ }
-
-  // Process CSV rows -> numeric + Trust
   function processRows(rows){
     const processed = [];
-    try{
-      rows.forEach(row=>{
-        if (!row[AGENCY_COL]) return;
-        const obj = { Agency: row[AGENCY_COL] };
-        let valid = true, sum=0;
-        TRUST_DIMS.forEach(dim => { const v = parseFloat(row[dim]); if (Number.isNaN(v)) valid=false; obj[dim]=v; sum+=v; });
-        METRICS.forEach(m => { const v=parseFloat(row[m]); if (Number.isNaN(v)) valid=false; obj[m]=v; });
-        if (!valid) return;
-        obj.Trust = sum / TRUST_DIMS.length;
-        processed.push(obj);
-      });
-      return processed;
-    } catch(e){ console.error(e); return []; }
+    rows.forEach(row=>{
+      if (!row[AGENCY_COL]) return;
+      const obj = { Agency: row[AGENCY_COL] };
+      let valid = true, sum = 0;
+      TRUST_DIMS.forEach(dim => { const v = parseFloat(row[dim]); if (Number.isNaN(v)) valid=false; obj[dim]=v; sum+=v; });
+      METRICS.forEach(m => { const v=parseFloat(row[m]); if (Number.isNaN(v)) valid=false; obj[m]=v; });
+      if (!valid) return;
+      obj.Trust = sum / TRUST_DIMS.length;
+      processed.push(obj);
+    });
+    return processed;
   }
 
-  // Run UMAP
   function runUMAP(processed){
     const input = processed.map(d => TRUST_DIMS.map(dim => d[dim]));
     if (input.length < 3) { alert('Need at least 3 agencies'); return null; }
@@ -160,14 +152,12 @@
     return processed;
   }
 
-  // rotate so X correlates with Trust
   function rotateToAlign(processed){
-    let best=0, bestAng=0;
+    let best= -Infinity, bestAng=0;
     for(let deg=-180; deg<=180; deg+=3){
       const a = deg*Math.PI/180;
       const xs = processed.map(d => d.x_umap*Math.cos(a) + d.y_umap*Math.sin(a));
-      const yVals = processed.map(d=>d.Trust);
-      const cor = pearson(xs,yVals);
+      const cor = pearson(xs, processed.map(d=>d.Trust));
       if (cor > best){ best = cor; bestAng = a; }
     }
     processed.forEach(d=>{
@@ -183,7 +173,6 @@
     if (!dx||!dy) return 0; return num/Math.sqrt(dx*dy);
   }
 
-  // Render Plotly
   function renderPlot(data){
     dataset = data.map((d,i)=>({...d,__idx:i}));
     const domMin = Math.min(...data.map(d=>d.Dominance));
@@ -193,29 +182,40 @@
     const cabs = Math.max(Math.abs(warmthMin), Math.abs(warmthMax));
 
     const widths = data.map(d => domMin===domMax ? 2 : 1 + ((d.Dominance-domMin)/(domMax-domMin))*7);
+
     const trace = {
       x: data.map(d=>d.x_rot),
       y: data.map(d=>d.y_rot),
       text: data.map(d=>d.Agency),
-      hovertemplate: data.map(d=> `<b>${d.Agency}</b><br>Trust: ${d.Trust.toFixed(2)}<extra></extra>`),
+      customdata: data.map(d => TRUST_DIMS.map(dim => `${dim}: ${d[dim].toFixed(2)}`).join('<br>') ),
+      hovertemplate: data.map(d=> `<b>${d.Agency}</b><br>Trust: ${d.Trust.toFixed(2)}<br>Warmth: ${d.Warmth.toFixed(1)}<br>Dominance: ${d.Dominance.toFixed(1)}<br><i>Dimensions:</i><br>${TRUST_DIMS.map(dim=>`${dim}: ${d[dim].toFixed(2)}`).join('<br>')}<extra></extra>`),
       mode:'markers+text',
       textposition:'top center',
       marker:{
         size:25,
         color: data.map(d=>d.Warmth),
-        colorscale:[[0,'#40e0d0'],[0.5,'#fff'],[1,'#ff0000']],
+        colorscale:[[0,'#40e0d0'],[0.5,'#ffffff'],[1,'#ff0000']],
         cmin:-cabs, cmax:cabs,
+        colorbar: { title: 'Warmth', titleside: 'right', thickness:12, len:0.5, x:1.06 },
         line:{ width: widths, color:'#333' }
       },
       type:'scatter'
     };
-    const layout = { margin:{t:36,l:40,r:80,b:40}, xaxis:{visible:true,showticklabels:false}, yaxis:{visible:false} };
-    Plotly.newPlot(plotId, [trace], layout, {responsive:true,displayModeBar:false}).then(()=> {
+
+    const layout = {
+      margin:{t:48,l:40,r:160,b:40}, // increased right margin so colorbar and labels are visible
+      hovermode:'closest',
+      dragmode:'zoom',
+      xaxis:{visible:true, showticklabels:false, title: { text: 'Trust Score (Low → High)', font: { size: 14, color: '#888' } }},
+      yaxis:{visible:false},
+      plot_bgcolor:'#fff', paper_bgcolor:'#fff'
+    };
+
+    Plotly.newPlot(plotId, [trace], layout, {responsive:true, displayModeBar:false}).then(()=> {
       populateSidebar(dataset);
     });
   }
 
-  // Sidebar population
   function populateSidebar(data){
     agencyListEl.innerHTML = '';
     const sorted = [...data].sort((a,b)=> a.Agency.localeCompare(b.Agency));
@@ -232,24 +232,17 @@
       const span = document.createElement('span'); span.textContent = d.Agency; span.style.userSelect='none';
 
       li.appendChild(cb); li.appendChild(span);
-      // clicking li toggles checkbox (but not when the click is directly on the checkbox)
       li.addEventListener('click', e => { if (e.target.tagName.toLowerCase() !== 'input') { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); } });
 
       agencyListEl.appendChild(li);
     });
 
-    // alphabet filter
     const letters = Array.from(new Set(sorted.map(s => s.Agency[0].toUpperCase()))).sort();
     alphaFilterEl.innerHTML = '';
     const allBtn = document.createElement('button'); allBtn.textContent='All'; allBtn.className='active'; allBtn.addEventListener('click', ()=>{ filterSidebar(''); setActiveAlpha(allBtn); });
     alphaFilterEl.appendChild(allBtn);
-    letters.forEach(L => {
-      const b = document.createElement('button'); b.textContent = L;
-      b.addEventListener('click', ()=>{ filterSidebar(L); setActiveAlpha(b); });
-      alphaFilterEl.appendChild(b);
-    });
+    letters.forEach(L => { const b = document.createElement('button'); b.textContent=L; b.addEventListener('click', ()=>{ filterSidebar(L); setActiveAlpha(b); }); alphaFilterEl.appendChild(b); });
 
-    // search
     searchEl.oninput = ()=> {
       const q = searchEl.value.trim().toLowerCase();
       Array.from(agencyListEl.children).forEach(li => {
@@ -258,10 +251,10 @@
       });
     };
 
-    // Clear + Reset
     clearBtn.onclick = ()=>{ clearHighlight(); Array.from(agencyListEl.querySelectorAll('input[type=checkbox]')).forEach(c=>c.checked=false); };
     resetBtn.onclick = ()=>{ Plotly.relayout(plotId, {'xaxis.autorange':true,'yaxis.autorange':true}); clearHighlight(); };
   }
+
   function setActiveAlpha(btn){
     Array.from(alphaFilterEl.querySelectorAll('button')).forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -273,7 +266,6 @@
     });
   }
 
-  // Highlighting
   function highlightByNames(names){
     const idx = names.map(n => dataset.findIndex(d => d.Agency===n)).filter(i=>i>=0);
     highlightIndices(idx);
@@ -284,23 +276,20 @@
     const opac = dataset.map((_,i) => indices.includes(i) ? 1 : 0.18);
     indices.forEach(i => { if (i>=0 && i<sizes.length) sizes[i]=40; });
     Plotly.restyle(plotId, {'marker.size':[sizes], 'marker.opacity':[opac]});
-    // zoom to selection
     const xs = indices.map(i=>dataset[i].x_rot), ys = indices.map(i=>dataset[i].y_rot);
     const xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
-    Plotly.relayout(plotId, {'xaxis.range':[xmin-0.6,xmax+0.6], 'yaxis.range':[ymin-0.4,ymax+0.4]});
+    const padX = Math.max(0.6, (xmax-xmin)*0.6);
+    const padY = Math.max(0.4, (ymax-ymin)*0.6);
+    Plotly.relayout(plotId, {'xaxis.range':[xmin-padX,xmax+padX], 'yaxis.range':[ymin-padY,ymax+padY]});
   }
   function clearHighlight(){
     if (!dataset || dataset.length===0) return;
     Plotly.restyle(plotId, {'marker.size':[dataset.map(()=>25)], 'marker.opacity':[dataset.map(()=>1.0)]});
   }
 
-  /* --- Load default CSV and kick off pipeline --- */
   document.addEventListener('DOMContentLoaded', ()=>{
-    // fetch default CSV
-    fetch('data/agency.csv').then(r => {
-      if (!r.ok) throw new Error('default CSV not found');
-      return r.text();
-    }).then(txt => {
+    fetch('data/agency.csv').then(r => { if (!r.ok) throw new Error('default CSV not found'); return r.text(); })
+    .then(txt => {
       fileNameDisplay.textContent = 'agency.csv (default)';
       const parsed = Papa.parse(txt, { header:true, skipEmptyLines:true }).data;
       const proc = processRows(parsed);
@@ -313,7 +302,6 @@
       alert('Default CSV not found. Please upload a CSV using Load CSV.');
     });
 
-    // upload handler
     fileInput.addEventListener('change', e=>{
       const f = e.target.files && e.target.files[0];
       if (!f) return;
@@ -327,21 +315,16 @@
       }});
     });
 
-    // Debug helper: show which element is receiving clicks inside sidebar
+    // Diagnostic toast for sidebar clicks (shows top element)
     sidebar.addEventListener('click', (e) => {
       const top = document.elementFromPoint(e.clientX, e.clientY);
       const info = (top && (top.tagName + (top.id?('#'+top.id):(' '+(top.className||'')).split(' ')[0]))) || String(top);
-      // show a tiny toast so you can see what's receiving the click
       showToast('Top element: ' + info, 900);
-      // console.log('sidebar click top element:', top);
     }, true);
   });
 
-  // In case user clicks a checkbox but nothing changes, this exposes a quick console test they can run:
-  window.debugTopOfSidebar = function(){
-    const r = sidebar.getBoundingClientRect();
-    return document.elementFromPoint(r.left+6, r.top+6);
-  };
+  // quick helper to test top element at top-left of sidebar
+  window.debugTopOfSidebar = function(){ const r = sidebar.getBoundingClientRect(); return document.elementFromPoint(r.left+6, r.top+6); };
   </script>
 </body>
 </html>
