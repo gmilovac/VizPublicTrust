@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trust in Gov — UMAP Explorer (Dominance + Info)</title>
+  <title>Trust in Gov — UMAP Explorer (Dominance Legend at Bottom)</title>
 
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -42,15 +42,29 @@
     .agency-list li:hover { background:#f2f7fb; }
     .agency-list input[type="checkbox"] { pointer-events:auto !important; }
 
-    /* Dominance legend area */
-    .dom-legend { margin-top:12px; padding-top:10px; border-top:1px dashed #eef6fa; font-size:13px; color:#333; }
-    .dom-legend .examples { display:flex; gap:12px; align-items:center; margin-top:8px; }
-    .dom-sample { display:flex; flex-direction:column; align-items:center; gap:6px; width:72px; }
-    .dom-circle { width:40px; height:40px; border-radius:50%; background:#ddd; display:flex; align-items:center; justify-content:center; }
-
     /* Plot card */
     .viz-card { background:#fff; border-radius:10px; padding:14px; box-shadow:0 8px 30px rgba(0,0,0,0.06); min-height:680px; position:relative; }
     #plot { width:100%; height:720px; }
+
+    /* Dominance legend positioned at bottom center of the viz card */
+    .dom-legend-bottom {
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:12px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #eef2f5;
+      padding:10px 14px;
+      border-radius:10px;
+      box-shadow:0 6px 22px rgba(0,0,0,0.08);
+      display:flex;
+      align-items:center;
+      gap:18px;
+      z-index:1500;
+      font-size:13px;
+    }
+    .dom-sample { display:flex; flex-direction:column; align-items:center; gap:8px; width:72px; text-align:center; }
+    .dom-circle { width:40px; height:40px; border-radius:50%; background:#ddd; display:flex; align-items:center; justify-content:center; }
 
     /* Info buttons */
     .plot-info { position:absolute; top:22px; left:38px; display:flex; gap:10px; z-index:1000; }
@@ -67,6 +81,7 @@
       :root { --sidebar-w:220px; }
       .main { margin-left: calc(var(--sidebar-w) + 20px); padding:12px; }
       #plot { height:560px; }
+      .dom-legend-bottom { bottom:8px; left:50%; transform:translateX(-50%); font-size:12px; }
     }
   </style>
 </head>
@@ -95,26 +110,6 @@
     <div class="alpha-filter" id="alpha-filter"></div>
 
     <ul class="agency-list" id="agency-list" aria-label="Agencies"></ul>
-
-    <!-- Dominance legend (min / median / max placeholders; filled after data loads) -->
-    <div class="dom-legend" id="dom-legend" aria-hidden="false">
-      <div style="font-weight:600;color:#444">Dominance (border thickness)</div>
-      <div style="font-size:12px;color:#666;margin-top:6px">Thin → Thick (lower → higher)</div>
-      <div class="examples" id="dom-examples" aria-hidden="true">
-        <div class="dom-sample">
-          <div class="dom-circle" id="dom-min" style="border:2px solid #333"></div>
-          <div style="font-size:12px" id="dom-min-label">min</div>
-        </div>
-        <div class="dom-sample">
-          <div class="dom-circle" id="dom-med" style="border:4px solid #333"></div>
-          <div style="font-size:12px" id="dom-med-label">median</div>
-        </div>
-        <div class="dom-sample">
-          <div class="dom-circle" id="dom-max" style="border:8px solid #333"></div>
-          <div style="font-size:12px" id="dom-max-label">max</div>
-        </div>
-      </div>
-    </div>
   </aside>
 
   <!-- Main -->
@@ -148,7 +143,6 @@
       <div class="info-modal" id="modal-agencies" role="dialog" aria-modal="true" aria-labelledby="agency-title">
         <h2 id="agency-title">Agency Full Names</h2>
         <div id="agency-fullnames" style="display:flex;gap:12px;flex-wrap:wrap">
-          <!-- many names will be filled statically for convenience -->
           <div style="min-width:220px">
             <div><strong>Amtrak</strong> — Amtrak</div>
             <div><strong>BPR</strong> — Bureau of Prisons (BPR)</div>
@@ -186,6 +180,27 @@
       </div>
 
       <div id="plot"></div>
+
+      <!-- Dominance legend moved to bottom center of the plot card -->
+      <div class="dom-legend-bottom" id="dom-legend-bottom" aria-hidden="false" style="display:none">
+        <div style="font-weight:600;color:#444">Dominance</div>
+        <div style="font-size:12px;color:#666">Thin → Thick</div>
+        <div style="display:flex;gap:12px;align-items:center;margin-left:8px">
+          <div class="dom-sample">
+            <div class="dom-circle" id="dom-min-bottom" style="border:2px solid #333"></div>
+            <div style="font-size:12px" id="dom-min-bottom-label">min</div>
+          </div>
+          <div class="dom-sample">
+            <div class="dom-circle" id="dom-med-bottom" style="border:4px solid #333"></div>
+            <div style="font-size:12px" id="dom-med-bottom-label">median</div>
+          </div>
+          <div class="dom-sample">
+            <div class="dom-circle" id="dom-max-bottom" style="border:8px solid #333"></div>
+            <div style="font-size:12px" id="dom-max-bottom-label">max</div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -205,13 +220,14 @@
   const resetBtn = document.getElementById('reset-btn');
   const fileInput = document.getElementById('csv-uploader');
   const fileNameDisplay = document.getElementById('file-name');
-  const domExamples = document.getElementById('dom-examples');
-  const domMinEl = document.getElementById('dom-min');
-  const domMedEl = document.getElementById('dom-med');
-  const domMaxEl = document.getElementById('dom-max');
-  const domMinLabel = document.getElementById('dom-min-label');
-  const domMedLabel = document.getElementById('dom-med-label');
-  const domMaxLabel = document.getElementById('dom-max-label');
+
+  const domLegendBottom = document.getElementById('dom-legend-bottom');
+  const domMinEl = document.getElementById('dom-min-bottom');
+  const domMedEl = document.getElementById('dom-med-bottom');
+  const domMaxEl = document.getElementById('dom-max-bottom');
+  const domMinLabel = document.getElementById('dom-min-bottom-label');
+  const domMedLabel = document.getElementById('dom-med-bottom-label');
+  const domMaxLabel = document.getElementById('dom-max-bottom-label');
 
   const metricsInfoBtn = document.getElementById('metrics-info');
   const agencyInfoBtn = document.getElementById('agency-info');
@@ -280,8 +296,8 @@
     const domMin = Math.min(...data.map(d=>d.Dominance));
     const domMax = Math.max(...data.map(d=>d.Dominance));
     const domMed = median(data.map(d=>d.Dominance));
-    // fill dominance legend (numbers + line widths)
-    domExamples.style.display = 'flex';
+    // populate bottom legend
+    domLegendBottom.style.display = 'flex';
     domMinLabel.textContent = domMin.toFixed(1);
     domMedLabel.textContent = domMed.toFixed(1);
     domMaxLabel.textContent = domMax.toFixed(1);
@@ -319,7 +335,7 @@
     };
 
     const layout = {
-      margin:{t:48,l:40,r:160,b:40},
+      margin:{t:48,l:40,r:160,b:100}, // increased bottom margin to make room for legend
       hovermode:'closest',
       dragmode:'zoom',
       xaxis:{visible:true, showticklabels:false, title: { text: 'Trust Score (Low → High)', font: { size: 14, color: '#888' } }},
@@ -436,7 +452,7 @@
     sidebar.addEventListener('click', (e) => {
       const top = document.elementFromPoint(e.clientX, e.clientY);
       const info = (top && (top.tagName + (top.id?('#'+top.id):(' '+(top.className||'')).split(' ')[0]))) || String(top);
-      // uncomment to see toast during debugging: showToast('Top element: ' + info, 900);
+      // showToast('Top element: ' + info, 900); // uncomment if you want a click toast
     }, true);
   });
 
