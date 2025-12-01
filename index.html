@@ -1,748 +1,347 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Public Trust in Government | UMAP Explorer</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trust in Gov — UMAP Explorer (Sidebar Fix)</title>
 
-    <!-- Libraries -->
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
 
-    <style>
-      :root {
-        --primary-color: #2c5f7f;
-        --bg-color: #f8f9fa;
-        --text-color: #333;
-        --sidebar-width: 320px; /* change here to widen/narrow sidebar */
-      }
-      html, body { height: 100%; }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen, Ubuntu, Cantarell, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-      }
+  <style>
+    :root { --primary-color:#2c5f7f; --bg:#f8f9fa; --sidebar-w:320px; }
+    html,body { height:100%; margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:#222; }
+    nav { background:#fff; padding:12px 18px; box-shadow:0 2px 6px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; z-index:4000; position:relative; }
+    .nav-brand { color:var(--primary-color); font-weight:700; text-decoration:none; }
 
-      /* NAV */
-      nav {
-        background-color: #fff;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        padding: 1rem 1.5rem;
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        position:relative;
-        z-index: 4000;
-      }
-      .nav-brand { font-size:1.15rem; font-weight:700; color:var(--primary-color); text-decoration:none; }
-      .nav-links { display:flex; gap:14px; align-items:center; }
-      .nav-item { text-decoration:none; color:#666; padding:8px 14px; border-radius:8px; }
-      .nav-item.active { background:var(--primary-color); color:white; }
+    /* IMPORTANT: page content shifted right so plot cannot appear underneath sidebar */
+    .main {
+      margin-left: calc(var(--sidebar-w) + 28px);
+      padding:18px;
+      box-sizing:border-box;
+    }
 
-      #csv-uploader { display:none; }
-      #upload-label { background:#eef2f5; color:var(--primary-color); padding:8px 14px; border-radius:8px; cursor:pointer; }
-      #file-name { color:#666; font-size:0.85rem; margin-left:6px; }
+    .sidebar {
+      position:fixed;
+      top:76px;
+      left:20px;
+      width:var(--sidebar-w);
+      max-height: calc(100vh - 100px);
+      background:#fff;
+      border-radius:10px;
+      box-shadow:0 12px 34px rgba(0,0,0,0.12);
+      border:1px solid #e9f0f4;
+      padding:12px;
+      overflow:auto;
+      z-index:2147483647; /* max */
+      pointer-events:auto !important;
+    }
+    .sidebar h3 { margin:0 0 8px 0; color:var(--primary-color); }
+    .sidebar .controls { display:flex; gap:8px; justify-content:flex-end; margin-bottom:10px; }
+    .btn { border:0; padding:7px 10px; border-radius:8px; cursor:pointer; }
+    .btn.primary { background:var(--primary-color); color:#fff; }
+    .btn.ghost { background:#eef6fa; color:var(--primary-color); }
 
-      /*
-        IMPORTANT LAYOUT CHANGE:
-        Use margin-left on the main content so the plot area never renders under the fixed sidebar.
-      */
-      .container {
-        display:flex;
-        flex-direction:column;
-        flex:1;
-        max-width:1600px;
-        margin:0 auto;
-        width:100%;
-        box-sizing:border-box;
-        padding:20px;
-        margin-left: calc(var(--sidebar-width) + 24px); /* room for sidebar + gap */
-      }
+    .search { width:100%; padding:8px; border-radius:8px; border:1px solid #eef6fa; margin-bottom:10px; }
 
-      .header-section { text-align:center; margin-bottom:16px; }
-      h1 { margin:0 0 8px 0; color:#1a202c; }
-      .subtitle { color:#666; font-size:1.03rem; }
+    .alpha-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+    .alpha-filter button { padding:4px 6px; border-radius:6px; border:1px solid #eef6fa; background:#f6fbfd; color:var(--primary-color); cursor:pointer; font-size:12px; }
+    .alpha-filter button.active { background:var(--primary-color); color:#fff; }
 
-      /* Viz card */
-      .viz-card {
-        background:white;
-        border-radius:12px;
-        padding:18px;
-        box-shadow:0 6px 18px rgba(10,20,30,0.05);
-        position:relative;
-        min-height:680px;
-        flex:1;
-      }
-      #plot { width:100%; height:100%; min-height:640px; pointer-events:auto; }
+    .agency-list { list-style:none; padding:0; margin:0; }
+    .agency-list li { display:flex; align-items:center; gap:8px; padding:8px; border-radius:8px; cursor:pointer; }
+    .agency-list li:hover { background:#f2f7fb; }
+    .agency-list input[type="checkbox"] { pointer-events:auto !important; }
 
-      /* Loading overlay */
-      #loading-overlay {
-        display:none; /* hidden unless visible */
-        position:absolute;
-        inset:0;
-        background: rgba(255,255,255,0.86);
-        z-index:2100;
-        align-items:center;
-        justify-content:center;
-        font-weight:600;
-        color:var(--primary-color);
-        border-radius:12px;
-        pointer-events:auto;
-      }
-      #loading-overlay.visible { display:flex; }
+    .viz-card { background:#fff; border-radius:10px; padding:14px; box-shadow:0 8px 30px rgba(0,0,0,0.06); min-height:680px; position:relative; }
+    #plot { width:100%; height:720px; }
 
-      /* Modal */
-      .modal-overlay {
-        display:none;
-        position:fixed;
-        inset:0;
-        background: rgba(0,0,0,0.56);
-        z-index:2200;
-        align-items:center;
-        justify-content:center;
-        pointer-events:auto;
-      }
-      .modal-overlay.visible { display:flex; }
-      .modal-content {
-        background:white;
-        padding:26px;
-        border-radius:12px;
-        width:92%;
-        max-width:620px;
-        box-shadow:0 14px 40px rgba(0,0,0,0.18);
-      }
-      .modal-close-btn {
-        background:var(--primary-color);
-        color:white;
-        border:0;
-        padding:10px 18px;
-        border-radius:8px;
-        cursor:pointer;
-        margin-top:12px;
-      }
+    /* tiny debug toast */
+    #click-toast { position:fixed; right:18px; bottom:18px; background:rgba(0,0,0,0.72); color:#fff; padding:8px 12px; border-radius:8px; font-size:13px; z-index:999999; display:none; pointer-events:none; }
 
-      /* Info icons */
-      .info-wrapper { position:absolute; top:20px; left:20px; display:flex; gap:10px; z-index:300; }
-      .info-icon { width:32px; height:32px; border-radius:50%; background:var(--primary-color); color:white; display:flex; align-items:center; justify-content:center; cursor:help; font-weight:700; font-style:italic; }
-      .info-tooltip {
-        display:none;
-        position:absolute;
-        left:0; top:44px;
-        width:300px;
-        background:white;
-        border-radius:10px;
-        box-shadow:0 8px 24px rgba(0,0,0,0.12);
-        padding:12px;
-        border:1px solid #eee;
-        z-index:350;
-        font-size:0.95rem;
-      }
-      .info-container:hover .info-tooltip { display:block; pointer-events:auto; }
+    /* ensure responsiveness */
+    @media (max-width:900px) {
+      :root { --sidebar-w:220px; }
+      .main { margin-left: calc(var(--sidebar-w) + 20px); padding:12px; }
+      #plot { height:560px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-brand">Trust in Gov</div>
+    <div>
+      <input id="csv-uploader" type="file" accept=".csv" style="display:none" />
+      <label for="csv-uploader" style="background:#eef6fa;padding:8px 12px;border-radius:8px;color:var(--primary-color);cursor:pointer;margin-right:8px">Load CSV</label>
+      <span id="file-name" style="color:#666;font-size:13px">Loading default...</span>
+    </div>
+  </nav>
 
-      /* Legend (non-blocking) */
-      .legend-overlay {
-        position:absolute; right:30px; bottom:30px;
-        background:rgba(255,255,255,0.92);
-        padding:12px; border-radius:8px; border:1px solid #eee; pointer-events:none; z-index:250;
-        font-size:0.86rem;
-      }
-
-      /* Sidebar (fixed, not overlapping content) */
-      .agency-sidebar {
-        position:fixed;
-        top:80px;
-        left:20px;
-        width: var(--sidebar-width);
-        max-height: calc(100vh - 120px);
-        background:white;
-        border-radius:10px;
-        box-shadow:0 12px 34px rgba(0,0,0,0.12);
-        border:1px solid #eef2f5;
-        padding:12px;
-        overflow:auto;
-        z-index:2147483647; /* very high to ensure it's above everything else */
-        transform: translateZ(0); /* create a stacking context */
-        pointer-events:auto !important;
-        -webkit-user-select: none;
-        user-select: none;
-      }
-      .agency-sidebar * { user-select: none; } /* avoid unwanted text selection when clicking rapidly */
-
-      .sidebar-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
-      .agency-list { list-style:none; padding:0; margin:0; }
-      .agency-list li { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px; cursor:pointer; pointer-events:auto !important; }
-      .agency-list li:hover { background:#f2f7fb; }
-      .alpha-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
-      .alpha-filter button { background:#f6fbfd; border:1px solid #eef6fa; padding:4px 6px; border-radius:6px; cursor:pointer; color:var(--primary-color); font-size:0.78rem; }
-      .alpha-filter button.active { background:var(--primary-color); color:white; }
-      .sidebar-action { padding:6px 8px; border-radius:8px; cursor:pointer; border:0; font-weight:600; }
-      .sidebar-action.primary { background:var(--primary-color); color:white; }
-      .sidebar-action.ghost { background:#eef2f5; color:var(--primary-color); }
-
-      /* ensure checkboxes are clickable */
-      .agency-list input[type="checkbox"] { pointer-events:auto !important; margin-right:8px; }
-
-      /* Small screens */
-      @media (max-width:920px) {
-        :root { --sidebar-width: 220px; }
-        .container { margin-left: calc(var(--sidebar-width) + 24px); }
-        .agency-sidebar { width: var(--sidebar-width); }
-      }
-    </style>
-  </head>
-
-  <body>
-    <nav>
-      <a class="nav-brand" href="index.html">Trust in Gov</a>
-      <div class="nav-links">
-        <input id="csv-uploader" type="file" accept=".csv" />
-        <label id="upload-label" for="csv-uploader">Load New CSV</label>
-        <span id="file-name">Loading default...</span>
-
-        <a class="nav-item active" href="index.html">High-Dimensional (UMAP)</a>
-        <a class="nav-item" href="radial.html">Radial/Bar Views</a>
-      </div>
-    </nav>
-
-    <!-- Modal (welcome) -->
-    <div id="welcome-modal" class="modal-overlay" aria-hidden="true">
-      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
-        <h2 id="welcome-title" style="margin-top:0;color:var(--primary-color);">Welcome to the Trust Profile Explorer</h2>
-        <p>This UMAP plots U.S. government agencies by similarity across five trust dimensions. Points closer together are more similar.</p>
-        <ul>
-          <li><b>X-axis (Trust):</b> Higher trust to the right.</li>
-          <li><b>Color (Warmth):</b> Red = warm, aqua = cold.</li>
-          <li><b>Border (Dominance):</b> Thicker outline = higher dominance.</li>
-        </ul>
-        <p>Use the sidebar to locate agencies. You can select multiple agencies using the checkboxes.</p>
-        <button id="modal-close" class="modal-close-btn">Start Exploring</button>
+  <!-- Sidebar (fixed) -->
+  <aside class="sidebar" id="sidebar">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>Agencies</h3>
+      <div style="display:flex;gap:8px">
+        <button id="clear-btn" class="btn ghost" title="Clear selections">Clear</button>
+        <button id="reset-btn" class="btn primary" title="Reset view">Reset</button>
       </div>
     </div>
 
-    <div class="container">
-      <div class="header-section">
-        <h1>Agency Trust Profile Explorer</h1>
-        <p class="subtitle">Agencies positioned by similarity (UMAP). Hover for details. Use sidebar to search & highlight.</p>
-      </div>
+    <input id="sidebar-search" class="search" placeholder="Filter agencies..." />
 
-      <div class="viz-card">
-        <div id="loading-overlay"><div>Calculating UMAP...</div></div>
+    <div class="alpha-filter" id="alpha-filter"></div>
 
-        <!-- info icons -->
-        <div class="info-wrapper">
-          <div class="info-container metric-info">
-            <div class="info-icon">i</div>
-            <div class="info-tooltip">
-              <h4 style="margin:0 0 8px 0;color:var(--primary-color)">Metric Definitions</h4>
-              <div style="font-size:0.95rem;line-height:1.35;">
-                <div><b>Trust</b> — Overall average across the five dimensions.</div>
-                <div><b>Warmth</b> — Perceived friendliness (color).</div>
-                <div><b>Dominance</b> — Perceived power (border thickness).</div>
-                <div style="margin-top:8px;"><b>Dimensions:</b>
-                  <ul style="margin:4px 0 0 16px;padding:0">
-                    <li>Competence</li><li>Reliability</li><li>Ethics</li><li>Sincerity</li><li>Benevolence</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
+    <ul class="agency-list" id="agency-list" aria-label="Agencies"></ul>
+  </aside>
 
-          <div class="info-container agency-info">
-            <div class="info-icon">?</div>
-            <div class="info-tooltip" style="width:740px;left:auto;right:0">
-              <h4 style="margin:0 0 8px 0;color:var(--primary-color)">Agency Full Names</h4>
-              <div style="display:flex;gap:12px">
-                <table style="font-size:0.9rem;border-collapse:collapse"><tr><th style="color:var(--primary-color);text-align:left">Short</th><th style="color:var(--primary-color);text-align:left">Full name</th></tr>
-                  <tr><td>Amtrak</td><td>Amtrak</td></tr>
-                  <tr><td>BPR</td><td>Bureau of Prisons (BPR)</td></tr>
-                  <tr><td>CBP</td><td>Customs & Border Protection (CBP)</td></tr>
-                  <tr><td>CDC</td><td>Center for Disease Control (CDC)</td></tr>
-                  <tr><td>Census</td><td>Census Bureau</td></tr>
-                  <tr><td>CISA</td><td>Cybersecurity and Infrastructure Security Agency (CISA)</td></tr>
-                  <tr><td>DEd</td><td>Department of Education</td></tr>
-                  <tr><td>DOD</td><td>Department of Defense (DoD)</td></tr>
-                  <tr><td>DOJ</td><td>Department of Justice (DOJ)</td></tr>
-                </table>
-                <table style="font-size:0.9rem;border-collapse:collapse"><tr><th style="color:var(--primary-color);text-align:left">Short</th><th style="color:var(--primary-color);text-align:left">Full name</th></tr>
-                  <tr><td>EPA</td><td>Environmental Protection Agency (EPA)</td></tr>
-                  <tr><td>FAA</td><td>Federal Aviation Administration (FAA)</td></tr>
-                  <tr><td>FBI</td><td>Federal Bureau of Investigation (FBI)</td></tr>
-                  <tr><td>FDA</td><td>Food & Drug Administration (FDA)</td></tr>
-                  <tr><td>FEMA</td><td>Federal Emergency Management Agency (FEMA)</td></tr>
-                  <tr><td>IRS</td><td>Internal Revenue Service (IRS)</td></tr>
-                  <tr><td>LaborDept</td><td>Labor Department</td></tr>
-                  <tr><td>Lib</td><td>Library of Congress</td></tr>
-                </table>
-                <table style="font-size:0.9rem;border-collapse:collapse"><tr><th style="color:var(--primary-color);text-align:left">Short</th><th style="color:var(--primary-color);text-align:left">Full name</th></tr>
-                  <tr><td>Mus</td><td>Smithsonian Museums</td></tr>
-                  <tr><td>NASA</td><td>National Aeronautics & Space Administration (NASA)</td></tr>
-                  <tr><td>NEA</td><td>National Endowment for the Arts (NEA)</td></tr>
-                  <tr><td>NSF</td><td>National Science Foundation (NSF)</td></tr>
-                  <tr><td>SocSecurity</td><td>Social Security Administration</td></tr>
-                  <tr><td>Treas</td><td>Treasury</td></tr>
-                  <tr><td>TSA</td><td>Transportation Security Administration (TSA)</td></tr>
-                  <tr><td>USPS</td><td>U.S. Postal Service (USPS)</td></tr>
-                  <tr><td>Zoo</td><td>National Zoo</td></tr>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="legend-overlay">
-          <div style="display:flex;gap:8px;align-items:center"><div style="width:12px;height:12px;border-radius:50%;border:1px solid #333;background:#ddd"></div><div style="font-size:0.86rem">Low Dominance</div></div>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><div style="width:12px;height:12px;border-radius:50%;border:4px solid #333;background:#ddd"></div><div style="font-size:0.86rem">High Dominance</div></div>
-        </div>
-
-        <div id="plot"></div>
-      </div>
+  <!-- Main content (shifted right so sidebar never overlaps) -->
+  <main class="main">
+    <div class="viz-card">
+      <div id="plot"></div>
     </div>
+  </main>
 
-    <!-- Permanent Sidebar -->
-    <aside class="agency-sidebar" id="agency-sidebar" aria-hidden="false">
-      <div class="sidebar-header">
-        <h3 style="margin:0;color:var(--primary-color)">Agencies</h3>
-        <div style="display:flex;gap:8px">
-          <button id="clear-highlight" class="sidebar-action ghost" title="Clear highlight">Clear</button>
-          <button id="reset-view" class="sidebar-action primary" title="Reset view">Reset</button>
-        </div>
-      </div>
+  <div id="click-toast"></div>
 
-      <div style="margin-bottom:8px">
-        <input id="sidebar-search" placeholder="Filter agencies..." style="width:100%;padding:8px;border-radius:8px;border:1px solid #eef6fa" />
-      </div>
+  <script>
+  /* --- DATA + UMAP + Plotly (kept minimal) --- */
+  const TRUST_DIMS = ["Competent","Reliable","Ethical","Sincere","Benevolent"];
+  const METRICS = ["Warmth","Dominance"];
+  const AGENCY_COL = "Agency";
 
-      <div id="alpha-filter" class="alpha-filter" aria-hidden="false" style="margin-bottom:8px"></div>
+  const sidebar = document.getElementById('sidebar');
+  const agencyListEl = document.getElementById('agency-list');
+  const searchEl = document.getElementById('sidebar-search');
+  const alphaFilterEl = document.getElementById('alpha-filter');
+  const clearBtn = document.getElementById('clear-btn');
+  const resetBtn = document.getElementById('reset-btn');
+  const fileInput = document.getElementById('csv-uploader');
+  const fileNameDisplay = document.getElementById('file-name');
+  const toast = document.getElementById('click-toast');
 
-      <ul id="agency-list" class="agency-list" aria-label="Agency list"></ul>
-    </aside>
+  let dataset = []; // processed + rotated, includes .Agency and .x_rot .y_rot etc.
+  let plotId = 'plot';
 
-    <script>
-      /* ------------------------
-         Globals & constants
-         ------------------------ */
-      const TRUST_DIMS = ["Competent","Reliable","Ethical","Sincere","Benevolent"];
-      const METRICS = ["Warmth","Dominance"];
-      const AGENCY_COL = "Agency";
+  // helper: small toast for click diagnostics
+  function showToast(msg, ms=900){
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(()=> toast.style.display = 'none', ms);
+  }
 
-      const fileInput = document.getElementById("csv-uploader");
-      const fileNameDisplay = document.getElementById("file-name");
-      const loadingOverlay = document.getElementById("loading-overlay");
-      const welcomeModal = document.getElementById("welcome-modal");
-      const modalCloseBtn = document.getElementById("modal-close");
+  function showLoading(show=true){ /* NO overlay in this simplified file */ }
 
-      const agencySidebar = document.getElementById("agency-sidebar");
-      const agencyListEl = document.getElementById("agency-list");
-      const sidebarSearch = document.getElementById("sidebar-search");
-      const alphaFilterEl = document.getElementById("alpha-filter");
-      const clearBtn = document.getElementById("clear-highlight");
-      const resetBtn = document.getElementById("reset-view");
+  // Process CSV rows -> numeric + Trust
+  function processRows(rows){
+    const processed = [];
+    try{
+      rows.forEach(row=>{
+        if (!row[AGENCY_COL]) return;
+        const obj = { Agency: row[AGENCY_COL] };
+        let valid = true, sum=0;
+        TRUST_DIMS.forEach(dim => { const v = parseFloat(row[dim]); if (Number.isNaN(v)) valid=false; obj[dim]=v; sum+=v; });
+        METRICS.forEach(m => { const v=parseFloat(row[m]); if (Number.isNaN(v)) valid=false; obj[m]=v; });
+        if (!valid) return;
+        obj.Trust = sum / TRUST_DIMS.length;
+        processed.push(obj);
+      });
+      return processed;
+    } catch(e){ console.error(e); return []; }
+  }
 
-      let currentDataset = []; // will hold processed + rotated data with __idx
-      let currentPlotId = "plot";
-      let lastHighlightedIndices = [];
+  // Run UMAP
+  function runUMAP(processed){
+    const input = processed.map(d => TRUST_DIMS.map(dim => d[dim]));
+    if (input.length < 3) { alert('Need at least 3 agencies'); return null; }
+    const umap = new UMAP({ nNeighbors: Math.min(15,input.length-1), nComponents:2, minDist:0.1, spread:1.0 });
+    const emb = umap.fit(input);
+    processed.forEach((d,i)=> { d.x_umap = emb[i][0]; d.y_umap = emb[i][1]; });
+    return processed;
+  }
 
-      /* ------------------------
-         Defensive: ensure sidebar receives pointer events.
-         Capture-phase listener: if a pointer event occurs inside the sidebar bounding rect,
-         stop propagation so other overlays/handlers can't intercept it.
-         ------------------------ */
-      (function guardSidebarClicks(){
-        function inSidebar(x,y){
-          const r = agencySidebar.getBoundingClientRect();
-          return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-        }
-        // capture-phase pointerdown & click handlers
-        ['pointerdown','mousedown','touchstart','click'].forEach(evt => {
-          document.addEventListener(evt, function(e){
-            try{
-              if (inSidebar(e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX), e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY))) {
-                // stop any other handler earlier/later from intercepting
-                e.stopPropagation();
-                // do not preventDefault — we want the event to reach sidebar elements naturally
-              }
-            }catch(err){}
-          }, true); // capture
-        });
-      })();
+  // rotate so X correlates with Trust
+  function rotateToAlign(processed){
+    let best=0, bestAng=0;
+    for(let deg=-180; deg<=180; deg+=3){
+      const a = deg*Math.PI/180;
+      const xs = processed.map(d => d.x_umap*Math.cos(a) + d.y_umap*Math.sin(a));
+      const yVals = processed.map(d=>d.Trust);
+      const cor = pearson(xs,yVals);
+      if (cor > best){ best = cor; bestAng = a; }
+    }
+    processed.forEach(d=>{
+      d.x_rot = d.x_umap*Math.cos(bestAng) + d.y_umap*Math.sin(bestAng);
+      d.y_rot = -d.x_umap*Math.sin(bestAng) + d.y_umap*Math.cos(bestAng);
+    });
+    return processed;
+  }
+  function pearson(a,b){
+    const n=a.length; const ma=a.reduce((s,v)=>s+v,0)/n; const mb=b.reduce((s,v)=>s+v,0)/n;
+    let num=0,dx=0,dy=0;
+    for(let i=0;i<n;i++){ num+=(a[i]-ma)*(b[i]-mb); dx+=(a[i]-ma)**2; dy+=(b[i]-mb)**2; }
+    if (!dx||!dy) return 0; return num/Math.sqrt(dx*dy);
+  }
 
-      /* ------------------------
-         Utility helpers
-         ------------------------ */
-      function showLoading(show=true) {
-        if (show) loadingOverlay.classList.add("visible");
-        else loadingOverlay.classList.remove("visible");
-      }
-      function showModal(show=true) {
-        if (show) { welcomeModal.classList.add("visible"); welcomeModal.setAttribute("aria-hidden","false"); }
-        else { welcomeModal.classList.remove("visible"); welcomeModal.setAttribute("aria-hidden","true"); }
-      }
+  // Render Plotly
+  function renderPlot(data){
+    dataset = data.map((d,i)=>({...d,__idx:i}));
+    const domMin = Math.min(...data.map(d=>d.Dominance));
+    const domMax = Math.max(...data.map(d=>d.Dominance));
+    const warmthMin = Math.min(...data.map(d=>d.Warmth));
+    const warmthMax = Math.max(...data.map(d=>d.Warmth));
+    const cabs = Math.max(Math.abs(warmthMin), Math.abs(warmthMax));
 
-      /* ------------------------
-         Data processing + UMAP
-         ------------------------ */
-      async function processAndPlot(parsedData) {
-        showLoading(true);
+    const widths = data.map(d => domMin===domMax ? 2 : 1 + ((d.Dominance-domMin)/(domMax-domMin))*7);
+    const trace = {
+      x: data.map(d=>d.x_rot),
+      y: data.map(d=>d.y_rot),
+      text: data.map(d=>d.Agency),
+      hovertemplate: data.map(d=> `<b>${d.Agency}</b><br>Trust: ${d.Trust.toFixed(2)}<extra></extra>`),
+      mode:'markers+text',
+      textposition:'top center',
+      marker:{
+        size:25,
+        color: data.map(d=>d.Warmth),
+        colorscale:[[0,'#40e0d0'],[0.5,'#fff'],[1,'#ff0000']],
+        cmin:-cabs, cmax:cabs,
+        line:{ width: widths, color:'#333' }
+      },
+      type:'scatter'
+    };
+    const layout = { margin:{t:36,l:40,r:80,b:40}, xaxis:{visible:true,showticklabels:false}, yaxis:{visible:false} };
+    Plotly.newPlot(plotId, [trace], layout, {responsive:true,displayModeBar:false}).then(()=> {
+      populateSidebar(dataset);
+    });
+  }
 
-        // validate
-        let processed = [];
+  // Sidebar population
+  function populateSidebar(data){
+    agencyListEl.innerHTML = '';
+    const sorted = [...data].sort((a,b)=> a.Agency.localeCompare(b.Agency));
+    sorted.forEach(d=>{
+      const li = document.createElement('li');
+      li.dataset.agency = d.Agency;
 
-        if (!parsedData || !parsedData.length || !parsedData[0][AGENCY_COL]) {
-          alert("Invalid CSV: requires Agency column and numeric metric columns.");
-          showLoading(false);
-          return;
-        }
-
-        try {
-          processed = parsedData.map(row => {
-            const obj = { Agency: row[AGENCY_COL] };
-            let valid = true;
-            let sum = 0;
-            TRUST_DIMS.forEach(dim => {
-              const v = parseFloat(row[dim]);
-              if (Number.isNaN(v)) valid = false;
-              obj[dim] = v;
-              sum += v;
-            });
-            METRICS.forEach(m => { obj[m] = parseFloat(row[m]); if (Number.isNaN(obj[m])) valid = false; });
-            if (!valid) return null;
-            obj.Trust = sum / TRUST_DIMS.length;
-            return obj;
-          }).filter(d => d);
-          if (processed.length === 0) throw new Error("No valid rows after parsing.");
-        } catch (err) {
-          alert("Error processing data: " + err.message);
-          showLoading(false);
-          return;
-        }
-
-        // prepare umap input
-        const umapInput = processed.map(d => TRUST_DIMS.map(dim => d[dim]));
-
-        // run UMAP (timeout to let UI update)
-        await new Promise(resolve => setTimeout(() => {
-          try {
-            if (umapInput.length < 3) { alert("Need at least 3 rows for UMAP."); showLoading(false); return; }
-            const umap = new UMAP({ nNeighbors: Math.min(15, umapInput.length - 1), nComponents:2, minDist:0.1, spread:1.0 });
-            const embedding = umap.fit(umapInput);
-            processed.forEach((d,i) => { d.x_umap = embedding[i][0]; d.y_umap = embedding[i][1]; });
-            resolve();
-          } catch (e) { alert("UMAP error: "+e.message); showLoading(false); }
-        }, 40));
-
-        if (!processed[0] || processed[0].x_umap === undefined) { showLoading(false); return; }
-
-        // rotate to align X-axis with Trust
-        const { rotatedData } = rotateToMaximizeCorrelation(processed, "x_umap","y_umap","Trust");
-
-        renderPlot(rotatedData);
-        showLoading(false);
-        // show modal once (controlled by localStorage)
-        if (localStorage.getItem("trustExplorerModalShown") !== "true") {
-          setTimeout(()=> showModal(true), 550);
-        }
-      }
-
-      /* ------------------------
-         Rotation helpers
-         ------------------------ */
-      function rotateToMaximizeCorrelation(data, xCol, yCol, targetCol) {
-        let bestAngle = 0;
-        let maxCorr = -Infinity;
-        for (let deg=-180; deg<=180; deg+=2) {
-          const ang = deg * Math.PI/180;
-          const xs = data.map(d => d[xCol]*Math.cos(ang) + d[yCol]*Math.sin(ang));
-          const corr = pearson(xs, data.map(d=>d[targetCol]));
-          if (corr > maxCorr) { maxCorr = corr; bestAngle = ang; }
-        }
-        const rotated = data.map(d => ({
-          ...d,
-          x_rot: d[xCol]*Math.cos(bestAngle) + d[yCol]*Math.sin(bestAngle),
-          y_rot: -d[xCol]*Math.sin(bestAngle) + d[yCol]*Math.cos(bestAngle)
-        }));
-        return { rotatedData: rotated, angle: bestAngle };
-      }
-      function pearson(a,b) {
-        const n = a.length; if (n===0) return 0;
-        const ma = a.reduce((s,x)=>s+x,0)/n; const mb = b.reduce((s,x)=>s+x,0)/n;
-        let num=0, dx=0, dy=0;
-        for (let i=0;i<n;i++){ num += (a[i]-ma)*(b[i]-mb); dx += (a[i]-ma)**2; dy += (b[i]-mb)**2; }
-        if (dx===0||dy===0) return 0;
-        return num/Math.sqrt(dx*dy);
-      }
-
-      /* ------------------------
-         Plot rendering
-         ------------------------ */
-      function renderPlot(dataset) {
-        // store global (with index)
-        currentDataset = dataset.map((d,i) => ({ ...d, __idx:i }));
-
-        const domMin = Math.min(...dataset.map(d=>d.Dominance));
-        const domMax = Math.max(...dataset.map(d=>d.Dominance));
-        const warmthMin = Math.min(...dataset.map(d=>d.Warmth));
-        const warmthMax = Math.max(...dataset.map(d=>d.Warmth));
-        const c_abs = Math.max(Math.abs(warmthMin), Math.abs(warmthMax));
-
-        function lineWidthFor(d) {
-          if (domMin === domMax) return 2;
-          return 1 + ((d - domMin)/(domMax-domMin))*7;
-        }
-
-        const colorscale = [[0,"#40e0d0"],[0.5,"#ffffff"],[1,"#ff0000"]];
-
-        const sizes = dataset.map(()=>25);
-        const opacities = dataset.map(()=>1.0);
-        const lineWidths = dataset.map(d=>lineWidthFor(d.Dominance));
-
-        const trace = {
-          x: dataset.map(d=>d.x_rot),
-          y: dataset.map(d=>d.y_rot),
-          text: dataset.map(d=>d.Agency),
-          customdata: dataset.map(d=>d.Agency),
-          hovertemplate: dataset.map(d => {
-            let s = `<b>${d.Agency}</b><br>Trust: ${d.Trust.toFixed(2)}<br>Warmth: ${d.Warmth.toFixed(1)}<br>Dominance: ${d.Dominance.toFixed(1)}<br><i>Dimensions:</i><br>`;
-            TRUST_DIMS.forEach(dim => s += `${dim}: ${d[dim].toFixed(2)}<br>`);
-            return s + "<extra></extra>";
-          }),
-          mode:"markers+text",
-          textposition:"top center",
-          marker:{
-            size: sizes,
-            opacity: opacities,
-            color: dataset.map(d=>d.Warmth),
-            colorscale: colorscale,
-            cmin: -c_abs,
-            cmax: c_abs,
-            colorbar: { title: "Warmth", thickness:12, len:0.48, x:1.05 },
-            line:{ width: lineWidths, color:"#333" },
-            symbol:"circle"
-          },
-          type:"scatter"
-        };
-
-        const layout = {
-          hovermode:"closest",
-          dragmode:"zoom",
-          margin:{t:36,l:40,r:80,b:40},
-          xaxis:{visible:true, showgrid:false, zeroline:false, showticklabels:false, title:"Trust Score (Low → High)", titlefont:{size:14,color:"#888"}},
-          yaxis:{visible:false, showgrid:false, zeroline:false},
-          plot_bgcolor:"#fff", paper_bgcolor:"#fff"
-        };
-
-        Plotly.newPlot("plot",[trace],layout,{responsive:true,displayModeBar:false}).then(()=> {
-          populateControls(currentDataset);
-        });
-      }
-
-      /* ------------------------
-         Controls: populate sidebar only
-         ------------------------ */
-      function populateControls(dataset) {
-        // Build sidebar list
-        const sorted = [...dataset].sort((a,b)=> a.Agency.localeCompare(b.Agency));
-        buildSidebar(sorted);
-        populateAlphaFilter(sorted);
-
-        // Wire Clear/Reset
-        clearBtn.onclick = () => {
-          clearHighlight();
-        };
-        resetBtn.onclick = () => {
-          Plotly.relayout(currentPlotId, { "xaxis.autorange": true, "yaxis.autorange": true });
-          clearHighlight();
-        };
-      }
-
-      function buildSidebar(sorted) {
-        agencyListEl.innerHTML = "";
-        sorted.forEach(d => {
-          const li = document.createElement("li");
-          li.dataset.agency = d.Agency;
-          li.style.pointerEvents = "auto";
-
-          const cb = document.createElement("input");
-          cb.type = "checkbox";
-          cb.style.marginRight = "8px";
-          cb.title = `Select ${d.Agency}`;
-          cb.addEventListener("change", (e) => {
-            const selected = Array.from(agencyListEl.querySelectorAll("input[type=checkbox]:checked")).map(c => c.parentElement.dataset.agency);
-            if (selected.length === 0) { clearHighlight(); }
-            else { highlightMultipleByNames(selected); }
-          });
-
-          const label = document.createElement("label");
-          label.style.display = "flex";
-          label.style.alignItems = "center";
-          label.style.gap = "8px";
-          label.style.width = "100%";
-          label.style.cursor = "pointer";
-          label.appendChild(cb);
-
-          const span = document.createElement("span");
-          span.className = "short";
-          span.textContent = d.Agency;
-          label.appendChild(span);
-
-          li.appendChild(label);
-          agencyListEl.appendChild(li);
-
-          // clicking li toggles checkbox
-          li.addEventListener("click", (ev) => {
-            if (ev.target.tagName.toLowerCase() === "input") return;
-            cb.checked = !cb.checked;
-            cb.dispatchEvent(new Event('change'));
-          });
-        });
-
-        // search input
-        sidebarSearch.oninput = () => {
-          const q = sidebarSearch.value.trim().toLowerCase();
-          Array.from(agencyListEl.children).forEach(li => {
-            const name = li.dataset.agency.toLowerCase();
-            li.style.display = name.includes(q) ? "" : "none";
-          });
-        };
-      }
-
-      function populateAlphaFilter(sorted) {
-        const letters = Array.from(new Set(sorted.map(d => d.Agency[0].toUpperCase()))).sort();
-        alphaFilterEl.innerHTML = "";
-        const allBtn = document.createElement("button");
-        allBtn.textContent = "All";
-        allBtn.classList.add("active");
-        allBtn.addEventListener("click", () => { filterSidebar(""); setAlphaActive(allBtn); });
-        alphaFilterEl.appendChild(allBtn);
-        letters.forEach(L => {
-          const btn = document.createElement("button");
-          btn.textContent = L;
-          btn.addEventListener("click", () => { filterSidebar(L); setAlphaActive(btn); });
-          alphaFilterEl.appendChild(btn);
-        });
-      }
-      function setAlphaActive(btn) {
-        Array.from(alphaFilterEl.querySelectorAll("button")).forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-      }
-      function filterSidebar(letter) {
-        Array.from(agencyListEl.children).forEach(li => {
-          const name = li.dataset.agency;
-          li.style.display = (!letter || name[0].toUpperCase() === letter) ? "" : "none";
-        });
-      }
-
-      /* ------------------------
-         Highlighting & zoom
-         ------------------------ */
-      function highlightMultipleByNames(names) {
-        const indices = names.map(n => currentDataset.findIndex(d => d.Agency === n)).filter(i => i >= 0);
-        highlightMultiple(indices);
-      }
-
-      function highlightMultiple(indices) {
-        if (!Array.isArray(indices) || indices.length === 0) { clearHighlight(); return; }
-        lastHighlightedIndices = indices.slice();
-
-        const baseSizes = currentDataset.map(()=>25);
-        const sizes = baseSizes.slice();
-        const opac = currentDataset.map((_,i) => indices.includes(i) ? 1.0 : 0.18);
-        indices.forEach(i => { if (i>=0 && i<sizes.length) sizes[i] = 40; });
-
-        Plotly.restyle(currentPlotId, {
-          "marker.size": [sizes],
-          "marker.opacity": [opac]
-        });
-
-        // compute bounding box
-        const xs = indices.map(i => currentDataset[i].x_rot);
-        const ys = indices.map(i => currentDataset[i].y_rot);
-        const xmin = Math.min(...xs), xmax = Math.max(...xs);
-        const ymin = Math.min(...ys), ymax = Math.max(...ys);
-        const padX = Math.max(0.6, (xmax - xmin) * 0.6);
-        const padY = Math.max(0.4, (ymax - ymin) * 0.6);
-
-        Plotly.relayout(currentPlotId, { "xaxis.range":[xmin - padX, xmax + padX], "yaxis.range":[ymin - padY, ymax + padY] });
-      }
-
-      function clearHighlight() {
-        if (!currentDataset || currentDataset.length === 0) return;
-        const defaultSizes = currentDataset.map(()=>25);
-        const defaultOpac = currentDataset.map(()=>1.0);
-        Plotly.restyle(currentPlotId, { "marker.size":[defaultSizes], "marker.opacity":[defaultOpac] });
-        lastHighlightedIndices = [];
-        Array.from(agencyListEl.querySelectorAll("input[type=checkbox]")).forEach(c => c.checked = false);
-      }
-
-      /* ------------------------
-         Wire file load and initial load
-         ------------------------ */
-      document.addEventListener("DOMContentLoaded", ()=> {
-        // fetch default CSV
-        showLoading(true);
-        fetch("data/agency.csv").then(r => {
-          if (!r.ok) throw new Error("default data not found");
-          return r.text();
-        }).then(txt => {
-          fileNameDisplay.textContent = "agency.csv (default)";
-          Papa.parse(txt, { header:true, skipEmptyLines:true, complete: (res)=> processAndPlot(res.data) });
-        }).catch(err => {
-          showLoading(false);
-          fileNameDisplay.textContent = "No file loaded.";
-          console.warn("Default data load failed:", err);
-        });
-
-        // modal control
-        modalCloseBtn.addEventListener("click", () => {
-          showModal(false);
-          localStorage.setItem("trustExplorerModalShown","true");
-        });
-
-        // file uploader
-        fileInput.addEventListener("change", (ev) => {
-          const f = ev.target.files && ev.target.files[0];
-          if (!f) return;
-          fileNameDisplay.textContent = f.name;
-          Papa.parse(f, { header:true, skipEmptyLines:true, complete: (res) => processAndPlot(res.data) });
-        });
-
-        // ensure overlays do not block clicks when hidden
-        const observeVisibility = (el) => {
-          if (!el) return;
-          const mo = new MutationObserver(()=> {
-            if (el.classList.contains('visible')) {
-              el.style.display = '';
-              el.style.pointerEvents = 'auto';
-            } else {
-              el.style.display = 'none';
-              el.style.pointerEvents = 'none';
-            }
-          });
-          mo.observe(el, { attributes:true, attributeFilter:['class'] });
-          if (!el.classList.contains('visible')) { el.style.display = 'none'; el.style.pointerEvents = 'none'; }
-        };
-        observeVisibility(welcomeModal);
-        observeVisibility(loadingOverlay);
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.title = `Select ${d.Agency}`;
+      cb.addEventListener('change', ()=> {
+        const selected = Array.from(agencyListEl.querySelectorAll('input[type=checkbox]:checked')).map(c => c.parentElement.dataset.agency);
+        if (selected.length === 0) { clearHighlight(); } else { highlightByNames(selected); }
       });
 
-      /* Expose programmatic helper */
-      window.highlightAgencies = (namesArray) => {
-        if (!Array.isArray(namesArray)) namesArray = [namesArray];
-        const valid = namesArray.filter(n => currentDataset.findIndex(d=>d.Agency===n)>=0);
-        if (valid.length===0) return;
-        Array.from(agencyListEl.querySelectorAll("li")).forEach(li => {
-          const cb = li.querySelector("input[type=checkbox]");
-          if (!cb) return;
-          cb.checked = valid.includes(li.dataset.agency);
-        });
-        highlightMultipleByNames(valid);
-      };
-    </script>
-  </body>
+      const span = document.createElement('span'); span.textContent = d.Agency; span.style.userSelect='none';
+
+      li.appendChild(cb); li.appendChild(span);
+      // clicking li toggles checkbox (but not when the click is directly on the checkbox)
+      li.addEventListener('click', e => { if (e.target.tagName.toLowerCase() !== 'input') { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); } });
+
+      agencyListEl.appendChild(li);
+    });
+
+    // alphabet filter
+    const letters = Array.from(new Set(sorted.map(s => s.Agency[0].toUpperCase()))).sort();
+    alphaFilterEl.innerHTML = '';
+    const allBtn = document.createElement('button'); allBtn.textContent='All'; allBtn.className='active'; allBtn.addEventListener('click', ()=>{ filterSidebar(''); setActiveAlpha(allBtn); });
+    alphaFilterEl.appendChild(allBtn);
+    letters.forEach(L => {
+      const b = document.createElement('button'); b.textContent = L;
+      b.addEventListener('click', ()=>{ filterSidebar(L); setActiveAlpha(b); });
+      alphaFilterEl.appendChild(b);
+    });
+
+    // search
+    searchEl.oninput = ()=> {
+      const q = searchEl.value.trim().toLowerCase();
+      Array.from(agencyListEl.children).forEach(li => {
+        const name = li.dataset.agency.toLowerCase();
+        li.style.display = name.includes(q) ? '' : 'none';
+      });
+    };
+
+    // Clear + Reset
+    clearBtn.onclick = ()=>{ clearHighlight(); Array.from(agencyListEl.querySelectorAll('input[type=checkbox]')).forEach(c=>c.checked=false); };
+    resetBtn.onclick = ()=>{ Plotly.relayout(plotId, {'xaxis.autorange':true,'yaxis.autorange':true}); clearHighlight(); };
+  }
+  function setActiveAlpha(btn){
+    Array.from(alphaFilterEl.querySelectorAll('button')).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  function filterSidebar(letter){
+    Array.from(agencyListEl.children).forEach(li => {
+      const name = li.dataset.agency;
+      li.style.display = (!letter || name[0].toUpperCase()===letter) ? '' : 'none';
+    });
+  }
+
+  // Highlighting
+  function highlightByNames(names){
+    const idx = names.map(n => dataset.findIndex(d => d.Agency===n)).filter(i=>i>=0);
+    highlightIndices(idx);
+  }
+  function highlightIndices(indices){
+    if (!indices || indices.length===0) { clearHighlight(); return; }
+    const sizes = dataset.map(()=>25);
+    const opac = dataset.map((_,i) => indices.includes(i) ? 1 : 0.18);
+    indices.forEach(i => { if (i>=0 && i<sizes.length) sizes[i]=40; });
+    Plotly.restyle(plotId, {'marker.size':[sizes], 'marker.opacity':[opac]});
+    // zoom to selection
+    const xs = indices.map(i=>dataset[i].x_rot), ys = indices.map(i=>dataset[i].y_rot);
+    const xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
+    Plotly.relayout(plotId, {'xaxis.range':[xmin-0.6,xmax+0.6], 'yaxis.range':[ymin-0.4,ymax+0.4]});
+  }
+  function clearHighlight(){
+    if (!dataset || dataset.length===0) return;
+    Plotly.restyle(plotId, {'marker.size':[dataset.map(()=>25)], 'marker.opacity':[dataset.map(()=>1.0)]});
+  }
+
+  /* --- Load default CSV and kick off pipeline --- */
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // fetch default CSV
+    fetch('data/agency.csv').then(r => {
+      if (!r.ok) throw new Error('default CSV not found');
+      return r.text();
+    }).then(txt => {
+      fileNameDisplay.textContent = 'agency.csv (default)';
+      const parsed = Papa.parse(txt, { header:true, skipEmptyLines:true }).data;
+      const proc = processRows(parsed);
+      const umap = runUMAP(proc);
+      if (!umap) return;
+      const rotated = rotateToAlign(umap);
+      renderPlot(rotated);
+    }).catch(err => {
+      console.warn('Could not load default CSV:', err);
+      alert('Default CSV not found. Please upload a CSV using Load CSV.');
+    });
+
+    // upload handler
+    fileInput.addEventListener('change', e=>{
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      fileNameDisplay.textContent = f.name;
+      Papa.parse(f, { header:true, skipEmptyLines:true, complete: (res)=> {
+        const proc = processRows(res.data);
+        const umap = runUMAP(proc);
+        if (!umap) return;
+        const rotated = rotateToAlign(umap);
+        renderPlot(rotated);
+      }});
+    });
+
+    // Debug helper: show which element is receiving clicks inside sidebar
+    sidebar.addEventListener('click', (e) => {
+      const top = document.elementFromPoint(e.clientX, e.clientY);
+      const info = (top && (top.tagName + (top.id?('#'+top.id):(' '+(top.className||'')).split(' ')[0]))) || String(top);
+      // show a tiny toast so you can see what's receiving the click
+      showToast('Top element: ' + info, 900);
+      // console.log('sidebar click top element:', top);
+    }, true);
+  });
+
+  // In case user clicks a checkbox but nothing changes, this exposes a quick console test they can run:
+  window.debugTopOfSidebar = function(){
+    const r = sidebar.getBoundingClientRect();
+    return document.elementFromPoint(r.left+6, r.top+6);
+  };
+  </script>
+</body>
 </html>
