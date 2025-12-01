@@ -15,6 +15,10 @@
     nav { background:#fff; padding:12px 18px; box-shadow:0 2px 6px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; z-index:4000; position:relative; }
     .nav-brand { color:var(--primary-color); font-weight:700; text-decoration:none; }
 
+    .nav-links { display:flex; gap:12px; align-items:center; }
+    .nav-item { text-decoration:none; color:#666; padding:8px 12px; border-radius:8px; }
+    .nav-item.active { background:var(--primary-color); color:white; }
+
     /* Page shifted right so sidebar never overlaps plot */
     .main { margin-left: calc(var(--sidebar-w) + 28px); padding:18px; box-sizing:border-box; }
 
@@ -88,10 +92,13 @@
 <body>
   <nav>
     <div class="nav-brand">Trust in Gov</div>
-    <div>
+    <div class="nav-links">
       <input id="csv-uploader" type="file" accept=".csv" style="display:none" />
       <label for="csv-uploader" style="background:#eef6fa;padding:8px 12px;border-radius:8px;color:var(--primary-color);cursor:pointer;margin-right:8px">Load CSV</label>
       <span id="file-name" style="color:#666;font-size:13px">Loading default...</span>
+
+      <!-- Restored nav link to Radial/Bar Views -->
+      <a class="nav-item" href="radial.html">Radial/Bar Views</a>
     </div>
   </nav>
 
