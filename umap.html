@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trust in Government Agencies — UMAP Explorer without warmth and dominance</title>
+  <title>Trust in Government Agencies — UMAP Explorer</title>
 
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -264,7 +264,14 @@
       x: data.map(d=>d.x_rot),
       y: data.map(d=>d.y_rot),
       text: data.map(d=>d.Agency),
-      hovertemplate: data.map(d=> `<b>${d.Agency}</b><br>Trust: ${d.Trust.toFixed(2)}<br><i>Dimensions:</i><br>${TRUST_DIMS.map(dim=>`${dim}: ${d[dim].toFixed(2)}`).join('<br>')}<extra></extra>`),
+      hovertemplate: data.map(d=> {
+        const dims = TRUST_DIMS.map(dim => {
+          const dimName = dim.padEnd(12, ' ');
+          const score = d[dim].toFixed(2);
+          return `${dimName}${score}`;
+        }).join('<br>');
+        return `<b>${d.Agency}</b><br><br><span style="font-family:monospace">Trust        ${d.Trust.toFixed(2)}</span><br><br><i>Dimensions:</i><br><span style="font-family:monospace">${dims}</span><extra></extra>`;
+      }),
       mode:'markers+text',
       textposition:'top center',
       marker:{
