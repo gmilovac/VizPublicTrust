@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -881,4 +881,409 @@
       });
     </script>
   </body>
+</html> -->
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trust in Government Agencies — UMAP Explorer</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
+
+  <style>
+    :root { --primary-color:#2c5f7f; --bg:#f8f9fa; --sidebar-w:320px; }
+    html,body { height:100%; margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:#222; }
+    nav { background:#fff; padding:12px 18px; box-shadow:0 2px 6px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; z-index:4000; position:relative; }
+    .nav-brand { color:var(--primary-color); font-weight:700; text-decoration:none; }
+
+    .nav-links { display:flex; gap:12px; align-items:center; }
+    .nav-item { text-decoration:none; color:#666; padding:8px 12px; border-radius:8px; }
+    .nav-item.active { background:var(--primary-color); color:white; }
+
+    .main { margin-left: calc(var(--sidebar-w) + 28px); padding:18px; box-sizing:border-box; }
+
+    .sidebar {
+      position:fixed; top:76px; left:20px; width:var(--sidebar-w);
+      max-height: calc(100vh - 100px); background:#fff; border-radius:10px;
+      box-shadow:0 12px 34px rgba(0,0,0,0.12); border:1px solid #e9f0f4; padding:12px;
+      overflow:auto; z-index:2147483647; pointer-events:auto !important;
+    }
+    .sidebar h3 { margin:0 0 8px 0; color:var(--primary-color); }
+    .controls { display:flex; gap:8px; justify-content:flex-end; margin-bottom:10px; }
+    .btn { border:0; padding:7px 10px; border-radius:8px; cursor:pointer; }
+    .btn.primary { background:var(--primary-color); color:#fff; }
+    .btn.ghost { background:#eef6fa; color:var(--primary-color); }
+
+    .search { width:100%; padding:8px; border-radius:8px; border:1px solid #eef6fa; margin-bottom:10px; }
+
+    .alpha-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+    .alpha-filter button { padding:4px 6px; border-radius:6px; border:1px solid #eef6fa; background:#f6fbfd; color:var(--primary-color); cursor:pointer; font-size:12px; }
+    .alpha-filter button.active { background:var(--primary-color); color:#fff; }
+
+    .agency-list { list-style:none; padding:0; margin:0; }
+    .agency-list li { display:flex; align-items:center; gap:8px; padding:8px; border-radius:8px; cursor:pointer; }
+    .agency-list li:hover { background:#f2f7fb; }
+    .agency-list input[type="checkbox"] { pointer-events:auto !important; }
+
+    .viz-card { background:#fff; border-radius:10px; padding:14px; box-shadow:0 8px 30px rgba(0,0,0,0.06); min-height:680px; position:relative; }
+    #plot { width:100%; height:720px; }
+
+    .x-scale-bottom {
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:18px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      z-index:1500;
+      pointer-events:none;
+      font-size:13px;
+    }
+    .x-scale-caption {
+      margin-top:4px;
+      color:#666;
+      font-size:12px;
+    }
+
+    .plot-info { position:absolute; top:22px; left:38px; display:flex; gap:10px; z-index:1000; }
+    .info-btn { width:36px; height:36px; border-radius:50%; background:var(--primary-color); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(10,20,30,0.12); border:0; }
+    .info-modal { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; padding:18px; border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,0.25); z-index:2147483650; width:90%; max-width:720px; display:none; }
+    .info-modal.visible { display:block; }
+    .info-modal h2 { margin-top:0; color:var(--primary-color); }
+    .info-close { margin-top:12px; padding:8px 12px; background:var(--primary-color); color:#fff; border:0; border-radius:8px; cursor:pointer; }
+
+    #click-toast { position:fixed; right:18px; bottom:18px; background:rgba(0,0,0,0.72); color:#fff; padding:8px 12px; border-radius:8px; font-size:13px; z-index:999999; display:none; pointer-events:none; }
+
+    @media (max-width:900px) {
+      :root { --sidebar-w:220px; }
+      .main { margin-left: calc(var(--sidebar-w) + 20px); padding:12px; }
+      #plot { height:560px; }
+      .x-scale-bottom { bottom:12px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-brand">Trust in Government Agencies - UMAP Explorer</div>
+    <div class="nav-links">
+      <input id="csv-uploader" type="file" accept=".csv" style="display:none" />
+      <label for="csv-uploader" style="background:#eef6fa;padding:8px 12px;border-radius:8px;color:var(--primary-color);cursor:pointer;margin-right:8px">Load CSV</label>
+      <span id="file-name" style="color:#666;font-size:13px">Loading default...</span>
+    </div>
+  </nav>
+
+  <aside class="sidebar" id="sidebar">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>Agencies</h3>
+      <div style="display:flex;gap:8px">
+        <button id="clear-btn" class="btn ghost" title="Clear selections">Clear</button>
+        <button id="reset-btn" class="btn primary" title="Reset view">Reset</button>
+      </div>
+    </div>
+
+    <input id="sidebar-search" class="search" placeholder="Filter agencies..." />
+
+    <div class="alpha-filter" id="alpha-filter"></div>
+
+    <ul class="agency-list" id="agency-list" aria-label="Agencies"></ul>
+  </aside>
+
+  <main class="main">
+    <div class="viz-card" id="viz-card">
+      <div class="plot-info" id="plot-info">
+        <button class="info-btn" id="metrics-info">i</button>
+        <button class="info-btn" id="agency-info">?</button>
+      </div>
+
+      <div class="info-modal" id="modal-metrics" role="dialog" aria-modal="true" aria-labelledby="metrics-title">
+        <h2 id="metrics-title">Metric Definitions</h2>
+        <div>
+          <p><strong>Trust</strong> — Overall average across: Competence, Reliability, Ethics, Sincerity, Benevolence.</p>
+          <p><strong>Five Dimensions:</strong></p>
+          <ul>
+            <li>Competence — Ability to execute</li>
+            <li>Reliability — Consistency</li>
+            <li>Ethics — Moral principles</li>
+            <li>Sincerity — Honesty</li>
+            <li>Benevolence — Care for public interest</li>
+          </ul>
+        </div>
+        <button class="info-close" id="close-metrics">Close</button>
+      </div>
+
+      <div class="info-modal" id="modal-agencies" role="dialog" aria-modal="true" aria-labelledby="agency-title">
+        <h2 id="agency-title">Agency Full Names</h2>
+        <div id="agency-fullnames" style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="min-width:220px">
+            <div><strong>Amtrak</strong> — Amtrak</div>
+            <div><strong>BPR</strong> — Bureau of Prisons (BPR)</div>
+            <div><strong>CBP</strong> — Customs & Border Protection (CBP)</div>
+            <div><strong>CDC</strong> — Center for Disease Control (CDC)</div>
+            <div><strong>Census</strong> — Census Bureau</div>
+            <div><strong>CISA</strong> — Cybersecurity and Infrastructure Security Agency (CISA)</div>
+            <div><strong>DEd</strong> — Department of Education</div>
+            <div><strong>DOD</strong> — Department of Defense (DoD)</div>
+            <div><strong>DOJ</strong> — Department of Justice (DOJ)</div>
+          </div>
+          <div style="min-width:220px">
+            <div><strong>EPA</strong> — Environmental Protection Agency (EPA)</div>
+            <div><strong>FAA</strong> — Federal Aviation Administration (FAA)</div>
+            <div><strong>FBI</strong> — Federal Bureau of Investigation (FBI)</div>
+            <div><strong>FDA</strong> — Food & Drug Administration (FDA)</div>
+            <div><strong>FEMA</strong> — Federal Emergency Management Agency (FEMA)</div>
+            <div><strong>IRS</strong> — Internal Revenue Service (IRS)</div>
+            <div><strong>LaborDept</strong> — Labor Department</div>
+            <div><strong>Lib</strong> — Library of Congress</div>
+          </div>
+          <div style="min-width:220px">
+            <div><strong>Mus</strong> — Smithsonian Museums</div>
+            <div><strong>NASA</strong> — National Aeronautics & Space Administration (NASA)</div>
+            <div><strong>NEA</strong> — National Endowment for the Arts (NEA)</div>
+            <div><strong>NSF</strong> — National Science Foundation (NSF)</div>
+            <div><strong>SocSecurity</strong> — Social Security Administration</div>
+            <div><strong>Treas</strong> — Treasury</div>
+            <div><strong>TSA</strong> — Transportation Security Administration (TSA)</div>
+            <div><strong>USPS</strong> — U.S. Postal Service (USPS)</div>
+            <div><strong>Zoo</strong> — National Zoo</div>
+          </div>
+        </div>
+        <button class="info-close" id="close-agencies">Close</button>
+      </div>
+
+      <div id="plot"></div>
+
+      <div class="x-scale-bottom" id="x-scale-bottom" aria-hidden="false" style="display:flex; justify-content:center; margin-top:8px;">
+        <div class="x-scale-caption">Trust Score (Low → High)</div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="click-toast"></div>
+
+  <script>
+  const TRUST_DIMS = ["Competent","Reliable","Ethical","Sincere","Benevolent"];
+  const AGENCY_COL = "Agency";
+
+  const sidebar = document.getElementById('sidebar');
+  const agencyListEl = document.getElementById('agency-list');
+  const searchEl = document.getElementById('sidebar-search');
+  const alphaFilterEl = document.getElementById('alpha-filter');
+  const clearBtn = document.getElementById('clear-btn');
+  const resetBtn = document.getElementById('reset-btn');
+  const fileInput = document.getElementById('csv-uploader');
+  const fileNameDisplay = document.getElementById('file-name');
+
+  const xScale = document.getElementById('x-scale-bottom');
+
+  const metricsInfoBtn = document.getElementById('metrics-info');
+  const agencyInfoBtn = document.getElementById('agency-info');
+  const modalMetrics = document.getElementById('modal-metrics');
+  const modalAgencies = document.getElementById('modal-agencies');
+  const closeMetrics = document.getElementById('close-metrics');
+  const closeAgencies = document.getElementById('close-agencies');
+
+  const toast = document.getElementById('click-toast');
+
+  let dataset = [];
+  let plotId = 'plot';
+
+  function showToast(msg, ms=900){ toast.textContent = msg; toast.style.display = 'block'; setTimeout(()=> toast.style.display='none', ms); }
+
+  function processRows(rows){
+    const processed = [];
+    rows.forEach(row => {
+      if (!row[AGENCY_COL]) return;
+      const obj = { Agency: row[AGENCY_COL] };
+      let valid = true, sum = 0;
+      TRUST_DIMS.forEach(dim => { const v = parseFloat(row[dim]); if (Number.isNaN(v)) valid=false; obj[dim]=v; sum+=v; });
+      if (!valid) return;
+      obj.Trust = sum / TRUST_DIMS.length;
+      processed.push(obj);
+    });
+    return processed;
+  }
+
+  function runUMAP(processed){
+    const input = processed.map(d => TRUST_DIMS.map(dim => d[dim]));
+    if (input.length < 3) { alert('Need at least 3 agencies'); return null; }
+    const umap = new UMAP({ nNeighbors: Math.min(15,input.length-1), nComponents:2, minDist:0.1, spread:1.0 });
+    const emb = umap.fit(input);
+    processed.forEach((d,i)=> { d.x_umap = emb[i][0]; d.y_umap = emb[i][1]; });
+    return processed;
+  }
+
+  function rotateToAlign(processed){
+    let best= -Infinity, bestAng=0;
+    for(let deg=-180; deg<=180; deg+=3){
+      const a = deg*Math.PI/180;
+      const xs = processed.map(d => d.x_umap*Math.cos(a) + d.y_umap*Math.sin(a));
+      const cor = pearson(xs, processed.map(d=>d.Trust));
+      if (cor > best){ best = cor; bestAng = a; }
+    }
+    processed.forEach(d=>{
+      d.x_rot = d.x_umap*Math.cos(bestAng) + d.y_umap*Math.sin(bestAng);
+      d.y_rot = -d.x_umap*Math.sin(bestAng) + d.y_umap*Math.cos(bestAng);
+    });
+    return processed;
+  }
+  function pearson(a,b){
+    const n=a.length; const ma=a.reduce((s,v)=>s+v,0)/n; const mb=b.reduce((s,v)=>s+v,0)/n;
+    let num=0,dx=0,dy=0;
+    for(let i=0;i<n;i++){ num+=(a[i]-ma)*(b[i]-mb); dx+=(a[i]-ma)**2; dy+=(b[i]-mb)**2; }
+    if (!dx||!dy) return 0; return num/Math.sqrt(dx*dy);
+  }
+
+  function renderPlot(data){
+    dataset = data.map((d,i)=>({...d,__idx:i}));
+
+    xScale.style.display = 'flex';
+
+    const trace = {
+      x: data.map(d=>d.x_rot),
+      y: data.map(d=>d.y_rot),
+      text: data.map(d=>d.Agency),
+      hovertemplate: data.map(d=> {
+        const dims = TRUST_DIMS.map(dim => {
+          const dimName = dim.padEnd(12, ' ');
+          const score = d[dim].toFixed(2);
+          return `${dimName}${score}`;
+        }).join('<br>');
+        return `<b>${d.Agency}</b><br><br><span style="font-family:monospace">Trust        ${d.Trust.toFixed(2)}</span><br><br><i>Dimensions:</i><br><span style="font-family:monospace">${dims}</span><extra></extra>`;
+      }),
+      mode:'markers+text',
+      textposition:'top center',
+      marker:{
+        size:25,
+        color: '#2c5f7f',
+        line:{ width: 2, color:'#333' }
+      },
+      type:'scatter'
+    };
+
+    const layout = {
+      margin:{t:48,l:40,r:80,b:100},
+      hovermode:'closest',
+      dragmode:'zoom',
+      yaxis:{visible:false},
+      plot_bgcolor:'#fff', paper_bgcolor:'#fff'
+    };
+
+    Plotly.newPlot(plotId, [trace], layout, {responsive:true, displayModeBar:false}).then(()=> {
+      populateSidebar(dataset);
+    });
+  }
+
+  function populateSidebar(data){
+    agencyListEl.innerHTML = '';
+    const sorted = [...data].sort((a,b)=> a.Agency.localeCompare(b.Agency));
+    sorted.forEach(d=>{
+      const li = document.createElement('li');
+      li.dataset.agency = d.Agency;
+
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.title = `Select ${d.Agency}`;
+      cb.addEventListener('change', ()=> {
+        const selected = Array.from(agencyListEl.querySelectorAll('input[type=checkbox]:checked')).map(c => c.parentElement.dataset.agency);
+        if (selected.length === 0) { clearHighlight(); } else { highlightByNames(selected); }
+      });
+
+      const span = document.createElement('span'); span.textContent = d.Agency; span.style.userSelect='none';
+
+      li.appendChild(cb); li.appendChild(span);
+      li.addEventListener('click', e => { if (e.target.tagName.toLowerCase() !== 'input') { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); } });
+
+      agencyListEl.appendChild(li);
+    });
+
+    const letters = Array.from(new Set(sorted.map(s => s.Agency[0].toUpperCase()))).sort();
+    alphaFilterEl.innerHTML = '';
+    const allBtn = document.createElement('button'); allBtn.textContent='All'; allBtn.className='active'; allBtn.addEventListener('click', ()=>{ filterSidebar(''); setActiveAlpha(allBtn); });
+    alphaFilterEl.appendChild(allBtn);
+    letters.forEach(L => { const b = document.createElement('button'); b.textContent=L; b.addEventListener('click', ()=>{ filterSidebar(L); setActiveAlpha(b); }); alphaFilterEl.appendChild(b); });
+
+    searchEl.oninput = ()=> {
+      const q = searchEl.value.trim().toLowerCase();
+      Array.from(agencyListEl.children).forEach(li => {
+        const name = li.dataset.agency.toLowerCase();
+        li.style.display = name.includes(q) ? '' : 'none';
+      });
+    };
+
+    clearBtn.onclick = ()=>{ clearHighlight(); Array.from(agencyListEl.querySelectorAll('input[type=checkbox]')).forEach(c=>c.checked=false); };
+    resetBtn.onclick = ()=>{ Plotly.relayout(plotId, {'xaxis.autorange':true,'yaxis.autorange':true}); clearHighlight(); };
+  }
+
+  function setActiveAlpha(btn){ Array.from(alphaFilterEl.querySelectorAll('button')).forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  function filterSidebar(letter){ Array.from(agencyListEl.children).forEach(li => { const name = li.dataset.agency; li.style.display = (!letter || name[0].toUpperCase()===letter) ? '' : 'none'; }); }
+
+  function highlightByNames(names){
+    const idx = names.map(n => dataset.findIndex(d => d.Agency===n)).filter(i=>i>=0);
+    highlightIndices(idx);
+  }
+  function highlightIndices(indices){
+    if (!indices || indices.length===0) { clearHighlight(); return; }
+    const sizes = dataset.map(()=>25);
+    const opac = dataset.map((_,i) => indices.includes(i) ? 1 : 0.18);
+    indices.forEach(i => { if (i>=0 && i<sizes.length) sizes[i]=40; });
+    Plotly.restyle(plotId, {'marker.size':[sizes], 'marker.opacity':[opac]});
+    const xs = indices.map(i=>dataset[i].x_rot), ys = indices.map(i=>dataset[i].y_rot);
+    const xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
+    const padX = Math.max(0.6, (xmax-xmin)*0.6);
+    const padY = Math.max(0.4, (ymax-ymin)*0.6);
+    Plotly.relayout(plotId, {'xaxis.range':[xmin-padX,xmax+padX], 'yaxis.range':[ymin-padY,ymax+padY]});
+  }
+  function clearHighlight(){ if (!dataset || dataset.length===0) return; Plotly.restyle(plotId, {'marker.size':[dataset.map(()=>25)], 'marker.opacity':[dataset.map(()=>1.0)]}); }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    fetch('data/agency.csv').then(r => { if (!r.ok) throw new Error('default CSV not found'); return r.text(); })
+    .then(txt => {
+      fileNameDisplay.textContent = 'agency.csv (default)';
+      const parsed = Papa.parse(txt, { header:true, skipEmptyLines:true }).data;
+      const proc = processRows(parsed);
+      const umap = runUMAP(proc);
+      if (!umap) return;
+      const rotated = rotateToAlign(umap);
+      renderPlot(rotated);
+    }).catch(err => {
+      console.warn('Could not load default CSV:', err);
+      alert('Default CSV not found. Please upload a CSV using Load CSV.');
+    });
+
+    fileInput.addEventListener('change', e=>{
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      fileNameDisplay.textContent = f.name;
+      Papa.parse(f, { header:true, skipEmptyLines:true, complete: (res)=> {
+        const proc = processRows(res.data);
+        const umap = runUMAP(proc);
+        if (!umap) return;
+        const rotated = rotateToAlign(umap);
+        renderPlot(rotated);
+      }});
+    });
+
+    metricsInfoBtn.addEventListener('click', ()=> modalMetrics.classList.add('visible'));
+    agencyInfoBtn.addEventListener('click', ()=> modalAgencies.classList.add('visible'));
+    closeMetrics.addEventListener('click', ()=> modalMetrics.classList.remove('visible'));
+    closeAgencies.addEventListener('click', ()=> modalAgencies.classList.remove('visible'));
+
+    sidebar.addEventListener('click', (e) => {
+      const top = document.elementFromPoint(e.clientX, e.clientY);
+      const info = (top && (top.tagName + (top.id?('#'+top.id):(' '+(top.className||'')).split(' ')[0]))) || String(top);
+    }, true);
+  });
+
+  window.debugTopOfSidebar = function(){ const r = sidebar.getBoundingClientRect(); return document.elementFromPoint(r.left+6, r.top+6); };
+  </script>
+</body>
 </html>
