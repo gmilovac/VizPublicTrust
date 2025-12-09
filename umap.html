@@ -174,7 +174,7 @@
       <div id="plot"></div>
 
       <div class="x-scale-bottom" id="x-scale-bottom" aria-hidden="false" style="display:flex; justify-content:center; margin-top:8px;">
-        <div class="x-scale-caption">Trust Score (Low → High)</div>
+        <div class="x-scale-caption">General Trust Score (Low → High)</div>
       </div>
 
     </div>
@@ -270,7 +270,7 @@
           const score = d[dim].toFixed(2);
           return `${dimName}${score}`;
         }).join('<br>');
-        return `<b>${d.Agency}</b><br><br><span style="font-family:monospace">Trust        ${d.Trust.toFixed(2)}</span><br><br><i>Dimensions:</i><br><span style="font-family:monospace">${dims}</span><extra></extra>`;
+        return `<b>${d.Agency}</b><br><br><span style="font-family:monospace">General Trust        ${d.Trust.toFixed(2)}</span><br><br><i>Dimensions:</i><br><span style="font-family:monospace">${dims}</span><extra></extra>`;
       }),
       mode:'markers+text',
       textposition:'top center',
